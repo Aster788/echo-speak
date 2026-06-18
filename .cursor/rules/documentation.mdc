@@ -1,0 +1,12 @@
+---
+description: Documentation standards for echo-speak
+globs: docs/**/*
+alwaysApply: false
+---
+
+# Documentation
+
+- Keep `docs/progress.md` updated when completing milestones.
+- Record architectural decisions in `docs/decisions.md` (ADR format: Context, Decision, Consequences).
+- `docs/next-task.md` should always reflect the single next actionable task.
+- Link to relevant files and migrations when documenting schema changes in `docs/database.md`.

@@ -1,0 +1,30 @@
+---
+description: Echo Speak project context and conventions
+alwaysApply: true
+---
+
+# Echo Speak
+
+Personal English learning app: import video transcripts, extract expressions, detect knowledge gaps, and generate spaced-repetition reviews.
+
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Supabase (Postgres + client)
+- OpenAI for transcript cleaning, expression extraction, gap detection, review generation
+- Feishu notes sync for external content
+
+## Key directories
+
+- `src/services/` — business logic (no UI)
+- `src/db/` — Supabase data access
+- `src/lib/` — shared utilities (OpenAI, Supabase client, SRS, scoring)
+- `prompts/` — LLM prompt templates (referenced by services)
+- `docs/` — PRD, architecture, progress tracking
+
+## Workflow
+
+1. Import transcript → clean → store
+2. Extract expressions → score → library
+3. Detect gaps from usage patterns
+4. Generate reviews → SRS scheduling

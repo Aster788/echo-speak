@@ -1,0 +1,14 @@
+---
+description: TypeScript and React coding style for echo-speak
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Coding Style
+
+- Prefer functional components and async/await.
+- Services in `src/services/` are pure business logic; no React imports.
+- DB access only through `src/db/` modules, not directly in components.
+- Types live in `src/types/`; avoid duplicating interfaces.
+- Use named exports; default export only for Next.js pages.
+- Environment variables: `NEXT_PUBLIC_*` for client-safe values only.

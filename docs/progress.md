@@ -1,18 +1,22 @@
 # Progress
 
+永远只记录：当前开发结构。
+
 ## Completed
 
-- [x] Project scaffolding
+- Project structure
+- Documentation
+- Phase 1 database schema (`videos`, `transcripts` migration)
+- Phase 1 local verification (`supabase db reset`, seed data confirmed)
 
-## In progress
+## In Progress
 
-- [ ] Initial Supabase migration
-- [ ] Transcript import flow
+- Phase 2: transcript import flow
 
-## Backlog
+## Current Focus
 
-- [ ] Expression extraction pipeline
-- [ ] Gap detection
-- [ ] Review generator + SRS
-- [ ] Feishu sync
-- [ ] UI pages (import, library, review, gaps, settings)
+Build transcript upload and storage pipeline.
+
+## Next Milestone
+
+User uploads transcript → transcript stored in Supabase.

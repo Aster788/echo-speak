@@ -1,14 +1,15 @@
 export interface Transcript {
   id: string;
-  videoId: string;
-  rawText: string;
-  cleanedText: string | null;
-  createdAt: string;
+  video_id: string;
+  raw_text: string;
+  cleaned_text: string | null;
+  created_at: string;
 }
 
 export interface Video {
   id: string;
   title: string;
-  sourceUrl: string | null;
-  createdAt: string;
+  youtube_url: string | null;
+  source: "youtube" | "manual";
+  created_at: string;
 }

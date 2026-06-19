@@ -1,29 +1,237 @@
-# Product Requirements — Echo Speak
+# Echo Speak
 
-## Problem
+永远只记录：产品要干什么。
 
-Watching English content produces passive input. Useful phrases are lost unless manually noted and reviewed.
+## Product Vision
 
-## Solution
+Help users turn English input into active speaking ability.
 
-Echo Speak turns video transcripts into a personal expression library with gap detection and spaced-repetition reviews.
+The goal is not collecting vocabulary.
 
-## Core features
+The goal is recalling useful expressions when speaking.
 
-1. **Import** — Paste or upload transcripts; associate with video metadata.
-2. **Expression library** — AI-extracted phrases with context, definitions, and examples.
-3. **Gap detection** — Identify expressions you encounter but do not yet own.
-4. **Review** — Daily SRS cards generated from your library and gaps.
-5. **Feishu sync** — Pull notes from Feishu as supplemental input.
+---
 
-## Non-goals (v1)
+## Target User
 
-- Multi-user / social features
-- Mobile native app
-- Real-time speech recognition
+Primary User:
 
-## Success metrics
+Ying (solo learner)
 
-- Expressions added per week
-- Review completion rate
-- Gap closure rate over 30 days
+Learning source:
+
+- YouTube Vlogs
+
+- Lifestyle videos
+
+- Daily English
+
+- Workplace English
+
+Current workflow:
+
+1. Watch YouTube
+
+2. Export transcript
+
+3. Take notes in Feishu
+
+4. Collect useful expressions
+
+5. Forget most of them later
+
+Echo solves step 5.
+
+---
+
+## Core Workflow
+
+Transcript
+
++
+
+Feishu Notes
+
+↓
+
+Expression Library
+
+↓
+
+Review Question Generator
+
+↓
+
+Active Recall
+
+↓
+
+Self Evaluation
+
+↓
+
+Spaced Repetition
+
+↓
+
+Long-term Memory
+
+---
+
+## Core Features
+
+### 1. Transcript Import
+
+Input:
+
+- txt
+
+- srt
+
+- transcript text
+
+Output:
+
+- cleaned transcript
+
+- transcript stored
+
+---
+
+### 2. Feishu Note Sync
+
+Sync:
+
+- useful expressions
+
+- vocabulary
+
+- notes
+
+Feishu remains source of truth.
+
+---
+
+### 3. Expression Extraction
+
+Extract:
+
+- phrases
+
+- collocations
+
+- sentence patterns
+
+Store:
+
+- source sentence
+
+- translation
+
+- topic
+
+- difficulty
+
+---
+
+### 4. Active Recall Review
+
+Review card example:
+
+Prompt:
+
+顺便说一句
+
+User thinks of answer.
+
+Then clicks:
+
+- Mastered
+
+- Review Again
+
+- Forgotten
+
+No speech recognition.
+
+No AI scoring.
+
+---
+
+### 5. Review Modes
+
+#### Video Review
+
+Review expressions from one video.
+
+Example:
+
+Sydney Serena
+
+→ What I Eat In A Day
+
+---
+
+#### Topic Review
+
+Review expressions from many videos.
+
+Example:
+
+- Food
+
+- Workout
+
+- Shopping
+
+- Travel
+
+- Productivity
+
+---
+
+### 6. Spaced Repetition
+
+Mastered
+
+→ review later
+
+Review Again
+
+→ review soon
+
+Forgotten
+
+→ review immediately
+
+---
+
+### 7. Gap Detection
+
+Compare:
+
+Transcript
+
+vs
+
+Feishu Notes
+
+Find:
+
+Useful expressions user missed.
+
+---
+
+## Not In Scope
+
+- AI pronunciation scoring
+
+- Speaking assessment
+
+- Grammar correction
+
+- Social features
+
+- Public sharing
+
+- Multi-user support

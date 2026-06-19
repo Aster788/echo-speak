@@ -1,4 +1,5 @@
 import { getOpenAIClient, loadPrompt } from "@/lib/openai";
+import { keepEnglishLinesOnly } from "@/lib/english-lines";
 
 export async function cleanTranscript(rawText: string): Promise<string> {
   const systemPrompt = await loadPrompt("transcript-cleaner");
@@ -11,14 +12,18 @@ export async function cleanTranscript(rawText: string): Promise<string> {
     ],
     temperature: 0.2,
   });
-  return response.choices[0]?.message?.content?.trim() ?? "";
+  return keepEnglishLinesOnly(
+    response.choices[0]?.message?.content?.trim() ?? ""
+  );
 }
 
 /** Local fallback for tests without API */
 export function cleanTranscriptSync(rawText: string): string {
-  return rawText
-    .replace(/\[\d{1,2}:\d{2}(:\d{2})?\]/g, "")
-    .replace(/^(Speaker \d+|Host):\s*/gim, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return keepEnglishLinesOnly(
+    rawText
+      .replace(/\[\d{1,2}:\d{2}(:\d{2})?\]/g, "")
+      .replace(/^(Speaker \d+|Host):\s*/gim, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+  );
 }

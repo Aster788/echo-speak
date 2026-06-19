@@ -2,34 +2,32 @@
 
 Objective:
 
-Build transcript import flow (Phase 2).
+Build expression extraction pipeline (Phase 3).
 
 Scope:
 
-- Transcript upload (txt / srt / paste)
-- Transcript cleaner integration
-- Save cleaned transcript to `transcripts` table
+- AI extraction from `transcripts.cleaned_text`
+- Topic classification
+- Store in `expressions` table (new migration)
 
 Definition of Done:
 
-- User can import a YouTube transcript file
-- Raw text stored in `transcripts.raw_text`
-- Cleaned text stored in `transcripts.cleaned_text`
+- Imported transcript yields extracted expressions in database
+- Each expression has phrase, meaning, example, topic
 
 Do Not Build Yet:
 
-- Expression extraction (Phase 3)
 - Review engine (Phase 4–5)
 - Feishu Sync (Phase 6)
 - Gap Detection (Phase 7)
 
 Files Expected:
 
-- `src/app/import/page.tsx`
-- `scripts/import-transcript.ts`
-- `src/services/transcript-cleaner.ts`
+- `supabase/migrations/*` (expressions table)
+- `src/services/expression-extractor.ts`
+- `prompts/extract-expressions.md`
 
 Reference:
 
-- Phase 1 migration: `supabase/migrations/20250619120000_phase1_videos_transcripts.sql`
+- Phase 2 import: `src/services/transcript-importer.ts`
 - `docs/database.md`

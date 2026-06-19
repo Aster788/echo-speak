@@ -11,4 +11,10 @@ describe("transcript-cleaner", () => {
     const raw = "Speaker 1: Hello there";
     expect(cleanTranscriptSync(raw)).toBe("Hello there");
   });
+
+  it("removes Chinese translation lines", () => {
+    const raw = `Hello world
+你好世界`;
+    expect(cleanTranscriptSync(raw)).toBe("Hello world");
+  });
 });

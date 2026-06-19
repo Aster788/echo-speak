@@ -1,32 +1,18 @@
 import { Navbar } from "@/components/Navbar";
+import { ImportForm } from "./ImportForm";
 
 export default function ImportPage() {
   return (
-    <div>
+    <div className="min-h-screen bg-[#FFFFFF]">
       <Navbar />
-      <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-xl font-bold">Import Transcript</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Paste a raw transcript to clean and extract expressions.
+      <main className="mx-auto w-full max-w-[430px] px-4 py-8">
+        <h1 className="text-xl font-light text-[#222222]">Import Transcript</h1>
+        <p className="mt-2 text-sm text-[#222222]">
+          Upload or paste a YouTube transcript to clean and save.
         </p>
-        <form className="mt-6 space-y-4">
-          <input
-            type="text"
-            placeholder="Video title"
-            className="w-full rounded border px-3 py-2"
-          />
-          <textarea
-            placeholder="Raw transcript..."
-            rows={12}
-            className="w-full rounded border px-3 py-2 font-mono text-sm"
-          />
-          <button
-            type="submit"
-            className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
-          >
-            Import
-          </button>
-        </form>
+        <div className="mt-6">
+          <ImportForm />
+        </div>
       </main>
     </div>
   );

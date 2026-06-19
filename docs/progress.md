@@ -8,15 +8,16 @@
 - Documentation
 - Phase 1 database schema (`videos`, `transcripts` migration)
 - Phase 1 local verification (`supabase db reset`, seed data confirmed)
+- Phase 2 transcript import flow (UI, CLI, cleaner, parser)
 
 ## In Progress
 
-- Phase 2: transcript import flow
+- Phase 3: expression extraction
 
 ## Current Focus
 
-Build transcript upload and storage pipeline.
+Extract expressions from cleaned transcripts into the library.
 
 ## Next Milestone
 
-User uploads transcript → transcript stored in Supabase.
+Expression database created from imported transcripts.

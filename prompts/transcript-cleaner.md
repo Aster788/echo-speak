@@ -18,3 +18,4 @@ Plain cleaned text only. No markdown, no commentary.
 - Preserve paragraph breaks between topic shifts
 - Do not summarize or translate
 - Keep original language (English)
+- Remove inline translation lines (e.g. Chinese subtitles paired with English)

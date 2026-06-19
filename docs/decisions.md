@@ -1,19 +1,53 @@
 # Architecture Decision Records
 
-## ADR-001: Next.js App Router
-
-**Context:** Need a React UI with API routes and SSR for Supabase.
-
-**Decision:** Use Next.js 15 App Router with client components only where needed.
-
-**Consequences:** Server components for data fetching; `src/app/` route structure.
+## # Decision Log
 
 ---
 
-## ADR-002: Service layer separation
+2026-06-19
 
-**Context:** LLM pipelines and DB access should be testable without UI.
+Decision:
 
-**Decision:** Business logic in `src/services/`; DB in `src/db/`; prompts in `prompts/`.
+No speech recognition.
 
-**Consequences:** Scripts and tests can import services directly.
+Reason:
+
+Speaking assessment is unnecessary.
+
+User can self-evaluate.
+
+---
+
+2026-06-19
+
+Decision:
+
+Active Recall is the core feature.
+
+Reason:
+
+The goal is speaking recall, not expression collection.
+
+---
+
+2026-06-19
+
+Decision:
+
+Feishu is source of truth.
+
+Reason:
+
+Notes are maintained there.
+
+---
+
+2026-06-19
+
+Decision:
+
+Transcript is imported once.
+
+Reason:
+
+Transcript rarely changes.

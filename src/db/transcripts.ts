@@ -2,7 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import type { Transcript } from "@/types/transcript";
 
 export async function createTranscript(
-  input: Pick<Transcript, "videoId" | "rawText" | "cleanedText">
+  input: Pick<Transcript, "video_id" | "raw_text" | "cleaned_text">
 ): Promise<Transcript> {
   const { data, error } = await getSupabase()
     .from("transcripts")

@@ -8,7 +8,7 @@ export async function listVideos(): Promise<Video[]> {
 }
 
 export async function createVideo(
-  input: Pick<Video, "title" | "sourceUrl">
+  input: Pick<Video, "title" | "youtube_url" | "source">
 ): Promise<Video> {
   const { data, error } = await getSupabase()
     .from("videos")

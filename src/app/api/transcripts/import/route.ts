@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { parseTranscriptFile } from "@/lib/transcript-parse";
+import { titleFromTranscriptFilename } from "@/lib/transcript-filename";
 import { importTranscript } from "@/services/transcript-importer";
+import { isDuplicateImportError } from "@/services/import-duplicate-error";
 
 export async function POST(request: Request) {
   try {
@@ -18,9 +20,7 @@ export async function POST(request: Request) {
       rawText = parseTranscriptFile(buffer, file.name);
 
       if (!title.trim()) {
-        title = file.name
-          .replace(/\.(txt|srt)$/i, "")
-          .replace(/[-_]/g, " ");
+        title = titleFromTranscriptFilename(file.name);
       }
     }
 
@@ -47,6 +47,21 @@ export async function POST(request: Request) {
       transcriptId: result.transcript.id,
     });
   } catch (error) {
+    if (isDuplicateImportError(error)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          duplicate: true,
+          reason: error.reason,
+          message: error.message,
+          videoId: error.videoId,
+          transcriptId: error.transcriptId ?? undefined,
+          videoTitle: error.videoTitle ?? undefined,
+        },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,

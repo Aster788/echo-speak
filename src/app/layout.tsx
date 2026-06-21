@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Echo Speak",
@@ -13,7 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white text-gray-900 antialiased">
+      <body
+        className={`${inter.className} min-h-screen bg-[#222222]/[0.04] text-[#222222] antialiased`}
+      >
         {children}
       </body>
     </html>

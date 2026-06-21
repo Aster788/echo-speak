@@ -1,11 +1,11 @@
-import { getOpenAIClient, loadPrompt } from "@/lib/openai";
+import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 import { keepEnglishLinesOnly } from "@/lib/english-lines";
 
 export async function cleanTranscript(rawText: string): Promise<string> {
   const systemPrompt = await loadPrompt("transcript-cleaner");
-  const openai = getOpenAIClient();
+  const openai = getLlmClient();
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getLlmModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: rawText },

@@ -1,16 +1,29 @@
 export interface Expression {
   id: string;
+  video_id: string;
   phrase: string;
-  definition: string;
+  meaning: string;
   example: string;
-  sourceTranscriptId: string | null;
-  score: number;
-  createdAt: string;
+  topic_id: string;
+  source_type: "transcript" | "feishu";
+  weight: number;
+  topic_locked: boolean;
+  created_at: string;
 }
 
 export interface ExtractedExpression {
   phrase: string;
   definition: string;
   example: string;
-  context?: string;
+  topic_slug: string;
 }
+
+export type CreateExpressionInput = {
+  video_id: string;
+  phrase: string;
+  meaning: string;
+  example: string;
+  topic_id: string;
+  source_type?: "transcript" | "feishu";
+  weight?: number;
+};

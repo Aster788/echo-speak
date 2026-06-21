@@ -10,18 +10,18 @@ Echo Speaker 是语言收藏工具。
 
 不是：
 
-* Duolingo
-* Quizlet
-* Anki
-* SaaS Dashboard
+- Duolingo
+- Quizlet
+- Anki
+- SaaS Dashboard
 
 风格关键词：
 
-* Quiet
-* Literary
-* Vintage
-* Paper
-* Human
+- Quiet
+- Literary
+- Vintage
+- Paper
+- Human
 
 用户感受：
 
@@ -33,20 +33,20 @@ Echo Speaker 是语言收藏工具。
 
 Primary:
 
-* iPhone 15 Plus
+- iPhone 15 Plus
 
 Design Width:
 
-* 390px–430px
+- 390px–430px
 
 原则：
 
-* Mobile First
+- Mobile First
 
 Desktop:
 
-* 使用居中移动端容器
-* max-width: 430px
+- 使用居中移动端容器
+- max-width: 430px
 
 不单独设计 Desktop Layout。
 
@@ -73,9 +73,9 @@ Antic Didone
 
 仅允许用于：
 
-* 视频标题
-* 主题标题
-* 分类标题
+- 视频标题
+- 主题标题
+- 分类标题
 
 ---
 
@@ -100,16 +100,16 @@ Source Han Sans CN Light
 
 Allowed:
 
-* 300
-* 400
-* 500
-* 600
+- 300
+- 400
+- 500
+- 600
 
 Forbidden:
 
-* 700+
-* Extra Bold
-* Black
+- 700+
+- Extra Bold
+- Black
 
 ---
 
@@ -126,8 +126,8 @@ Only:
 
 禁止：
 
-* 彩色文字
-* 灰色文字
+- 彩色文字
+- 灰色文字
 
 必须保证可读性。
 
@@ -167,9 +167,9 @@ Only:
 
 禁止：
 
-* 新增颜色
-* 品牌蓝
-* 高饱和颜色
+- 新增颜色
+- 品牌蓝
+- 高饱和颜色
 
 ---
 
@@ -177,19 +177,19 @@ Only:
 
 所有卡片：
 
-* Matte
-* Flat
-* Paper-like
+- Matte
+- Flat
+- Paper-like
 
 禁止：
 
-* Gradient
-* Glassmorphism
-* Neumorphism
-* Glow
-* Neon
-* Metallic
-* 3D
+- Gradient
+- Glassmorphism
+- Neumorphism
+- Glow
+- Neon
+- Metallic
+- 3D
 
 ---
 
@@ -201,16 +201,16 @@ Paper Texture
 
 效果：
 
-* 轻颗粒
-* 微噪点
-* 牛皮纸质感
-* 手工纸质感
+- 轻颗粒
+- 微噪点
+- 牛皮纸质感
+- 手工纸质感
 
 参考：
 
-* Recycled Paper
-* Kraft Paper
-* Art Paper
+- Recycled Paper
+- Kraft Paper
+- Art Paper
 
 透明度保持极低。
 
@@ -267,15 +267,15 @@ Source
 ```text
 熟练掌握
 需再复习
-没印象
+没印象了
 ```
 
 对应：
 
 ```text
-easy
+mastered
 again
-forgot
+unsure
 ```
 
 系统据此更新 SRS。
@@ -290,8 +290,8 @@ forgot
 
 Allowed:
 
-* Fade
-* Opacity Transition
+- Fade
+- Opacity Transition
 
 Duration:
 
@@ -301,10 +301,14 @@ Duration:
 
 Forbidden:
 
-* Bounce
-* Spin
-* Particle
-* Complex Animation
+- Bounce
+- Spin
+- Particle (except scoped easter egg below)
+- Complex Animation
+
+### Phase 3.5 exception: trash dismiss easter egg
+
+When user drag-drops an expression to the topic-dock trash, the system MAY play a **brief, optional** confetti or paper burst **once per session or sporadically** — not on every delete. Primary feedback remains 150–200ms opacity fade. Celebration must not block interaction or dominate the quiet aesthetic.
 
 ---
 

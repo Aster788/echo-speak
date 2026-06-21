@@ -1,21 +1,21 @@
-import { Navbar } from "@/components/Navbar";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
 
 export default function SettingsPage() {
   return (
-    <div>
-      <Navbar />
-      <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-xl font-bold">Settings</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          API keys are configured via environment variables.
-        </p>
-        <ul className="mt-6 list-inside list-disc text-sm text-gray-600">
-          <li>OPENAI_API_KEY</li>
-          <li>NEXT_PUBLIC_SUPABASE_URL</li>
-          <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
-          <li>SUPABASE_SERVICE_ROLE_KEY (scripts only)</li>
-        </ul>
-      </main>
-    </div>
+    <PageShell>
+      <PageHeader
+        title="Settings"
+        description="API keys are configured via environment variables."
+      />
+      <ul className="mt-6 space-y-2 text-[0.8125rem] font-normal text-[#222222]">
+        <li>LLM_API_KEY</li>
+        <li>LLM_BASE_URL (e.g. https://api.deepseek.com)</li>
+        <li>LLM_MODEL (e.g. deepseek-chat)</li>
+        <li>NEXT_PUBLIC_SUPABASE_URL</li>
+        <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+        <li>SUPABASE_SERVICE_ROLE_KEY (scripts only)</li>
+      </ul>
+    </PageShell>
   );
 }

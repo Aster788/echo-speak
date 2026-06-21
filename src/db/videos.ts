@@ -11,6 +11,20 @@ export async function listVideos(
   return (data ?? []) as Video[];
 }
 
+export async function getVideoByYoutubeUrl(
+  youtubeUrl: string,
+  client?: SupabaseClient
+): Promise<Video | null> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("videos")
+    .select("*")
+    .eq("youtube_url", youtubeUrl)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Video | null) ?? null;
+}
+
 export async function createVideo(
   input: Pick<Video, "title" | "youtube_url" | "source">,
   client?: SupabaseClient

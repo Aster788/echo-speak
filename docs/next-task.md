@@ -2,32 +2,28 @@
 
 Objective:
 
-Build expression extraction pipeline (Phase 3).
+Build topic-based review flow (Phase 4).
 
 Scope:
 
-- AI extraction from `transcripts.cleaned_text`
-- Topic classification
-- Store in `expressions` table (new migration)
+- Review expressions filtered by topic subtree
+- Review cards using existing design system
+- Persist review ratings for SRS prep (Phase 5)
 
 Definition of Done:
 
-- Imported transcript yields extracted expressions in database
-- Each expression has phrase, meaning, example, topic
+- User can start a review session scoped to a topic (e.g. all `food` descendants)
+- User can rate expressions (mastered / review_again / forgotten)
 
 Do Not Build Yet:
 
-- Review engine (Phase 4–5)
+- Full SRS scheduling engine (Phase 5)
 - Feishu Sync (Phase 6)
 - Gap Detection (Phase 7)
-
-Files Expected:
-
-- `supabase/migrations/*` (expressions table)
-- `src/services/expression-extractor.ts`
-- `prompts/extract-expressions.md`
+- Extraction depth modes (standard vs deep) — deferred; see `openspec/changes/phase-3-expression-extraction/design.md`
 
 Reference:
 
-- Phase 2 import: `src/services/transcript-importer.ts`
-- `docs/database.md`
+- Topic subtree queries: `src/db/topics.ts`
+- Expressions by topic: `src/db/expressions.ts`
+- `/topics` curation UI: `src/app/topics/`

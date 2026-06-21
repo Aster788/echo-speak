@@ -1,9 +1,19 @@
-import { createTranscript } from "@/db/transcripts";
-import { createVideo } from "@/db/videos";
-import { resolveImportTitle } from "@/lib/youtube-oembed";
+import {
+  createTranscript,
+  getLatestTranscriptForVideo,
+  getTranscriptByContentHash,
+} from "@/db/transcripts";
+import { createVideo, getVideoByYoutubeUrl } from "@/db/videos";
+import { hashTranscriptContent } from "@/lib/transcript-content-hash";
+import {
+  normalizeYoutubeWatchUrl,
+  resolveImportTitle,
+} from "@/lib/youtube-oembed";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Transcript, Video } from "@/types/transcript";
+import { DuplicateImportError } from "@/services/import-duplicate-error";
+import { hasLlmApiKey } from "@/lib/llm";
 import {
   cleanTranscript,
   cleanTranscriptSync,
@@ -43,7 +53,7 @@ export async function cleanTranscriptForImport(
 ): Promise<string> {
   if (
     process.env.IMPORT_USE_SYNC_CLEANER === "1" ||
-    !process.env.OPENAI_API_KEY
+    !hasLlmApiKey()
   ) {
     return cleanTranscriptSync(rawText);
   }
@@ -55,6 +65,47 @@ export async function cleanTranscriptForImport(
   }
 }
 
+async function assertNotDuplicateImport(
+  rawText: string,
+  youtube_url: string | null,
+  supabase: SupabaseClient
+): Promise<void> {
+  const contentHash = hashTranscriptContent(rawText);
+  const existingByHash = await getTranscriptByContentHash(contentHash, supabase);
+
+  if (existingByHash) {
+    throw new DuplicateImportError({
+      reason: "content_hash",
+      message:
+        "This transcript text was already imported. Open the existing video instead of importing again.",
+      videoId: existingByHash.video_id,
+      transcriptId: existingByHash.id,
+    });
+  }
+
+  if (!youtube_url) {
+    return;
+  }
+
+  const existingVideo = await getVideoByYoutubeUrl(youtube_url, supabase);
+  if (!existingVideo) {
+    return;
+  }
+
+  const latestTranscript = await getLatestTranscriptForVideo(
+    existingVideo.id,
+    supabase
+  );
+
+  throw new DuplicateImportError({
+    reason: "youtube_url",
+    message: `This YouTube video was already imported${existingVideo.title ? `: "${existingVideo.title}"` : ""}.`,
+    videoId: existingVideo.id,
+    transcriptId: latestTranscript?.id ?? null,
+    videoTitle: existingVideo.title,
+  });
+}
+
 export async function importTranscript(
   input: ImportTranscriptInput,
   options: ImportTranscriptOptions = {}
@@ -62,14 +113,19 @@ export async function importTranscript(
   const rawText = input.rawText.trim();
   validateTranscriptLength(rawText);
 
-  const youtube_url = input.youtube_url?.trim() || null;
-  const title = await resolveImportTitle(input.title, youtube_url);
-  const source = youtube_url ? "youtube" : "manual";
+  const normalizedYoutubeUrl =
+    normalizeYoutubeWatchUrl(input.youtube_url?.trim() ?? "") ?? null;
   const supabase = options.supabase ?? getSupabaseAdmin();
   const cleanFn = options.cleanFn ?? cleanTranscriptForImport;
 
+  await assertNotDuplicateImport(rawText, normalizedYoutubeUrl, supabase);
+
+  const title = await resolveImportTitle(input.title, normalizedYoutubeUrl);
+  const source = normalizedYoutubeUrl ? "youtube" : "manual";
+  const contentHash = hashTranscriptContent(rawText);
+
   const video = await createVideo(
-    { title, youtube_url, source },
+    { title, youtube_url: normalizedYoutubeUrl, source },
     supabase
   );
 
@@ -83,6 +139,7 @@ export async function importTranscript(
       video_id: video.id,
       raw_text: rawText,
       cleaned_text,
+      content_hash: contentHash,
     },
     supabase
   );

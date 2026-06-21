@@ -1,4 +1,4 @@
-import { getOpenAIClient, loadPrompt } from "@/lib/openai";
+import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 
 export interface Gap {
   phrase: string;
@@ -12,9 +12,9 @@ export async function detectGaps(
   newText: string
 ): Promise<Gap[]> {
   const systemPrompt = await loadPrompt("gap-detection");
-  const openai = getOpenAIClient();
+  const openai = getLlmClient();
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getLlmModel(),
     messages: [
       { role: "system", content: systemPrompt },
       {

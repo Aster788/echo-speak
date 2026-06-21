@@ -3,6 +3,7 @@ export interface Transcript {
   video_id: string;
   raw_text: string;
   cleaned_text: string | null;
+  content_hash: string | null;
   created_at: string;
 }
 

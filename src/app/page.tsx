@@ -1,30 +1,28 @@
 import Link from "next/link";
-import { Navbar } from "@/components/Navbar";
+import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/PageShell";
 
 export default function HomePage() {
   return (
-    <div>
-      <Navbar />
-      <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-2xl font-bold">Echo Speak</h1>
-        <p className="mt-2 text-gray-600">
-          Turn video transcripts into expressions you actually remember.
-        </p>
-        <div className="mt-6 flex gap-4">
-          <Link
-            href="/import"
-            className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
-          >
-            Import transcript
-          </Link>
-          <Link
-            href="/review"
-            className="rounded border px-4 py-2 hover:bg-gray-50"
-          >
-            Start review
-          </Link>
-        </div>
-      </main>
-    </div>
+    <PageShell>
+      <PageHeader
+        title="Echo Speak"
+        description="Turn video transcripts into expressions you actually remember."
+      />
+      <div className="mt-8 flex flex-col gap-3">
+        <Link
+          href="/import"
+          className="rounded-[1rem] border-[2.5px] border-[#000000] bg-[#000000] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#FFFFFF] transition-opacity duration-150 hover:opacity-90"
+        >
+          Import transcript
+        </Link>
+        <Link
+          href="/review"
+          className="rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#222222] transition-opacity duration-150 hover:opacity-80"
+        >
+          Start review
+        </Link>
+      </div>
+    </PageShell>
   );
 }

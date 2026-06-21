@@ -1,4 +1,4 @@
-import { getOpenAIClient, loadPrompt } from "@/lib/openai";
+import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 import type { ReviewCard } from "@/types/review";
 
 export async function generateReviewCard(expression: {
@@ -7,9 +7,9 @@ export async function generateReviewCard(expression: {
   example: string;
 }): Promise<ReviewCard> {
   const systemPrompt = await loadPrompt("review-generator");
-  const openai = getOpenAIClient();
+  const openai = getLlmClient();
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getLlmModel(),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: JSON.stringify(expression) },

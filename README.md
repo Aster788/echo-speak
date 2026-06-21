@@ -9,7 +9,15 @@ npm install
 cp .env.local.example .env.local  # or edit .env.local directly
 ```
 
-Fill in `OPENAI_API_KEY` and Supabase credentials.
+Fill in `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, and Supabase credentials.
+
+Example (DeepSeek):
+
+```bash
+LLM_API_KEY=your-deepseek-key
+LLM_BASE_URL=https://api.deepseek.com
+LLM_MODEL=deepseek-chat
+```
 
 ### Supabase
 

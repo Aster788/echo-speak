@@ -9,15 +9,17 @@
 - Phase 1 database schema (`videos`, `transcripts` migration)
 - Phase 1 local verification (`supabase db reset`, seed data confirmed)
 - Phase 2 transcript import flow (UI, CLI, cleaner, parser)
+- Phase 3 expression extraction (`topics`, `expressions`, pipeline, API, CLI)
+- Phase 3.5 topic curation UI (`/topics`, dismissals, topic dock, merge, `topic_locked`)
 
 ## In Progress
 
-- Phase 3: expression extraction
+- Phase 4: topic-based review
 
 ## Current Focus
 
-Extract expressions from cleaned transcripts into the library.
+Review expressions by topic subtree before SRS scheduling.
 
 ## Next Milestone
 
-Expression database created from imported transcripts.
+User can review expressions scoped to a topic in `/review`.

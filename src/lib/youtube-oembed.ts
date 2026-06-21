@@ -5,22 +5,38 @@ type OEmbedResponse = {
 };
 
 export function isYoutubeWatchUrl(url: string): boolean {
+  return extractYoutubeVideoId(url) !== null;
+}
+
+export function extractYoutubeVideoId(url: string): string | null {
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(url.trim());
     const host = parsed.hostname.replace(/^www\./, "");
 
     if (host === "youtu.be") {
-      return parsed.pathname.length > 1;
+      const id = parsed.pathname.replace(/^\//, "").split("/")[0];
+      return id || null;
     }
 
     if (host === "youtube.com" || host === "m.youtube.com") {
-      return parsed.pathname === "/watch" && parsed.searchParams.has("v");
+      if (parsed.pathname === "/watch") {
+        return parsed.searchParams.get("v");
+      }
     }
 
-    return false;
+    return null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function normalizeYoutubeWatchUrl(url: string): string | null {
+  const videoId = extractYoutubeVideoId(url);
+  if (!videoId) {
+    return null;
+  }
+
+  return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
 export async function fetchYoutubeTitle(url: string): Promise<string> {

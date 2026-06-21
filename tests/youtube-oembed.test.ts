@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  extractYoutubeVideoId,
   fetchYoutubeTitle,
   isYoutubeWatchUrl,
+  normalizeYoutubeWatchUrl,
   resolveImportTitle,
 } from "@/lib/youtube-oembed";
 
@@ -18,6 +20,18 @@ describe("youtube-oembed", () => {
 
   it("rejects non-YouTube URLs", () => {
     expect(isYoutubeWatchUrl("https://example.com/watch?v=1")).toBe(false);
+  });
+
+  it("normalizes watch and youtu.be URLs to the same canonical URL", () => {
+    expect(
+      normalizeYoutubeWatchUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    ).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(normalizeYoutubeWatchUrl("https://youtu.be/dQw4w9WgXcQ")).toBe(
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    );
+    expect(extractYoutubeVideoId("https://youtu.be/dQw4w9WgXcQ")).toBe(
+      "dQw4w9WgXcQ"
+    );
   });
 
   it("fetchYoutubeTitle returns title from oEmbed response", async () => {

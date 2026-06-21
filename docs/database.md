@@ -12,7 +12,9 @@ supabase/migrations/
 |-------|--------|-----------|
 | videos | **implemented** (Phase 1) | `20250619120000_phase1_videos_transcripts.sql` |
 | transcripts | **implemented** (Phase 1) | `20250619120000_phase1_videos_transcripts.sql` |
-| expressions | planned (Phase 3) | — |
+| topics | **implemented** (Phase 3) | `20250620120000_phase3_topics_expressions.sql` |
+| expressions | **implemented** (Phase 3) | `20250620120000_phase3_topics_expressions.sql` |
+| expression_dismissals | **implemented** (Phase 3.5) | `20250620180000_phase35_topic_curation.sql` |
 | review_queue | planned (Phase 5) | — |
 | review_history | planned (Phase 4–5) | — |
 | gaps | planned (Phase 7) | — |
@@ -34,7 +36,7 @@ Stores imported videos.
 
 | title | text | |
 
-| youtube_url | text | optional |
+| youtube_url | text | optional; unique when set (import dedup) |
 
 | source | text | youtube / manual |
 
@@ -60,13 +62,43 @@ Stores transcript content.
 
 | cleaned_text | text | cleaned transcript |
 
+| content_hash | text | SHA-256 of normalized raw text; unique when set (import dedup) |
+
 | created_at | timestamptz | |
+
+---
+
+# topics
+
+**Status: implemented (Phase 3)**
+
+Hierarchical topic taxonomy for multi-dimensional review.
+
+| Column | Type | Notes |
+
+|----------|----------|----------|
+
+| id | uuid | PK |
+
+| name | text | display name |
+
+| slug | text | unique, URL-safe key |
+
+| parent_id | uuid | FK → topics, null for roots |
+
+| is_system | boolean | true for seed topics |
+
+| merged_into_id | uuid | FK → topics, audit trail after merge (Phase 3.5) |
+
+| created_at | timestamptz | |
+
+Seed tree defined in `src/lib/topic-seeds.ts`.
 
 ---
 
 # expressions
 
-**Status: planned (Phase 3)**
+**Status: implemented (Phase 3)**
 
 Core learning unit.
 
@@ -84,13 +116,37 @@ Core learning unit.
 
 | example | text | Source sentence |
 
-| topic | text | food / shopping / workout |
+| topic_id | uuid | FK → topics (leaf or leaf-root) |
+
+| topic_locked | boolean | true when user manually moved topic (Phase 3.5) |
 
 | source_type | text | transcript / feishu |
 
 | weight | numeric | importance score |
 
 | created_at | timestamptz | |
+
+---
+
+# expression_dismissals
+
+**Status: implemented (Phase 3.5)**
+
+Records phrases the user permanently removed so re-extraction does not re-insert them.
+
+| Column | Type | Notes |
+
+|----------|----------|----------|
+
+| id | uuid | PK |
+
+| video_id | uuid | FK → videos |
+
+| phrase_key | text | normalized phrase (lowercase, collapsed whitespace) |
+
+| dismissed_at | timestamptz | |
+
+Unique on `(video_id, phrase_key)`.
 
 ---
 
@@ -192,7 +248,7 @@ transcripts
 
 ↓
 
-expressions
+expressions ──→ topics (hierarchical)
 
 ↓
 

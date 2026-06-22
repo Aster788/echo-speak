@@ -136,25 +136,25 @@ Store:
 
 ### 4. Active Recall Review
 
-Review card example:
+双面纸质收藏卡（见 `docs/design-system.md`）。
 
-Prompt:
+**Front（中文 → 回忆英文）：**
 
-顺便说一句
+- `meaning`（中文含义）
+- `example_zh`（例句中文）
 
-User thinks of answer.
+**Back（核对）：**
 
-Then clicks:
+- `phrase`（Expression）
+- `example_en`（完整英文句）
 
-- Mastered
+用户翻转卡片后点击评分（纯英文 UI）：
 
-- Review Again
+- mastered
+- again
+- unsure
 
-- Forgotten
-
-No speech recognition.
-
-No AI scoring.
+No speech recognition. No AI scoring.
 
 ---
 
@@ -192,15 +192,15 @@ Example:
 
 ### 6. Spaced Repetition
 
-Mastered
+mastered
 
 → review later
 
-Review Again
+again
 
 → review soon
 
-Forgotten
+unsure
 
 → review immediately
 

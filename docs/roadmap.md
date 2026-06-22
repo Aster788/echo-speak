@@ -32,11 +32,12 @@
 
 ## Phase 4 — Active Recall
 
-- Review page
-- Review cards
-- Self evaluation
+- Review page (Video + Topic mode selector)
+- Tarot-style flip review cards
+- Self evaluation (`mastered` / `again` / `unsure`)
+- `example_en` + `example_zh` for bilingual recall
 
-**Success:** User can review expressions.
+**Success:** User can review expressions by video or topic with physical-card UX.
 
 ---
 

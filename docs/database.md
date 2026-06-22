@@ -13,10 +13,10 @@ supabase/migrations/
 | videos | **implemented** (Phase 1) | `20250619120000_phase1_videos_transcripts.sql` |
 | transcripts | **implemented** (Phase 1) | `20250619120000_phase1_videos_transcripts.sql` |
 | topics | **implemented** (Phase 3) | `20250620120000_phase3_topics_expressions.sql` |
-| expressions | **implemented** (Phase 3) | `20250620120000_phase3_topics_expressions.sql` |
+| expressions | **implemented** (Phase 3–4) | `20250620120000_phase3_topics_expressions.sql`, `20250621160000_phase4_active_recall.sql` |
 | expression_dismissals | **implemented** (Phase 3.5) | `20250620180000_phase35_topic_curation.sql` |
 | review_queue | planned (Phase 5) | — |
-| review_history | planned (Phase 4–5) | — |
+| review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
 | gaps | planned (Phase 7) | — |
 | sync_logs | planned (Phase 6) | — |
 
@@ -58,9 +58,9 @@ Stores transcript content.
 
 | video_id | uuid | FK → videos |
 
-| raw_text | text | original transcript |
+| raw_text | text | 用户粘贴的**双语**原文（英+中）；import 时完整保留，供 `example_zh` 对齐 |
 
-| cleaned_text | text | cleaned transcript |
+| cleaned_text | text | 英文-only（cleaner 去掉中文行）；expression 提取用 |
 
 | content_hash | text | SHA-256 of normalized raw text; unique when set (import dedup) |
 
@@ -98,7 +98,7 @@ Seed tree defined in `src/lib/topic-seeds.ts`.
 
 # expressions
 
-**Status: implemented (Phase 3)**
+**Status: implemented (Phase 3–4)**
 
 Core learning unit.
 
@@ -112,9 +112,11 @@ Core learning unit.
 
 | phrase | text | English expression |
 
-| meaning | text | Chinese explanation |
+| meaning | text | Chinese explanation（Review 正面第一行） |
 
-| example | text | Source sentence |
+| example_en | text | Source sentence in English（Review 背面第二行；原 `example` 列重命名） |
+
+| example_zh | text | nullable; Chinese sentence for review front |
 
 | topic_id | uuid | FK → topics (leaf or leaf-root) |
 
@@ -125,6 +127,13 @@ Core learning unit.
 | weight | numeric | importance score |
 
 | created_at | timestamptz | |
+
+**`example_zh` 填充策略（按优先级）：**
+
+1. 从 `transcripts.raw_text` 解析英/中块（交替块），按 `example_en` 子串对齐，取对应中文块
+2. 对齐失败 → DeepSeek 单句翻译（见 `docs/decisions.md`）
+
+提取 pipeline 写入时尽量同时填充；`scripts/backfill-example-zh.ts` 可补全历史行。
 
 ---
 
@@ -174,9 +183,9 @@ Expressions waiting for review.
 
 # review_history
 
-**Status: planned (Phase 4–5)**
+**Status: implemented (Phase 4)**
 
-Review records.
+Active Recall self-ratings; SRS scheduling deferred to Phase 5.
 
 | Column | Type | Notes |
 
@@ -186,11 +195,13 @@ Review records.
 
 | expression_id | uuid | FK → expressions |
 
-| rating | text | mastered / review_again / forgotten |
+| rating | text | `mastered` / `again` / `unsure` |
 
 | reviewed_at | timestamptz | |
 
-| next_review_at | timestamptz | |
+| mode | text | `video` / `topic` |
+
+| scope_id | uuid | video_id or topic_id for the session |
 
 ---
 

@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "audit:filenames": "tsx scripts/audit-filenames.ts",
+    "process-nav-assets": "tsx scripts/process-nav-assets.ts",
+    "process-import-assets": "tsx scripts/process-import-assets.ts",
+    "process-review-assets": "tsx scripts/process-review-assets.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
@@ -23,6 +27,7 @@
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
+    "sharp": "^0.35.2",
     "tailwindcss": "^3.4.16",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

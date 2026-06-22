@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
+import { ReviewResetProvider } from "@/components/review/ReviewResetContext";
 
 type PageShellProps = {
   children: ReactNode;
@@ -12,7 +13,7 @@ const phoneFrameClassName = [
   "mx-auto flex w-full max-w-[430px] flex-col overflow-hidden bg-[#FFFFFF]",
   "rounded-[36px] border-[2.5px] border-[#D4D4D4] md:rounded-[40px]",
   "shadow-[0_10px_28px_rgba(34,34,34,0.08),0_2px_6px_rgba(34,34,34,0.05),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_0_0_1px_rgba(34,34,34,0.04)]",
-  "min-h-[calc(100vh-1.5rem)] md:min-h-[min(844px,calc(100vh-3rem))]",
+  "min-h-[calc(100vh-1.5rem)] md:min-h-[min(932px,calc(100vh-3rem))]",
 ].join(" ");
 
 export function PageShell({ children, mainClassName = "" }: PageShellProps) {
@@ -25,8 +26,10 @@ export function PageShell({ children, mainClassName = "" }: PageShellProps) {
         >
           <div className="mx-auto h-1 w-16 rounded-full bg-[#222222]/15" />
         </div>
-        <Navbar />
-        <main className={`flex-1 px-4 py-8 ${mainClassName}`}>{children}</main>
+        <ReviewResetProvider>
+          <Navbar />
+          <main className={`flex-1 px-4 pt-4 pb-8 ${mainClassName}`}>{children}</main>
+        </ReviewResetProvider>
       </div>
     </div>
   );

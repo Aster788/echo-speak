@@ -22,10 +22,7 @@ export default async function TopicsPage() {
 
   return (
     <PageShell mainClassName="pb-32">
-      <PageHeader
-        title="Topics"
-        description="Curate your topic tree, move expressions, or drag to the trash."
-      />
+      <PageHeader description="Curate your topic tree, move expressions, or drag to the trash." />
       <div className="mt-6">
         <TopicsManager
           initialTree={tree}

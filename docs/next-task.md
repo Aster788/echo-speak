@@ -2,28 +2,26 @@
 
 Objective:
 
-Build topic-based review flow (Phase 4).
+Build spaced repetition scheduling (Phase 5) on top of Active Recall ratings.
 
 Scope:
 
-- Review expressions filtered by topic subtree
-- Review cards using existing design system
-- Persist review ratings for SRS prep (Phase 5)
+- `review_queue` table and due-date computation from `review_history` ratings
+- Surface due cards on `/review` (or dedicated queue entry)
+- Scheduling rules using existing `src/lib/srs.ts` (adapt to `mastered` / `again` / `unsure`)
 
 Definition of Done:
 
-- User can start a review session scoped to a topic (e.g. all `food` descendants)
-- User can rate expressions (mastered / review_again / forgotten)
+- After rating in Phase 4 flow, expressions get a next review date
+- User sees expressions when due, not the full deck every time
 
 Do Not Build Yet:
 
-- Full SRS scheduling engine (Phase 5)
 - Feishu Sync (Phase 6)
 - Gap Detection (Phase 7)
-- Extraction depth modes (standard vs deep) — deferred; see `openspec/changes/phase-3-expression-extraction/design.md`
 
 Reference:
 
-- Topic subtree queries: `src/db/topics.ts`
-- Expressions by topic: `src/db/expressions.ts`
-- `/topics` curation UI: `src/app/topics/`
+- Ratings: `review_history` (`src/db/review-history.ts`)
+- SRS helper: `src/lib/srs.ts`
+- Phase 4 review UI: `src/app/review/`, `src/components/review/`

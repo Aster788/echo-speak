@@ -51,3 +51,55 @@ Transcript is imported once.
 Reason:
 
 Transcript rarely changes.
+
+---
+
+2026-06-21
+
+Decision:
+
+Phase 4 review ratings use `mastered` | `again` | `unsure` (design-system is source of truth).
+
+Reason:
+
+Consistent API, UI, and SRS prep; replaces informal `review_again` / `forgotten` naming.
+
+---
+
+2026-06-21
+
+Decision:
+
+Rename `expressions.example` → `example_en`; add `example_zh` for review card front.
+
+Reason:
+
+Imports use bilingual transcripts; front card needs Chinese sentence aligned to English example.
+
+**Fill order:** align `example_zh` from `transcripts.raw_text` first; DeepSeek single-sentence translation on alignment failure (approved fallback).
+
+---
+
+2026-06-21
+
+Decision:
+
+Import `raw_text` is always bilingual paste (English + Chinese blocks); `cleaned_text` remains English-only for extraction.
+
+Reason:
+
+User workflow always pastes paired EN/ZH subtitles. Chinese is stripped only in `cleaned_text`, not in `raw_text`, so `example_zh` can be aligned without re-importing.
+
+**Alignment model:** split `raw_text` into alternating EN/ZH blocks (multi-line blocks OK); map `example_en` to the paired ZH block. Messy ASR lines (`>>`, `[music]`) may fail → DeepSeek fallback.
+
+---
+
+2026-06-21
+
+Decision:
+
+Use DeepSeek API for `example_zh` when transcript alignment fails.
+
+Reason:
+
+Per-sentence cost is negligible at personal scale (~$0.0001 per expression). Cheaper than blocking review UX. Prefer alignment from `raw_text` to avoid unnecessary API calls.

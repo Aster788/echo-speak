@@ -1,0 +1,31 @@
+---
+description: Default Cursor browser preview to iPhone 15 Plus (430×932)
+alwaysApply: true
+---
+
+# Browser preview — iPhone 15 Plus
+
+Echo Speak is designed for **iPhone 15 Plus**: **430 × 932** CSS px (`docs/design-system.md`).
+
+## When opening or using @browser
+
+1. **Before** navigating, taking screenshots, or checking layout, set the preview viewport to **430 × 932**.
+2. Prefer device emulation when available (preset **iPhone 15 Plus** or custom **430×932**).
+3. If only resize is available, resize the browser pane to **430×932**.
+4. If CDP is available (`browser_cdp`), use `Emulation.setDeviceMetricsOverride` with `width: 430`, `height: 932`, `deviceScaleFactor: 3`, `mobile: true`.
+5. Do not judge Import/Review layout at desktop widths; always verify at 430×932.
+
+## Dev server
+
+- Use a single `next dev` instance; stop all servers before `rm -rf .next`.
+- Default local URL: `http://localhost:3001` when port 3000 is taken.
+
+## Project MCP (echo-speak only)
+
+This repo defines **chrome-devtools** in `.cursor/mcp.json` with `--viewport 430x932`. Use it for mobile-accurate preview in external Chrome started by MCP (not global `~/.cursor/mcp.json`).
+
+After editing MCP config: **Cmd+Shift+P → Reload Window**, then check **Cursor Settings → MCP** for a green connection.
+
+## Limitation
+
+Cursor Glass browser has no persisted default viewport in `settings.json`. For manual Glass opens, use the toolbar device preset or a ~430px-wide pane. Agent + MCP paths above are scoped to this project only.

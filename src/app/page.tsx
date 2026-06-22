@@ -5,10 +5,7 @@ import { PageShell } from "@/components/PageShell";
 export default function HomePage() {
   return (
     <PageShell>
-      <PageHeader
-        title="Echo Speak"
-        description="Turn video transcripts into expressions you actually remember."
-      />
+      <PageHeader description="Turn video transcripts into expressions you actually remember." />
       <div className="mt-8 flex flex-col gap-3">
         <Link
           href="/import"

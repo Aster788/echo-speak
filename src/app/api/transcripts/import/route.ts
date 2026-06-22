@@ -28,7 +28,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
-          message: "Provide transcript text or upload a .txt / .srt file.",
+          message:
+            "Please Provide transcript text or upload a .txt / .srt file.",
         },
         { status: 400 }
       );

@@ -173,7 +173,8 @@ export async function createExpressions(
     video_id: input.video_id,
     phrase: input.phrase,
     meaning: input.meaning,
-    example: input.example,
+    example_en: input.example_en,
+    example_zh: input.example_zh ?? null,
     topic_id: input.topic_id,
     source_type: input.source_type ?? "transcript",
     weight: input.weight ?? 1.0,
@@ -185,6 +186,46 @@ export async function createExpressions(
     .select();
   if (error) throw error;
   return (data ?? []) as Expression[];
+}
+
+export async function updateExpressionExampleZh(
+  expressionId: string,
+  exampleZh: string,
+  client?: SupabaseClient
+): Promise<void> {
+  const supabase = client ?? getSupabase();
+  const { error } = await supabase
+    .from("expressions")
+    .update({ example_zh: exampleZh })
+    .eq("id", expressionId);
+  if (error) throw error;
+}
+
+export async function listExpressionsMissingExampleZh(
+  client?: SupabaseClient
+): Promise<Expression[]> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("expressions")
+    .select("*")
+    .is("example_zh", null);
+  if (error) throw error;
+  return (data ?? []) as Expression[];
+}
+
+export async function listVideoExpressionCounts(
+  client?: SupabaseClient
+): Promise<Map<string, number>> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase.from("expressions").select("video_id");
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    const videoId = row.video_id as string;
+    counts.set(videoId, (counts.get(videoId) ?? 0) + 1);
+  }
+  return counts;
 }
 
 /** @deprecated Use createExpressions */

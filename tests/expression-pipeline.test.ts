@@ -143,6 +143,7 @@ describe("expression-pipeline", () => {
     const result = await extractExpressionsForTranscript("transcript-1", {
       supabase,
       extractFn,
+      resolveExampleZhFn: async () => "示例中文",
     });
 
     expect(extractFn).toHaveBeenCalled();
@@ -172,6 +173,7 @@ describe("expression-pipeline", () => {
     const result = await extractExpressionsForTranscript("transcript-1", {
       supabase,
       extractFn,
+      resolveExampleZhFn: async () => "示例中文",
     });
 
     expect(result.expressionCount).toBe(1);

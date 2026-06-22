@@ -11,15 +11,17 @@
 - Phase 2 transcript import flow (UI, CLI, cleaner, parser)
 - Phase 3 expression extraction (`topics`, `expressions`, pipeline, API, CLI)
 - Phase 3.5 topic curation UI (`/topics`, dismissals, topic dock, merge, `topic_locked`)
+- Phase 4 design spec (`docs/design-system.md` Review Page / Review Card)
+- Phase 4 Active Recall (`/review`, flip cards, Video/Topic modes, `review_history`, bilingual examples)
 
 ## In Progress
 
-- Phase 4: topic-based review
+- Phase 5: Spaced Repetition (review queue, scheduling, due reviews)
 
 ## Current Focus
 
-Review expressions by topic subtree before SRS scheduling.
+SRS scheduling on top of Phase 4 ratings (`mastered` / `again` / `unsure`).
 
 ## Next Milestone
 
-User can review expressions scoped to a topic in `/review`.
+Expressions reappear automatically based on spaced repetition.

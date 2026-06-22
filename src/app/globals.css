@@ -1,3 +1,122 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes review-float-plus {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--plus-x)), 8px) scale(0.85);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--plus-x)), -26px) scale(1.08);
+  }
+}
+
+@keyframes review-spark-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.45);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(-50% + var(--spark-x)),
+        calc(-50% + var(--spark-y))
+      )
+      scale(0.9);
+  }
+}
+
+@keyframes review-broken-heart-shake {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.78);
+  }
+  12% {
+    opacity: 1;
+    transform: rotate(-12deg) scale(1);
+  }
+  28% {
+    transform: rotate(10deg) scale(1.04);
+  }
+  44% {
+    transform: rotate(-9deg) scale(1.02);
+  }
+  60% {
+    transform: rotate(7deg) scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: rotate(-4deg) scale(0.98);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.86);
+  }
+}
+
+@keyframes review-report-success-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes review-report-firework-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(-50% + var(--firework-x)),
+        calc(-50% + var(--firework-y))
+      )
+      scale(1.15);
+  }
+}
+
+.review-float-plus {
+  animation: review-float-plus 0.95s ease-out forwards;
+}
+
+.review-spark-dot {
+  animation: review-spark-pop 0.9s ease-out forwards;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.review-broken-heart {
+  animation: review-broken-heart-shake 1.05s ease-in-out forwards;
+}
+
+.review-report-success {
+  animation: review-report-success-pop 1.1s ease-out forwards;
+}
+
+.review-report-firework {
+  animation: review-report-firework-burst 0.8s ease-out forwards;
+}

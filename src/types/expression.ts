@@ -3,7 +3,8 @@ export interface Expression {
   video_id: string;
   phrase: string;
   meaning: string;
-  example: string;
+  example_en: string;
+  example_zh: string | null;
   topic_id: string;
   source_type: "transcript" | "feishu";
   weight: number;
@@ -22,7 +23,8 @@ export type CreateExpressionInput = {
   video_id: string;
   phrase: string;
   meaning: string;
-  example: string;
+  example_en: string;
+  example_zh?: string | null;
   topic_id: string;
   source_type?: "transcript" | "feishu";
   weight?: number;

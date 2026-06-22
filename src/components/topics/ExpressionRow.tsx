@@ -94,9 +94,9 @@ export function ExpressionRow({
           <div className="min-w-0 flex-1">
             <h3 className="font-medium text-[#222222]">{expression.phrase}</h3>
             <p className="mt-1 text-sm text-[#222222]">{expression.meaning}</p>
-            {expression.example && (
+            {expression.example_en && (
               <p className="mt-2 text-sm italic text-[#222222] opacity-80">
-                &ldquo;{expression.example}&rdquo;
+                &ldquo;{expression.example_en}&rdquo;
               </p>
             )}
             {expression.topic_locked && (

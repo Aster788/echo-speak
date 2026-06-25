@@ -51,6 +51,15 @@ export function ReviewSession({
     setError(null);
   }, []);
 
+  const backToScopePicker = useCallback(() => {
+    setPhase("pick-scope");
+    setScopeId(null);
+    setScopeLabel("");
+    setDeck([]);
+    setIndex(0);
+    setError(null);
+  }, []);
+
   useEffect(() => {
     if (!reviewReset) return;
     return reviewReset.registerReset(resetSession);
@@ -103,14 +112,25 @@ export function ReviewSession({
 
   const scopeOptions = mode === "video" ? videoScopes : topicScopes;
   const fillDecorationArea = phase === "select-mode";
+  const fillCompleteArea = phase === "complete";
 
   return (
     <div
       className={`flex min-w-0 flex-col ${
-        fillDecorationArea ? "min-h-0 flex-1 justify-center gap-6" : "gap-4"
+        fillDecorationArea
+          ? "min-h-0 flex-1 justify-center gap-6"
+          : fillCompleteArea
+            ? "min-h-0 flex-1"
+            : "gap-4"
       }`}
     >
-      <div className="relative z-10 shrink-0 space-y-6">
+      <div
+        className={`relative z-10 ${
+          fillCompleteArea
+            ? "flex min-h-0 flex-1 flex-col"
+            : "shrink-0 space-y-6"
+        }`}
+      >
         {(phase === "select-mode" ||
           phase === "reviewing" ||
           phase === "complete") && (
@@ -120,7 +140,7 @@ export function ReviewSession({
             }
             mode={mode}
             onSelectMode={handleSelectMode}
-            onBack={resetSession}
+            onBack={backToScopePicker}
           />
         )}
 
@@ -143,20 +163,27 @@ export function ReviewSession({
         )}
 
         {phase === "complete" && (
-          <div className="text-center">
-            <p className="text-[0.875rem] text-[#222222]">
-              {deck.length === 0
-                ? "No cards in this scope yet."
-                : "You have finished this deck."}
-            </p>
-            <button
-              type="button"
-              onClick={resetSession}
-              className="mt-4 text-sm text-[#222222] underline opacity-80"
-            >
-              Choose another mode
-            </button>
-          </div>
+          <>
+            <div className="mt-8 shrink-0 text-center">
+              <p className="text-[0.875rem] text-[#222222]">You have completed.</p>
+              <button
+                type="button"
+                onClick={resetSession}
+                className="mt-3 text-sm text-[#222222] underline opacity-80"
+              >
+                choose another mode
+              </button>
+            </div>
+            <div className="flex min-h-0 flex-1 items-center justify-center py-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/review/congrats.png"
+                alt=""
+                className="w-full max-w-[400px] object-contain"
+                aria-hidden="true"
+              />
+            </div>
+          </>
         )}
 
         {isPending && (

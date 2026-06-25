@@ -6,6 +6,8 @@ import {
   listReviewVideoScopes,
 } from "@/app/review/actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReviewPage() {
   const [videoScopes, topicScopes] = await Promise.all([
     listReviewVideoScopes(),

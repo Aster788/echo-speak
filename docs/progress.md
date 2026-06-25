@@ -15,26 +15,29 @@
 - Phase 4 Active Recall (`/review`, flip cards, Video/Topic modes, `review_history`, bilingual examples)
 - Phase 4 release (`phase-4` tag on `main`)
 - Pre-Phase 5 planning (`openspec/changes/pre-phase-5-hardening`: proposal, design, specs, tasks)
+- Pre-Phase 5 Review UI polish (finish page, Back stack, card/report fixes) — PR #5 on `main`
+- Supabase cloud schema (all migrations on `ejgybfiywdbnfzckjqao`); Vercel project `echo-speak` linked
+- Supabase cloud + Vercel deploy (`docs/deployment.md`, production https://echo-speak-gray.vercel.app) — PR merged
 
 ## In Progress
 
-- **Pre-Phase 5 Hardening** — planning complete; implementation not started on `main`
+- **Pre-Phase 5 Hardening** — next: `example_zh` quality, then extraction, Collections
 
 Workstreams (see `openspec/changes/pre-phase-5-hardening/tasks.md`):
 
 | Priority | Workstream | Status |
 |----------|------------|--------|
-| P0 | Review UI polish (finish page, Back stack, small fixes) | pending |
-| P0 | Supabase cloud + deploy (Mac + phone shared DB) | pending |
-| P0 | `example_zh` quality (alignment + backfill) | pending |
+| P0 | Review UI polish | **done** |
+| P0 | Supabase cloud + deploy | **done** |
+| P0 | `example_zh` quality | **next** |
 | P1 | Extraction depth tuning | pending |
-| P1 | Collections page (Topic / Video / All; replaces Library + Topics) | pending |
+| P1 | Collections page | pending |
 | P2 | Home page redesign | pending |
-| P2 | Settings + Auth (`user_settings`) | pending |
+| P2 | Settings + Auth | pending |
 
 ## Current Focus
 
-Ship Pre-Phase 5 workstreams before starting Phase 5 SRS. First implementation PR: **Review UI polish** or **Supabase cloud** (see `docs/next-task.md`).
+**example_zh quality** (`feat/example-zh-quality`). See `docs/next-task.md`.
 
 ## Next Milestone
 

@@ -2,28 +2,26 @@
 
 Objective:
 
-Start **Pre-Phase 5 Hardening** implementation — first PR: **Review UI polish** (`feat/review-ui-polish`).
+Start **example_zh quality** (`feat/example-zh-quality`) — Pre-Phase 5 P0.
 
 Scope (this PR):
 
-- Review finish page: `You have completed.`, congrats illustration, `choose another mode` link
-- Hierarchical Back: reviewing → scope picker; complete → scope picker; scope picker → mode selector
-- Lighter scope sticky notes; darker card footer divider; Again `+1` uses card text color
-- Report dialog: 标点有误 replaces 其他; darker success toast
-- Updated `broken-heart.png` asset
+- SQL stats: null % by video
+- User sample audit table (6 videos × 3–5 cards)
+- Improve `alignExampleZhFromRawText`
+- Backfill null rows; document before/after in `docs/decisions.md`
+- Tests + spot-check 5 Review cards
 
 Definition of Done:
 
-- Manual test on `/review` at 430×932: Back paths and finish page match `openspec/changes/pre-phase-5-hardening/specs/review-ui-polish/spec.md`
-- `npm run build` passes
+- Measurable drop in `example_zh` null rate; sample audit documented
+- `npm run build` and relevant tests pass
 
 Then (Pre-Phase 5 queue):
 
-1. `chore/supabase-cloud` — cloud project, migrations, Vercel deploy, phone + Mac smoke test
-2. `feat/example-zh-quality` — stats, user sample audit, parser/backfill
-3. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
-4. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
-5. `feat/home-page-redesign` + `feat/settings-auth`
+1. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
+2. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
+3. `feat/home-page-redesign` + `feat/settings-auth`
 
 Do Not Build Yet:
 
@@ -33,6 +31,5 @@ Do Not Build Yet:
 
 Reference:
 
-- OpenSpec: `openspec/changes/pre-phase-5-hardening/` (proposal, design, specs, tasks)
-- Review ratings (Phase 4): `src/db/review-history.ts`
-- SRS helper (Phase 5): `src/lib/srs.ts`
+- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §3
+- Cloud deploy: `docs/deployment.md` (production https://echo-speak-gray.vercel.app)

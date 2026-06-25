@@ -2,28 +2,24 @@
 
 Objective:
 
-Start **Pre-Phase 5 Hardening** implementation — first PR: **Review UI polish** (`feat/review-ui-polish`).
+Finish **Supabase cloud deploy** on `chore/supabase-cloud`, then start **example_zh quality** (`feat/example-zh-quality`).
 
-Scope (this PR):
+Scope (finish cloud PR):
 
-- Review finish page: `You have completed.`, congrats illustration, `choose another mode` link
-- Hierarchical Back: reviewing → scope picker; complete → scope picker; scope picker → mode selector
-- Lighter scope sticky notes; darker card footer divider; Again `+1` uses card text color
-- Report dialog: 标点有误 replaces 其他; darker success toast
-- Updated `broken-heart.png` asset
+- [ ] Set Vercel env: `SUPABASE_SERVICE_ROLE_KEY` (cloud) + run `./scripts/sync-vercel-env.sh`
+- [ ] `npx vercel --prod` — smoke test `/import` + `/review` on Mac and phone
+- [ ] Optional: copy local data → cloud (`docs/cloud-data.md`)
 
 Definition of Done:
 
-- Manual test on `/review` at 430×932: Back paths and finish page match `openspec/changes/pre-phase-5-hardening/specs/review-ui-polish/spec.md`
-- `npm run build` passes
+- Production URL reads/writes cloud DB; ADR + `docs/deployment.md` on `main`
 
 Then (Pre-Phase 5 queue):
 
-1. `chore/supabase-cloud` — cloud project, migrations, Vercel deploy, phone + Mac smoke test
-2. `feat/example-zh-quality` — stats, user sample audit, parser/backfill
-3. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
-4. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
-5. `feat/home-page-redesign` + `feat/settings-auth`
+1. `feat/example-zh-quality` — stats, user sample audit, parser/backfill
+2. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
+3. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
+4. `feat/home-page-redesign` + `feat/settings-auth`
 
 Do Not Build Yet:
 
@@ -33,6 +29,6 @@ Do Not Build Yet:
 
 Reference:
 
-- OpenSpec: `openspec/changes/pre-phase-5-hardening/` (proposal, design, specs, tasks)
-- Review ratings (Phase 4): `src/db/review-history.ts`
-- SRS helper (Phase 5): `src/lib/srs.ts`
+- Deploy: `docs/deployment.md`, `scripts/sync-vercel-env.sh`
+- Cloud project: `ejgybfiywdbnfzckjqao`
+- Vercel: https://vercel.com/aster788s-projects/echo-speak

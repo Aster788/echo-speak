@@ -94,6 +94,32 @@ User workflow always pastes paired EN/ZH subtitles. Chinese is stripped only in 
 
 ---
 
+2026-06-25
+
+Decision:
+
+**Local Supabase CLI for development; Supabase Cloud + Vercel for production** (Mac + phone).
+
+Context:
+
+Single-user app; phone needs the same DB as Mac. Local `supabase start` is fast for migrations and `db reset`; production must not share that database.
+
+Decision:
+
+| Use case | Supabase | Next.js |
+|----------|----------|---------|
+| Dev on Mac | `supabase start` + `.env.local` → `127.0.0.1:54321` | `npm run dev` |
+| Mac + phone daily use | Cloud project `echo-speak` (`ejgybfiywdbnfzckjqao`) | Vercel `echo-speak` |
+
+Consequences:
+
+- Migrations live in `supabase/migrations/`; apply to cloud via `supabase db push` or dashboard.
+- `SUPABASE_SERVICE_ROLE_KEY` only on server (`.env.local` / Vercel); never Settings UI.
+- Optional data copy: `docs/cloud-data.md`.
+- Smoke test: import + review on production URL from Mac and phone.
+
+---
+
 2026-06-21
 
 Decision:

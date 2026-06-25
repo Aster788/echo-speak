@@ -9,6 +9,8 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { TopicsManager } from "./TopicsManager";
 
+export const dynamic = "force-dynamic";
+
 export default async function TopicsPage() {
   const supabase = getSupabaseAdmin();
   const topics = await listTopics(supabase);

@@ -41,6 +41,23 @@
 
 ---
 
+## Pre-Phase 5 — Hardening
+
+Bridge work before SRS. Not numbered as Phase 4.x; tracked as `pre-phase-5-hardening`.
+
+- **Collections** — `/collections` with Topic | Video | All views (replaces `/topics` + `/library`); vintage scrapbook UI; Move sheet; no dock/merge
+- **Home + Settings** — Hello hero; framed Settings with Auth + `user_settings` (server-only keys stay in `.env`)
+- **Review polish** — Finish page, hierarchical Back, sticky-note/divider/report tweaks
+- **`example_zh` quality** — alignment improvements + backfill
+- **Extraction depth** — cap calibration from per-video delete counts
+- **Supabase cloud + deploy** — Mac import and phone Review share one database
+
+**Success:** Data and primary surfaces are trustworthy across devices; user can curate and review without placeholders — ready for scheduling.
+
+**Gate:** Phase 5 starts only after P0 + P1 workstreams above merge to `main`.
+
+---
+
 ## Phase 5 — Spaced Repetition
 
 - Review queue

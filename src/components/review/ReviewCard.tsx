@@ -14,7 +14,7 @@ type ReviewCardProps = {
   onRate: (rating: ReviewRating) => void;
 };
 
-type ReportType = "english" | "chinese" | "other";
+type ReportType = "english" | "chinese" | "punctuation";
 
 type DisplayCardContent = Pick<
   ReviewDeckCard,
@@ -24,7 +24,7 @@ type DisplayCardContent = Pick<
 const REPORT_TYPES: Array<{ value: ReportType; label: string }> = [
   { value: "english", label: "英文有误" },
   { value: "chinese", label: "中文有误" },
-  { value: "other", label: "其他" },
+  { value: "punctuation", label: "标点有误" },
 ];
 const REPORT_FIREWORK_COLORS = [
   "#F5C84B",
@@ -39,7 +39,6 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
   const [feedback, setFeedback] = useState<ReviewRating | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportType, setReportType] = useState<ReportType>("chinese");
-  const [otherDescription, setOtherDescription] = useState("");
   const [correctContent, setCorrectContent] = useState("");
   const [successVisible, setSuccessVisible] = useState(false);
   const [displayCard, setDisplayCard] = useState<DisplayCardContent>({
@@ -54,6 +53,10 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
     [card.id]
   );
   const textColor = reviewCardTextColor(background);
+  const footerDividerClassName =
+    textColor === "#FFFFFF"
+      ? "border-t border-[#FFFFFF]/45"
+      : "border-t border-[#222222]/40";
   const sourceLabel = mode === "video" ? card.videoTitle : card.topicName;
   const hiddenFaceStyle: CSSProperties = {
     backfaceVisibility: "hidden",
@@ -70,7 +73,6 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
     setIsBack(false);
     setReportOpen(false);
     setReportType("chinese");
-    setOtherDescription("");
     setCorrectContent("");
     setSuccessVisible(false);
   }, [card]);
@@ -97,15 +99,10 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
         return { ...current, meaning: nextContent };
       }
 
-      return {
-        ...current,
-        meaning: nextContent,
-        example_zh: otherDescription.trim() || current.example_zh,
-      };
+      return { ...current, example_zh: nextContent };
     });
 
     setReportOpen(false);
-    setOtherDescription("");
     setCorrectContent("");
     setSuccessVisible(true);
     window.setTimeout(() => setSuccessVisible(false), 1100);
@@ -173,7 +170,9 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                   <p className="mt-4 text-[1rem] leading-relaxed opacity-50">—</p>
                 )}
               </div>
-              <div className="border-t border-inherit px-4 py-3 text-center text-[0.75rem] opacity-80">
+              <div
+                className={`${footerDividerClassName} px-4 py-3 text-center text-[0.75rem] opacity-80`}
+              >
                 {sourceLabel}
               </div>
             </button>
@@ -274,16 +273,6 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                     </button>
                   ))}
                 </div>
-                {reportType === "other" && (
-                  <label className="mt-5 block text-[0.8125rem]">
-                    <span>请输入：</span>
-                    <input
-                      value={otherDescription}
-                      onChange={(event) => setOtherDescription(event.target.value)}
-                      className="mt-1 block w-full border-0 border-b border-[#222222]/45 bg-transparent px-0 py-1 outline-none focus:ring-0"
-                    />
-                  </label>
-                )}
               </div>
 
               <label className="block text-[0.875rem]">
@@ -320,7 +309,7 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
           className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center"
           aria-live="polite"
         >
-          <div className="review-report-success relative rounded-full bg-[#FFFFFF]/75 px-8 py-4 text-[1.125rem] font-medium text-[#222222] shadow-[0_8px_24px_rgba(34,34,34,0.12)]">
+          <div className="review-report-success relative rounded-full bg-[#C9C4B0] px-8 py-4 text-[1.125rem] font-medium text-[#222222] shadow-[0_8px_24px_rgba(34,34,34,0.18)]">
             提交成功：）
             {Array.from({ length: 12 }, (_, index) => (
               <span

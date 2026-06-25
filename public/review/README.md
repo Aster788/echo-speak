@@ -14,6 +14,7 @@ Naming: URL-safe (`[a-zA-Z0-9._-]` only).
 | `confused.png` | `sources/confused.png` | Edge flood-fill white → transparent; card report button |
 | `paper.png` | `sources/paper.jpeg` | Edge flood-fill white → transparent; card report dialog |
 | `broken-heart.png` | `sources/broken-heart.png` | Edge flood-fill white → transparent; unsure feedback |
+| `congrats.png` | `sources/congrats.jpeg` | Edge flood-fill white → transparent; review finish page |
 | `microphone-button.png` | `sources/microphone-button.png` | Mic control |
 | `mic-button.png` | `sources/mic-button.png` | Mic control (alt) |
 | `review-background-alphabet.png` | `sources/review-background-alphabet.png` | Page background |

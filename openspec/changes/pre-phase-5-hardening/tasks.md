@@ -8,13 +8,13 @@
 
 ## 1. P0 — Review UI polish (`feat/review-ui-polish`) — can ship first
 
-- [ ] 1.1 Fix Back stack: reviewing → scope picker; complete → scope picker; scope picker → mode selector
-- [ ] 1.2 Finish page: `You have completed.`, congrats illustration, `choose another mode` link
-- [ ] 1.3 Sticky note lighter tint on scope picker
-- [ ] 1.4 Review card footer divider darker
-- [ ] 1.5 Again +1 color = card textColor
-- [ ] 1.6 Report dialog: 标点有误 replaces 其他; success toast darker
-- [ ] 1.7 Manual test Back paths on `/review` at 430×932
+- [x] 1.1 Fix Back stack: reviewing → scope picker; complete → scope picker; scope picker → mode selector
+- [x] 1.2 Finish page: `You have completed.`, congrats illustration, `choose another mode` link
+- [x] 1.3 Sticky note lighter tint on scope picker
+- [x] 1.4 Review card footer divider darker
+- [x] 1.5 Again +1 color = card textColor
+- [x] 1.6 Report dialog: 标点有误 replaces 其他; success toast darker
+- [x] 1.7 Manual test Back paths on `/review` at 430×932
 
 ## 2. P0 — Supabase cloud (`chore/supabase-cloud`)
 

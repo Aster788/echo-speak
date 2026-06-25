@@ -134,6 +134,22 @@ async function processBrokenHeart() {
   console.log(`  broken-heart.png (${meta.width}×${meta.height})`);
 }
 
+async function processCongrats() {
+  const src = path.join(SOURCES, "congrats.jpeg");
+  const raw = await sharp(src).png().toBuffer();
+  const transparent = await removeEdgeWhiteBackground(raw);
+  const outPath = path.join(OUT, "congrats.png");
+
+  await sharp(transparent)
+    .trim({ threshold: 8 })
+    .resize({ width: 360, fit: "inside" })
+    .png({ compressionLevel: 9 })
+    .toFile(outPath);
+
+  const meta = await sharp(outPath).metadata();
+  console.log(`  congrats.png (${meta.width}×${meta.height})`);
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
 
@@ -142,6 +158,7 @@ async function main() {
   await processConfusedButton();
   await processPaper();
   await processBrokenHeart();
+  await processCongrats();
 
   console.log(`Done → ${OUT}`);
 }

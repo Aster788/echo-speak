@@ -41,9 +41,10 @@ export function ReviewRatingActions({
               {AGAIN_OFFSETS.map((offset, plusIndex) => (
                 <span
                   key={offset}
-                  className="review-float-plus absolute left-1/2 top-2 text-xs font-medium text-[#222222]"
+                  className="review-float-plus absolute left-1/2 top-2 text-xs font-medium"
                   style={
                     {
+                      color: textColor,
                       "--plus-x": `${offset}px`,
                       animationDelay: `${plusIndex * 70}ms`,
                     } as CSSProperties

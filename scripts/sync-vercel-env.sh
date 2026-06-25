@@ -18,16 +18,22 @@ if [[ ! -f .vercel/project.json ]]; then
   exit 1
 fi
 
-if [[ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
-  echo "Set SUPABASE_SERVICE_ROLE_KEY (Supabase Dashboard → Settings → API → service_role)." >&2
-  exit 1
-fi
+EXPORTED_SERVICE_ROLE="${SUPABASE_SERVICE_ROLE_KEY:-}"
 
 if [[ -f .env.local ]]; then
   # shellcheck disable=SC1091
   set -a
   source .env.local
   set +a
+fi
+
+if [[ -n "$EXPORTED_SERVICE_ROLE" ]]; then
+  SUPABASE_SERVICE_ROLE_KEY="$EXPORTED_SERVICE_ROLE"
+fi
+
+if [[ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
+  echo "Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE." >&2
+  exit 1
 fi
 
 CLOUD_URL="${NEXT_PUBLIC_SUPABASE_CLOUD_URL:-https://ejgybfiywdbnfzckjqao.supabase.co}"
@@ -47,17 +53,20 @@ fi
 add_env() {
   local name="$1"
   local value="$2"
-  for target in production preview; do
-    printf '%s' "$value" | npx vercel env add "$name" "$target" --force --yes 2>/dev/null || \
-      printf '%s' "$value" | npx vercel env add "$name" "$target" --yes
-  done
+  local sensitive="${3:-yes}"
+  # Production only — avoids interactive "Git branch?" on Preview.
+  if [[ "$sensitive" == "yes" ]]; then
+    npx vercel env add "$name" production --value "$value" --force --yes --sensitive
+  else
+    npx vercel env add "$name" production --value "$value" --force --yes --no-sensitive
+  fi
 }
 
 echo "Syncing Vercel env for echo-speak…"
 
-add_env NEXT_PUBLIC_SUPABASE_URL "$CLOUD_URL"
-add_env NEXT_PUBLIC_SUPABASE_ANON_KEY "$CLOUD_ANON"
-add_env SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
+add_env NEXT_PUBLIC_SUPABASE_URL "$CLOUD_URL" no
+add_env NEXT_PUBLIC_SUPABASE_ANON_KEY "$CLOUD_ANON" no
+add_env SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY" yes
 add_env LLM_API_KEY "$LLM_API_KEY"
 add_env LLM_BASE_URL "${LLM_BASE_URL:-https://api.deepseek.com}"
 add_env LLM_MODEL "${LLM_MODEL:-deepseek-chat}"

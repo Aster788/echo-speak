@@ -47,6 +47,17 @@ npx vercel --prod
 
 Until `SUPABASE_SERVICE_ROLE_KEY` is set on Vercel, `/review` and `/topics` return 500 at runtime (build succeeds).
 
+**Validate before sync** (catches local demo key pasted by mistake):
+
+```bash
+# After pasting cloud service_role into .env.local or export:
+./scripts/validate-cloud-supabase-env.sh
+./scripts/sync-vercel-env.sh
+npx vercel --prod
+```
+
+Cloud `service_role` JWT payload must include `"ref": "ejgybfiywdbnfzckjqao"`. Local `supabase start` keys use `"iss": "supabase-demo"` and will not work with the cloud URL.
+
 ## 3. Deploy
 
 **CLI (first time or manual):**

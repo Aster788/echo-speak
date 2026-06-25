@@ -2,24 +2,26 @@
 
 Objective:
 
-Finish **Supabase cloud deploy** on `chore/supabase-cloud`, then start **example_zh quality** (`feat/example-zh-quality`).
+Start **example_zh quality** (`feat/example-zh-quality`) — Pre-Phase 5 P0.
 
-Scope (finish cloud PR):
+Scope (this PR):
 
-- [ ] Set Vercel env: `SUPABASE_SERVICE_ROLE_KEY` (cloud) + run `./scripts/sync-vercel-env.sh`
-- [ ] `npx vercel --prod` — smoke test `/import` + `/review` on Mac and phone
-- [ ] Optional: copy local data → cloud (`docs/cloud-data.md`)
+- SQL stats: null % by video
+- User sample audit table (6 videos × 3–5 cards)
+- Improve `alignExampleZhFromRawText`
+- Backfill null rows; document before/after in `docs/decisions.md`
+- Tests + spot-check 5 Review cards
 
 Definition of Done:
 
-- Production URL reads/writes cloud DB; ADR + `docs/deployment.md` on `main`
+- Measurable drop in `example_zh` null rate; sample audit documented
+- `npm run build` and relevant tests pass
 
 Then (Pre-Phase 5 queue):
 
-1. `feat/example-zh-quality` — stats, user sample audit, parser/backfill
-2. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
-3. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
-4. `feat/home-page-redesign` + `feat/settings-auth`
+1. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
+2. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
+3. `feat/home-page-redesign` + `feat/settings-auth`
 
 Do Not Build Yet:
 
@@ -29,6 +31,5 @@ Do Not Build Yet:
 
 Reference:
 
-- Deploy: `docs/deployment.md`, `scripts/sync-vercel-env.sh`
-- Cloud project: `ejgybfiywdbnfzckjqao`
-- Vercel: https://vercel.com/aster788s-projects/echo-speak
+- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §3
+- Cloud deploy: `docs/deployment.md` (production https://echo-speak-gray.vercel.app)

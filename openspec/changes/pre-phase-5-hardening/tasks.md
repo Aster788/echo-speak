@@ -20,8 +20,8 @@
 
 - [x] 2.1 Create cloud Supabase project; link repo
 - [x] 2.2 Apply all migrations including Phase 4
-- [ ] 2.3 Deploy Next.js (Vercel); env vars documented
-- [ ] 2.4 ADR: local CLI vs cloud; phone + Mac smoke test
+- [x] 2.3 Deploy Next.js (Vercel); env vars documented
+- [x] 2.4 ADR: local CLI vs cloud; phone + Mac smoke test
 - [x] 2.5 Optional: export/import guide from local to cloud
 
 ## 3. P0 — example_zh quality (`feat/example-zh-quality`)

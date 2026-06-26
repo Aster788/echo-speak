@@ -12,7 +12,9 @@
     "audit:filenames": "tsx scripts/audit-filenames.ts",
     "process-nav-assets": "tsx scripts/process-nav-assets.ts",
     "process-import-assets": "tsx scripts/process-import-assets.ts",
-    "process-review-assets": "tsx scripts/process-review-assets.ts"
+    "process-review-assets": "tsx scripts/process-review-assets.ts",
+    "process-collections-assets": "tsx scripts/process-collections-assets.ts",
+    "sync-dev-supabase-env": "bash scripts/sync-dev-supabase-env.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

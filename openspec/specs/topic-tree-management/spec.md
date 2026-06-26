@@ -2,23 +2,23 @@
 
 ## Purpose
 
-Mobile-first `/topics` UI for curating the topic tree and expressions (Phase 3.5).
+Mobile-first **Collections** UI for curating the topic tree and expressions (Phase 3.5; route `/collections` from Pre-Phase 5).
 
 ## Requirements
 
 ### Requirement: Topic tree browser
 
-The system SHALL provide a `/topics` page displaying the hierarchical topic tree with expression counts per topic.
+The system SHALL provide a **Collections** page at `/collections` (Topic tab) displaying the hierarchical topic tree with expression counts. `/topics` redirects to `/collections`.
 
 #### Scenario: View topic tree
 
-- **WHEN** user opens `/topics`
-- **THEN** the system shows root topics with expandable children and expression counts
+- **WHEN** user opens Collections Topic tab
+- **THEN** the system shows root topics with expandable children and expression counts sorted a→z among siblings
 
 #### Scenario: View expressions in topic
 
 - **WHEN** user selects a topic node
-- **THEN** the system lists expressions directly assigned to that topic (not subtree aggregate on this view)
+- **THEN** the system navigates to Topic level two listing expressions for that topic only (not subtree aggregate on this view)
 
 ### Requirement: Create user topic
 
@@ -64,79 +64,21 @@ The system SHALL allow deleting user-created topics that have no expressions and
 
 ### Requirement: Drag or pick to reassign expression topic
 
-The system SHALL allow moving an expression to a different topic by drag-and-drop or a "Move to…" picker.
-
-#### Scenario: Move expression via drag
-
-- **WHEN** user drags an expression onto topic `drinks`
-- **THEN** the system updates `expressions.topic_id` to `drinks` and sets `topic_locked = true`
+The system SHALL allow moving an expression to a different topic via the **Move sheet** picker on Collections cards.
 
 #### Scenario: Move expression via picker
 
-- **WHEN** user selects "Move to…" and chooses topic `cooking`
+- **WHEN** user opens Move sheet from an expression card and chooses topic `cooking`
 - **THEN** the system updates `topic_id` and sets `topic_locked = true`
 
 ### Requirement: Dismiss expression
 
-The system SHALL allow users to permanently remove an unwanted expression from their library via delete button, swipe-to-delete, or drag-to-trash.
+The system SHALL allow users to permanently remove an unwanted expression from their library via the **delete (bin) icon** on Collections cards.
 
 #### Scenario: Delete button
 
-- **WHEN** user taps delete on an expression row
+- **WHEN** user taps delete on an expression card
 - **THEN** the system dismisses the expression (deletes row + records dismissal)
-
-#### Scenario: Swipe to delete on mobile
-
-- **WHEN** user swipes an expression row to reveal delete and confirms
-- **THEN** the system dismisses the expression
-
-#### Scenario: Drag to trash on dock
-
-- **WHEN** user long-presses an expression, drags it to the trash icon on the topic dock, and holds for ~0.5s
-- **THEN** the system dismisses the expression after a 150–200ms fade-out
-
-### Requirement: Topic dock for move and dismiss
-
-The system SHALL display a fixed bottom dock on `/topics` with topic targets and a trash icon on the right for drag-and-drop curation.
-
-#### Scenario: Dock visible
-
-- **WHEN** user views expressions on `/topics`
-- **THEN** a bottom dock shows topic icons and a trash icon anchored on the right
-
-#### Scenario: Drag expression to topic on dock
-
-- **WHEN** user drags an expression onto a topic icon in the dock
-- **THEN** the system moves the expression to that topic and sets `topic_locked = true`
-
-#### Scenario: Drag expression to trash on dock
-
-- **WHEN** user drags an expression onto the trash icon and holds briefly
-- **THEN** the system dismisses the expression with a fade-out animation
-
-#### Scenario: Celebration easter egg optional
-
-- **WHEN** user dismisses via trash drag
-- **THEN** the system MAY show a brief confetti or fireworks effect as an optional delight (not required on every dismiss)
-
-### Requirement: Merge topics
-
-The system SHALL allow merging a source topic into a target topic by reassigning all expressions and removing the source topic.
-
-#### Scenario: Merge leaf into leaf
-
-- **WHEN** user merges topic `cookings` into `cooking` and source has 5 expressions
-- **THEN** all 5 expressions receive `topic_id` of `cooking` with `topic_locked = true`, and `cookings` is deleted
-
-#### Scenario: Merge topic with children blocked
-
-- **WHEN** user attempts to merge a topic that has child topics
-- **THEN** the system rejects the merge with a clear error
-
-#### Scenario: Merge confirmation
-
-- **WHEN** user initiates a merge
-- **THEN** the system shows a confirmation with expression count before executing
 
 ### Requirement: Topic locked survives re-extraction
 
@@ -149,9 +91,9 @@ The system SHALL NOT change `topic_id` on expressions where `topic_locked = true
 
 ### Requirement: Mobile-first layout
 
-The topic management UI SHALL use a centered mobile container with `max-width: 430px` and design-system text colors (`#222` / `#fff`).
+The topic management UI SHALL use route `/collections` with Topic tab, centered 430px container, vintage scrapbook styling.
 
 #### Scenario: Mobile layout
 
-- **WHEN** user views `/topics` on phone or desktop
+- **WHEN** user views Collections Topic tab
 - **THEN** the layout is centered with max width 430px

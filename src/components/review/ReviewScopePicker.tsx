@@ -37,7 +37,7 @@ function ReviewScopeNote({
           transform: `rotate(${stickyNoteTilt(index)}deg)`,
         }}
       >
-        <span className="relative z-10 min-w-0 truncate text-sm italic leading-snug text-[#2a1f14]/95">
+        <span className="collections-title-scroll relative z-10 min-w-0 flex-1 overflow-x-auto whitespace-nowrap pr-4 text-sm italic leading-snug text-[#2a1f14]/95">
           {option.label}
         </span>
         <span className="relative z-10 ml-3 shrink-0 text-xs italic tabular-nums text-[#2a1f14]/70">

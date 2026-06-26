@@ -75,7 +75,7 @@ export function ImportStatusStrip({
           <p role="alert">Extraction failed. Try again.</p>
         )}
         {showTopicsLink && (
-          <Link href="/topics" className="underline opacity-95">
+          <Link href="/collections" className="underline opacity-95">
             Open Topics to curate expressions.
           </Link>
         )}

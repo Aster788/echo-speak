@@ -26,16 +26,20 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
-      parentId?: string;
+      parentId?: string | null;
       name?: string;
     };
 
-    if (!body.parentId || !body.name?.trim()) {
-      return jsonError("parentId and name are required.");
+    if (!body.name?.trim()) {
+      return jsonError("name is required.");
     }
 
     const supabase = getSupabaseAdmin();
-    const topic = await createUserTopic(body.parentId, body.name, supabase);
+    const topic = await createUserTopic(
+      body.parentId ?? null,
+      body.name,
+      supabase
+    );
     return jsonOk({ topic });
   } catch (error) {
     return jsonError(errorMessage(error, "Failed to create topic."), 400);

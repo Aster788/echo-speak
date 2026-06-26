@@ -58,9 +58,9 @@
 
 ## 6. P2 — Home (`feat/home-page-redesign`)
 
-- [ ] 6.1 Layout per spec: tagline → divider → buttons → Hello illustration
-- [ ] 6.2 Link CTAs to /import and /review
-- [ ] 6.3 430×932 visual check vs echo-speak-homepage-ref.png
+- [x] 6.1 Layout per spec: tagline → divider → buttons → Hello illustration
+- [x] 6.2 Link CTAs to /import and /review
+- [x] 6.3 430×932 visual check vs echo-speak-homepage-ref.png
 
 ## 7. P2 — Settings + Auth (`feat/settings-auth`)
 

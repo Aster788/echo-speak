@@ -14,6 +14,7 @@
     "process-import-assets": "tsx scripts/process-import-assets.ts",
     "process-review-assets": "tsx scripts/process-review-assets.ts",
     "process-collections-assets": "tsx scripts/process-collections-assets.ts",
+    "process-home-assets": "tsx scripts/process-home-assets.ts",
     "sync-dev-supabase-env": "bash scripts/sync-dev-supabase-env.sh"
   },
   "dependencies": {

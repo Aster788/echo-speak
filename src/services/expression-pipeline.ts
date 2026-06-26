@@ -14,8 +14,12 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Expression } from "@/types/expression";
 import type { ExtractedExpression } from "@/types/expression";
-import { extractExpressions } from "@/services/expression-extractor";
+import {
+  extractExpressions,
+  type ExtractExpressionsOptions as ExtractorOptions,
+} from "@/services/expression-extractor";
 import { resolveExampleZh } from "@/services/example-zh";
+import type { ExtractionDepth } from "@/lib/extraction-depth";
 
 export type ExtractExpressionsResult = {
   videoId: string;
@@ -24,15 +28,19 @@ export type ExtractExpressionsResult = {
   expressions: Expression[];
 };
 
-export type ExtractExpressionsOptions = {
+export type ExtractExpressionsPipelineOptions = {
   supabase?: SupabaseClient;
-  extractFn?: (cleanedText: string) => Promise<ExtractedExpression[]>;
+  extractFn?: (
+    cleanedText: string,
+    options?: ExtractorOptions
+  ) => Promise<ExtractedExpression[]>;
   resolveExampleZhFn?: typeof resolveExampleZh;
+  depth?: ExtractionDepth;
 };
 
 export async function extractExpressionsForTranscript(
   transcriptId: string,
-  options: ExtractExpressionsOptions = {}
+  options: ExtractExpressionsPipelineOptions = {}
 ): Promise<ExtractExpressionsResult> {
   const supabase = options.supabase ?? getSupabaseAdmin();
   const extractFn = options.extractFn ?? extractExpressions;
@@ -56,7 +64,7 @@ export async function extractExpressionsForTranscript(
   );
 
   const extracted = filterDismissedExpressions(
-    await extractFn(cleanedText),
+    await extractFn(cleanedText, { depth: options.depth }),
     dismissedKeys
   );
 

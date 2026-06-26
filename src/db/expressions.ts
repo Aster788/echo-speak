@@ -146,17 +146,30 @@ export async function deleteExpression(
   if (error) throw error;
 }
 
+import type { DismissReason } from "@/types/dismiss-reason";
+
 export async function dismissExpression(
   expressionId: string,
-  client?: SupabaseClient
+  options: {
+    reason?: DismissReason | null;
+    client?: SupabaseClient;
+  } = {}
 ): Promise<void> {
-  const supabase = client ?? getSupabase();
+  const supabase = options.client ?? getSupabase();
   const expression = await getExpression(expressionId, supabase);
   if (!expression) {
     throw new Error("Expression not found.");
   }
 
-  await recordDismissal(expression.video_id, expression.phrase, supabase);
+  await recordDismissal(
+    {
+      videoId: expression.video_id,
+      phrase: expression.phrase,
+      reason: options.reason ?? null,
+      topicId: expression.topic_id,
+    },
+    supabase
+  );
   await deleteExpression(expressionId, supabase);
 }
 

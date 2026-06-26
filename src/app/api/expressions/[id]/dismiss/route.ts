@@ -1,16 +1,23 @@
 import { dismissExpression } from "@/db/expressions";
 import { errorMessage, jsonError, jsonOk } from "@/lib/api-response";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { isDismissReason } from "@/types/dismiss-reason";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
+    const body = (await request.json().catch(() => ({}))) as {
+      reason?: string;
+    };
+    const reason =
+      body.reason && isDismissReason(body.reason) ? body.reason : null;
+
     const supabase = getSupabaseAdmin();
-    await dismissExpression(id, supabase);
+    await dismissExpression(id, { reason, client: supabase });
     return jsonOk({});
   } catch (error) {
     return jsonError(errorMessage(error, "Failed to dismiss expression."), 400);

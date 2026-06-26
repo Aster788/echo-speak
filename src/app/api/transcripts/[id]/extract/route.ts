@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { extractExpressionsForTranscript } from "@/services/expression-pipeline";
+import { resolveExtractionDepth } from "@/lib/extraction-depth";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const result = await extractExpressionsForTranscript(id);
+    const body = (await request.json().catch(() => ({}))) as {
+      depth?: string;
+    };
+    const result = await extractExpressionsForTranscript(id, {
+      depth: resolveExtractionDepth(body.depth),
+    });
 
     return NextResponse.json({
       ok: true,

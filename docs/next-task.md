@@ -2,33 +2,19 @@
 
 Objective:
 
-Start **extraction depth tuning** (`feat/extraction-depth-tuning`) — Pre-Phase 5 P1.
+Start **Collections page** (`feat/collections-page`) — Pre-Phase 5 P1 (next in queue).
 
-Scope (this PR):
+Scope:
 
-- User fills scheme-2 calibration table (6 videos: extracted / deleted / kept)
-- ADR: cap formula or Standard/Deep toggle
-- Update `prompts/extract-expressions.md` + pipeline + tests
-- User validates 2 sample videos
+- Route `/collections`; redirects from `/topics`, `/library`
+- Topic | Video | All views, Move sheet, a→z sort
+- See `openspec/changes/pre-phase-5-hardening/tasks.md` §5
 
-Definition of Done:
+Completed (merged):
 
-- Calibration table ≥5 videos documented
-- Cap/toggle implemented; documented in `docs/decisions.md`
-- Test video re-extract within expected range
-
-Then (Pre-Phase 5 queue):
-
-1. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
-2. `feat/home-page-redesign` + `feat/settings-auth`
-
-Do Not Build Yet:
-
-- **Phase 5 SRS** (`review_queue`, due dates) — blocked until Pre-Phase 5 gate (P0 + P1 on `main`)
-- Feishu Sync (Phase 6)
-- Gap Detection (Phase 7)
+- `feat/extraction-depth-tuning` — cap, rank pass, dismiss reasons, calibration scripts
 
 Reference:
 
-- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §4
-- A/B clean reports: `docs/ab-clean-extract-*.md`
+- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §5
+- Design: `docs/design-system.md`

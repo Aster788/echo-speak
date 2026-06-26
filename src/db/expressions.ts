@@ -1,5 +1,6 @@
 import { recordDismissal } from "@/db/expression-dismissals";
 import { getSupabase } from "@/lib/supabase";
+import { sortExpressionsByPhrase } from "@/lib/sort-collections";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CreateExpressionInput, Expression } from "@/types/expression";
 import { listTopicSubtreeIds, listTopics } from "@/db/topics";
@@ -10,7 +11,7 @@ export async function listExpressions(
   const supabase = client ?? getSupabase();
   const { data, error } = await supabase.from("expressions").select("*");
   if (error) throw error;
-  return (data ?? []) as Expression[];
+  return sortExpressionsByPhrase((data ?? []) as Expression[]);
 }
 
 export async function getExpression(
@@ -38,7 +39,7 @@ export async function listExpressionsByVideo(
     .eq("video_id", videoId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as Expression[];
+  return sortExpressionsByPhrase((data ?? []) as Expression[]);
 }
 
 export async function listExpressionsByTopicSubtree(
@@ -58,7 +59,7 @@ export async function listExpressionsByTopicSubtree(
     .in("topic_id", subtreeIds)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as Expression[];
+  return sortExpressionsByPhrase((data ?? []) as Expression[]);
 }
 
 export async function listExpressionsByTopicId(
@@ -72,7 +73,7 @@ export async function listExpressionsByTopicId(
     .eq("topic_id", topicId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as Expression[];
+  return sortExpressionsByPhrase((data ?? []) as Expression[]);
 }
 
 export async function deleteUnlockedExpressionsByVideoAndSource(

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { slugifyName, uniqueTopicSlug } from "@/lib/slugify";
+import { aggregateTopicExpressionCounts } from "@/db/topics";
 import {
   filterDismissedExpressions,
   normalizePhraseKey,
 } from "@/lib/merge-expressions";
+import type { Topic } from "@/types/topic";
 
 describe("slugifyName", () => {
   it("creates URL-safe slugs", () => {
@@ -47,3 +49,45 @@ describe("filterDismissedExpressions", () => {
     expect(filtered[0]?.phrase).toBe("on paper");
   });
 });
+
+describe("aggregateTopicExpressionCounts", () => {
+  it("rolls child expression counts up to parent topics", () => {
+    const topics = [
+      topic({ id: "food", name: "Food", slug: "food", parent_id: null }),
+      topic({
+        id: "cooking",
+        name: "Cooking",
+        slug: "cooking",
+        parent_id: "food",
+      }),
+      topic({
+        id: "meal-prep",
+        name: "Meal Prep",
+        slug: "meal-prep",
+        parent_id: "cooking",
+      }),
+    ];
+
+    const counts = aggregateTopicExpressionCounts(
+      topics,
+      new Map([
+        ["cooking", 2],
+        ["meal-prep", 3],
+      ])
+    );
+
+    expect(counts.get("food")).toBe(5);
+    expect(counts.get("cooking")).toBe(5);
+    expect(counts.get("meal-prep")).toBe(3);
+  });
+});
+
+function topic(overrides: Partial<Topic> & Pick<Topic, "id" | "name" | "slug">): Topic {
+  return {
+    parent_id: null,
+    is_system: false,
+    merged_into_id: null,
+    created_at: "2026-01-01",
+    ...overrides,
+  };
+}

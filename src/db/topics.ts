@@ -1,4 +1,5 @@
 import { slugifyName, uniqueTopicSlug } from "@/lib/slugify";
+import { sortTopicTreeByName } from "@/lib/sort-collections";
 import { getSupabase } from "@/lib/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Topic, TopicIndexEntry, TopicTreeNode } from "@/types/topic";
@@ -92,9 +93,9 @@ export function listTopicTree(topics: Topic[]): TopicTreeNode[] {
   }
 
   const sortNodes = (items: TopicTreeNode[]): TopicTreeNode[] =>
-    items
-      .map((item) => ({ ...item, children: sortNodes(item.children) }))
-      .sort((a, b) => a.slug.localeCompare(b.slug));
+    sortTopicTreeByName(
+      items.map((item) => ({ ...item, children: sortNodes(item.children) }))
+    );
 
   return sortNodes(roots);
 }
@@ -128,23 +129,55 @@ export async function getTopicExpressionCounts(
   const { data, error } = await supabase.from("expressions").select("topic_id");
   if (error) throw error;
 
-  const counts = new Map<string, number>();
+  const directCounts = new Map<string, number>();
   for (const row of data ?? []) {
     const topicId = row.topic_id as string;
-    counts.set(topicId, (counts.get(topicId) ?? 0) + 1);
+    directCounts.set(topicId, (directCounts.get(topicId) ?? 0) + 1);
   }
+
+  const topics = await listTopics(supabase);
+  return aggregateTopicExpressionCounts(topics, directCounts);
+}
+
+export function aggregateTopicExpressionCounts(
+  topics: Topic[],
+  directCounts: Map<string, number>
+): Map<string, number> {
+  const parentById = new Map(topics.map((topic) => [topic.id, topic.parent_id]));
+  const counts = new Map(directCounts);
+
+  for (const [topicId, count] of directCounts) {
+    let parentId = parentById.get(topicId) ?? null;
+    const visited = new Set<string>([topicId]);
+
+    while (parentId && !visited.has(parentId)) {
+      counts.set(parentId, (counts.get(parentId) ?? 0) + count);
+      visited.add(parentId);
+      parentId = parentById.get(parentId) ?? null;
+    }
+  }
+
   return counts;
 }
 
+export async function createRootTopic(
+  name: string,
+  client?: SupabaseClient
+): Promise<Topic> {
+  return createUserTopic(null, name, client);
+}
+
 export async function createUserTopic(
-  parentId: string,
+  parentId: string | null,
   name: string,
   client?: SupabaseClient
 ): Promise<Topic> {
   const supabase = client ?? getSupabase();
-  const parent = await getTopic(parentId, supabase);
-  if (!parent) {
-    throw new Error("Parent topic not found.");
+  if (parentId) {
+    const parent = await getTopic(parentId, supabase);
+    if (!parent) {
+      throw new Error("Parent topic not found.");
+    }
   }
 
   const trimmed = name.trim();
@@ -186,9 +219,6 @@ export async function renameUserTopic(
   if (!topic) {
     throw new Error("Topic not found.");
   }
-  if (topic.is_system) {
-    throw new Error("System topics cannot be renamed.");
-  }
 
   const trimmed = name.trim();
   if (!trimmed) {
@@ -226,9 +256,6 @@ export async function deleteUserTopic(
   const topic = await getTopic(topicId, supabase);
   if (!topic) {
     throw new Error("Topic not found.");
-  }
-  if (topic.is_system) {
-    throw new Error("System topics cannot be deleted.");
   }
 
   const topics = await listTopics(supabase);
@@ -296,4 +323,42 @@ export async function mergeTopics(
   if (deleteError) throw deleteError;
 
   return { movedCount };
+}
+
+export async function reparentUserTopic(
+  topicId: string,
+  newParentId: string | null,
+  client?: SupabaseClient
+): Promise<Topic> {
+  const supabase = client ?? getSupabase();
+  if (topicId === newParentId) {
+    throw new Error("A topic cannot be its own parent.");
+  }
+
+  const topic = await getTopic(topicId, supabase);
+  if (!topic) {
+    throw new Error("Topic not found.");
+  }
+
+  if (newParentId) {
+    const newParent = await getTopic(newParentId, supabase);
+    if (!newParent) {
+      throw new Error("Parent topic not found.");
+    }
+
+    const topics = await listTopics(supabase);
+    const subtreeIds = new Set(listTopicSubtreeIds(topicId, topics));
+    if (subtreeIds.has(newParentId)) {
+      throw new Error("Cannot move a topic into its own subtree.");
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("topics")
+    .update({ parent_id: newParentId })
+    .eq("id", topicId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Topic;
 }

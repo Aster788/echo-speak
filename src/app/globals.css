@@ -120,3 +120,30 @@
 .review-report-firework {
   animation: review-report-firework-burst 0.8s ease-out forwards;
 }
+
+.collections-title-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.collections-title-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.phone-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 34, 34, 0.32) transparent;
+}
+
+.phone-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.phone-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phone-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(34, 34, 34, 0.28);
+  border-radius: 999px;
+}

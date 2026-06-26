@@ -1,9 +1,9 @@
 ## 0. Design assets pipeline
 
-- [ ] 0.1 Add `scripts/process-collections-assets.ts` (or extend review script): transparent JPEG/PNG → `public/collections/`, `public/home/`, `public/review/`
-- [ ] 0.2 Process: congrats, Hello, input, title, arrow, target, Rectangle, paper, bin, move, back, down-arrow
+- [x] 0.1 Add `scripts/process-collections-assets.ts` (or extend review script): transparent JPEG/PNG → `public/collections/`, `public/home/`, `public/review/`
+- [x] 0.2 Process: congrats, Hello, input, title, arrow, target, Rectangle, paper, bin, move, back, down-arrow
 - [ ] 0.3 Re-tint review sticky-note lighter (`#E0DBC8`); re-process broken-heart
-- [ ] 0.4 Run `npm run audit:filenames`
+- [x] 0.4 Run `npm run audit:filenames`
 - [ ] 0.5 Add `docs/design/phase-4-review/README.md` asset map (sources → public paths)
 
 ## 1. P0 — Review UI polish (`feat/review-ui-polish`) — can ship first
@@ -41,20 +41,20 @@
 
 ## 5. P1 — Collections (`feat/collections-page`)
 
-- [ ] 5.1 Route `/collections`; redirects from `/topics`, `/library`
-- [ ] 5.2 Navbar: Collections only (drop Library)
-- [ ] 5.3 View tabs Topic | Video | All (`title.jpeg`); default Topic
-- [ ] 5.4 Page description copy update
-- [ ] 5.5 Topic L1: tree, Add topic, bin/move, a→z sort; arrow expand/collapse + rotate; target on leaves
-- [ ] 5.6 Topic L1: reparent API; remove `is_system` blocks for move/delete on seed topics
-- [ ] 5.6 Topic L2: Rectangle cards, back, bin/move
-- [ ] 5.7 Video L1 + L2 (mirror Topic pattern); video title header
-- [ ] 5.8 All view: flat cards + count header + back → Topic L1
-- [ ] 5.9 Move sheet modal (paper.jpeg); fireworks on success
-- [ ] 5.10 Remove TopicDock, merge UI, drag/swipe dismiss
-- [ ] 5.11 API: topic reparent on topic move; expression move unchanged semantics + topic_locked
-- [ ] 5.12 Regression: dismiss, move expression, add topic, delete empty topic
-- [ ] 5.13 Update delta specs archive on merge
+- [x] 5.1 Route `/collections`; redirects from `/topics`, `/library`
+- [x] 5.2 Navbar: Collections only (drop Library)
+- [x] 5.3 View tabs Topic | Video | All (`title.jpeg`); default Topic
+- [x] 5.4 Page description copy update
+- [x] 5.5 Topic L1: tree, Add topic, bin/move, a→z sort; arrow expand/collapse + rotate; target on leaves
+- [x] 5.6 Topic L1: reparent API; remove `is_system` blocks for move/delete on seed topics
+- [x] 5.6 Topic L2: Rectangle cards, back, bin/move
+- [x] 5.7 Video L1 + L2 (mirror Topic pattern); video title header
+- [x] 5.8 All view: flat cards + count header + back → Topic L1
+- [x] 5.9 Move sheet modal (paper.jpeg); fireworks on success
+- [x] 5.10 Remove TopicDock, merge UI, drag/swipe dismiss
+- [x] 5.11 API: topic reparent on topic move; expression move unchanged semantics + topic_locked
+- [x] 5.12 Regression: dismiss, move expression, add topic, delete empty topic
+- [x] 5.13 Update delta specs archive on merge
 
 ## 6. P2 — Home (`feat/home-page-redesign`)
 

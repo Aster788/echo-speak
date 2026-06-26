@@ -10,10 +10,10 @@ type PageShellProps = {
 };
 
 const phoneFrameClassName = [
-  "mx-auto flex w-full max-w-[430px] flex-col overflow-hidden bg-[#FFFFFF]",
+  "mx-auto flex h-[calc(100dvh-1.5rem)] max-h-[932px] w-full max-w-[430px] flex-col overflow-hidden bg-[#FFFFFF]",
   "rounded-[36px] border-[2.5px] border-[#D4D4D4] md:rounded-[40px]",
   "shadow-[0_10px_28px_rgba(34,34,34,0.08),0_2px_6px_rgba(34,34,34,0.05),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_0_0_1px_rgba(34,34,34,0.04)]",
-  "min-h-[calc(100vh-1.5rem)] md:min-h-[min(932px,calc(100vh-3rem))]",
+  "md:h-[min(932px,calc(100vh-3rem))]",
 ].join(" ");
 
 export function PageShell({ children, mainClassName = "" }: PageShellProps) {
@@ -28,7 +28,11 @@ export function PageShell({ children, mainClassName = "" }: PageShellProps) {
         </div>
         <ReviewResetProvider>
           <Navbar />
-          <main className={`flex-1 px-4 pt-4 pb-8 ${mainClassName}`}>{children}</main>
+          <main
+            className={`phone-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-8 ${mainClassName}`}
+          >
+            {children}
+          </main>
         </ReviewResetProvider>
       </div>
     </div>

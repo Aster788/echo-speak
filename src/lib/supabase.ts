@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { assertSupabaseKeyMatchesUrl } from "@/lib/supabase-env";
 
 let supabase: SupabaseClient | null = null;
 
@@ -20,5 +21,6 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (!url || !key) {
     throw new Error("Supabase URL and service role key must be set");
   }
+  assertSupabaseKeyMatchesUrl(url, key);
   return createClient(url, key);
 }

@@ -3,6 +3,7 @@ import {
   deleteUserTopic,
   getTopic,
   renameUserTopic,
+  reparentUserTopic,
 } from "@/db/topics";
 import { errorMessage, jsonError, jsonOk } from "@/lib/api-response";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -14,16 +15,26 @@ type RouteContext = {
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const body = (await request.json()) as { name?: string };
+    const body = (await request.json()) as {
+      name?: string;
+      parentId?: string | null;
+    };
+
+    const supabase = getSupabaseAdmin();
+
+    if (body.parentId !== undefined) {
+      const topic = await reparentUserTopic(id, body.parentId, supabase);
+      return jsonOk({ topic });
+    }
+
     if (!body.name?.trim()) {
       return jsonError("name is required.");
     }
 
-    const supabase = getSupabaseAdmin();
     const topic = await renameUserTopic(id, body.name, supabase);
     return jsonOk({ topic });
   } catch (error) {
-    return jsonError(errorMessage(error, "Failed to rename topic."), 400);
+    return jsonError(errorMessage(error, "Failed to update topic."), 400);
   }
 }
 

@@ -18,10 +18,11 @@
 - Pre-Phase 5 Review UI polish (finish page, Back stack, card/report fixes) — PR #5 on `main`
 - Supabase cloud schema (all migrations on `ejgybfiywdbnfzckjqao`); Vercel project `echo-speak` linked
 - Supabase cloud + Vercel deploy (`docs/deployment.md`, production https://echo-speak-gray.vercel.app) — PR merged
+- Pre-Phase 5 `example_zh` + sync clean default (branch `example-zh-quality`: Always LLM `example_zh`, `IMPORT_USE_LLM_CLEANER` opt-in, A/B reports, stats/backfill scripts)
 
 ## In Progress
 
-- **Pre-Phase 5 Hardening** — next: `example_zh` quality, then extraction, Collections
+- **Pre-Phase 5 Hardening** — next: extraction depth, Collections
 
 Workstreams (see `openspec/changes/pre-phase-5-hardening/tasks.md`):
 
@@ -29,15 +30,15 @@ Workstreams (see `openspec/changes/pre-phase-5-hardening/tasks.md`):
 |----------|------------|--------|
 | P0 | Review UI polish | **done** |
 | P0 | Supabase cloud + deploy | **done** |
-| P0 | `example_zh` quality | **next** |
-| P1 | Extraction depth tuning | pending |
+| P0 | `example_zh` quality | **done** (branch `example-zh-quality`: Always LLM + sync clean default) |
+| P1 | Extraction depth tuning | **next** |
 | P1 | Collections page | pending |
 | P2 | Home page redesign | pending |
 | P2 | Settings + Auth | pending |
 
 ## Current Focus
 
-**example_zh quality** (`feat/example-zh-quality`). See `docs/next-task.md`.
+**Extraction depth tuning** (`feat/extraction-depth-tuning`). See `docs/next-task.md`.
 
 ## Next Milestone
 

@@ -56,7 +56,6 @@ function parseArgs(args: string[]): {
 
 async function main() {
   loadEnvLocal();
-  process.env.IMPORT_USE_SYNC_CLEANER ??= "1";
 
   const { file, title, url } = parseArgs(process.argv.slice(2));
   const resolved = resolve(process.cwd(), file);

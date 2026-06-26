@@ -1,52 +1,65 @@
-import { describe, expect, it } from "vitest";
-import {
-  alignExampleZhFromRawText,
-  parseBilingualBlocks,
-  resolveExampleZh,
-} from "@/services/example-zh";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 
-describe("parseBilingualBlocks", () => {
-  it("groups alternating english and chinese blocks", () => {
-    const raw = [
-      "I grabbed an iced latte on the way.",
-      "我顺路买了一杯冰拿铁。",
-      "The cafe was packed.",
-      "咖啡馆里人很多。",
-    ].join("\n");
+const llmMocks = vi.hoisted(() => ({
+  hasLlmApiKey: vi.fn(() => true),
+  createMock: vi.fn(),
+}));
 
-    expect(parseBilingualBlocks(raw)).toEqual([
-      { lang: "en", text: "I grabbed an iced latte on the way." },
-      { lang: "zh", text: "我顺路买了一杯冰拿铁。" },
-      { lang: "en", text: "The cafe was packed." },
-      { lang: "zh", text: "咖啡馆里人很多。" },
-    ]);
-  });
-});
+vi.mock("@/lib/llm", () => ({
+  hasLlmApiKey: () => llmMocks.hasLlmApiKey(),
+  getLlmModel: () => "deepseek-chat",
+  getLlmClient: () => ({
+    chat: {
+      completions: {
+        create: llmMocks.createMock,
+      },
+    },
+  }),
+}));
 
-describe("alignExampleZhFromRawText", () => {
-  it("returns paired chinese block for matching english example", () => {
-    const raw = [
-      "I grabbed an iced latte on the way.",
-      "我顺路买了一杯冰拿铁。",
-    ].join("\n");
-
-    expect(
-      alignExampleZhFromRawText(raw, "I grabbed an iced latte on the way.")
-    ).toBe("我顺路买了一杯冰拿铁。");
-  });
-
-  it("returns null when no chinese pair exists", () => {
-    expect(
-      alignExampleZhFromRawText("Only English here.", "Only English here.")
-    ).toBeNull();
-  });
-});
+import { resolveExampleZh, translateExampleZh } from "@/services/example-zh";
 
 describe("resolveExampleZh", () => {
-  it("uses alignment before calling translation", async () => {
-    const raw = ["Hello world.", "你好世界。"].join("\n");
-    await expect(resolveExampleZh(raw, "Hello world.")).resolves.toBe(
-      "你好世界。"
-    );
+  beforeEach(() => {
+    llmMocks.hasLlmApiKey.mockReturnValue(true);
+    llmMocks.createMock.mockReset();
+  });
+
+  it("always calls LLM translation", async () => {
+    llmMocks.createMock.mockResolvedValue({
+      choices: [{ message: { content: "你好世界。" } }],
+    });
+
+    await expect(resolveExampleZh("Hello world.")).resolves.toBe("你好世界。");
+    expect(llmMocks.createMock).toHaveBeenCalledOnce();
+  });
+
+  it("returns null when translation fails", async () => {
+    llmMocks.createMock.mockResolvedValue({
+      choices: [{ message: { content: "" } }],
+    });
+
+    await expect(resolveExampleZh("Hello world.")).resolves.toBeNull();
+  });
+});
+
+describe("translateExampleZh", () => {
+  beforeEach(() => {
+    llmMocks.createMock.mockReset();
+  });
+
+  it("returns null when LLM API key is missing", async () => {
+    llmMocks.hasLlmApiKey.mockReturnValue(false);
+
+    await expect(translateExampleZh("Hello world.")).resolves.toBeNull();
+  });
+
+  it("returns trimmed translation content", async () => {
+    llmMocks.hasLlmApiKey.mockReturnValue(true);
+    llmMocks.createMock.mockResolvedValue({
+      choices: [{ message: { content: "  你好。 " } }],
+    });
+
+    await expect(translateExampleZh("Hi.")).resolves.toBe("你好。");
   });
 });

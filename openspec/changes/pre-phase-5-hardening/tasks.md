@@ -26,11 +26,11 @@
 
 ## 3. P0 — example_zh quality (`feat/example-zh-quality`)
 
-- [ ] 3.1 SQL stats: null % by video
-- [ ] 3.2 User sample audit table (6 videos × 3–5 cards)
-- [ ] 3.3 Improve `alignExampleZhFromRawText`
-- [ ] 3.4 Backfill null rows; document before/after in decisions
-- [ ] 3.5 Tests + spot-check 5 Review cards
+- [x] 3.1 SQL stats: null % by video (`scripts/example-zh-stats.ts`)
+- [x] 3.2 User sample audit table (6 videos × 3–5 cards)
+- [x] 3.3 Always LLM `example_zh`; alignment moved to `example-zh-alignment.ts` (audit only)
+- [x] 3.4 Default sync clean; `IMPORT_USE_LLM_CLEANER=1` opt-in; backfill + ADR
+- [x] 3.5 Tests + A/B clean reports (`docs/ab-clean-extract-*.md`)
 
 ## 4. P1 — Extraction depth (`feat/extraction-depth-tuning`)
 

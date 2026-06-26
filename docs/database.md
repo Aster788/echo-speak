@@ -128,12 +128,11 @@ Core learning unit.
 
 | created_at | timestamptz | |
 
-**`example_zh` 填充策略（按优先级）：**
+**`example_zh` 填充策略：**
 
-1. 从 `transcripts.raw_text` 解析英/中块（交替块），按 `example_en` 子串对齐，取对应中文块
-2. 对齐失败 → DeepSeek 单句翻译（见 `docs/decisions.md`）
+Always LLM：对 `example_en` 调用 DeepSeek 单句翻译（见 `docs/decisions.md` 2026-06-26）。`raw_text` 保留双语供参考；对齐逻辑仅在 `example-zh-alignment.ts`（审计脚本用）。
 
-提取 pipeline 写入时尽量同时填充；`scripts/backfill-example-zh.ts` 可补全历史行。
+提取 pipeline 写入时填充；`scripts/backfill-example-zh.ts --force` 可重译历史行。
 
 ---
 

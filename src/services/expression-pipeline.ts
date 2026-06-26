@@ -1,6 +1,7 @@
 import {
   createExpressions,
   deleteUnlockedExpressionsByVideoAndSource,
+  listExpressions,
   listExpressionsMissingExampleZh,
   updateExpressionExampleZh,
 } from "@/db/expressions";
@@ -71,7 +72,7 @@ export async function extractExpressionsForTranscript(
       phrase: item.phrase,
       meaning: item.definition,
       example_en: item.example,
-      example_zh: await resolveExampleZhFn(transcript.raw_text, item.example),
+      example_zh: await resolveExampleZhFn(item.example),
       topic_id: resolveTopicSlug(item.topic_slug, topicIndex),
       source_type: "transcript" as const,
       weight: 1.0,
@@ -90,54 +91,59 @@ export async function extractExpressionsForTranscript(
 
 export async function backfillExampleZhForExpression(
   expression: Expression,
-  rawText: string | null,
   resolveExampleZhFn: typeof resolveExampleZh = resolveExampleZh
 ): Promise<string | null> {
   if (expression.example_zh?.trim()) {
     return expression.example_zh;
   }
 
-  const exampleZh = await resolveExampleZhFn(rawText, expression.example_en);
+  const exampleZh = await resolveExampleZhFn(expression.example_en);
   if (exampleZh) {
     await updateExpressionExampleZh(expression.id, exampleZh);
   }
   return exampleZh;
 }
 
+export type BackfillExampleZhOptions = {
+  client?: SupabaseClient;
+  force?: boolean;
+  resolveExampleZhFn?: typeof resolveExampleZh;
+};
+
 export async function backfillMissingExampleZh(
-  client?: SupabaseClient
-): Promise<{ updated: number; skipped: number }> {
-  const supabase = client ?? getSupabaseAdmin();
-  const expressions = await listExpressionsMissingExampleZh(supabase);
-  const rawTextByVideo = new Map<string, string | null>();
+  options: BackfillExampleZhOptions = {}
+): Promise<{ updated: number; skipped: number; unchanged: number }> {
+  const supabase = options.client ?? getSupabaseAdmin();
+  const resolveExampleZhFn = options.resolveExampleZhFn ?? resolveExampleZh;
+  const expressions = options.force
+    ? await listExpressions(supabase)
+    : await listExpressionsMissingExampleZh(supabase);
 
   let updated = 0;
   let skipped = 0;
+  let unchanged = 0;
 
   for (const expression of expressions) {
-    if (!rawTextByVideo.has(expression.video_id)) {
-      const { data } = await supabase
-        .from("transcripts")
-        .select("raw_text")
-        .eq("video_id", expression.video_id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      rawTextByVideo.set(expression.video_id, data?.raw_text ?? null);
+    if (!options.force && expression.example_zh?.trim()) {
+      unchanged += 1;
+      continue;
     }
 
-    const exampleZh = await resolveExampleZh(
-      rawTextByVideo.get(expression.video_id),
-      expression.example_en
-    );
+    const exampleZh = await resolveExampleZhFn(expression.example_en);
 
-    if (exampleZh) {
-      await updateExpressionExampleZh(expression.id, exampleZh, supabase);
-      updated += 1;
-    } else {
+    if (!exampleZh) {
       skipped += 1;
+      continue;
     }
+
+    if (exampleZh === expression.example_zh) {
+      unchanged += 1;
+      continue;
+    }
+
+    await updateExpressionExampleZh(expression.id, exampleZh, supabase);
+    updated += 1;
   }
 
-  return { updated, skipped };
+  return { updated, skipped, unchanged };
 }

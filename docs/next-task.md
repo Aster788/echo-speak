@@ -2,26 +2,25 @@
 
 Objective:
 
-Start **example_zh quality** (`feat/example-zh-quality`) — Pre-Phase 5 P0.
+Start **extraction depth tuning** (`feat/extraction-depth-tuning`) — Pre-Phase 5 P1.
 
 Scope (this PR):
 
-- SQL stats: null % by video
-- User sample audit table (6 videos × 3–5 cards)
-- Improve `alignExampleZhFromRawText`
-- Backfill null rows; document before/after in `docs/decisions.md`
-- Tests + spot-check 5 Review cards
+- User fills scheme-2 calibration table (6 videos: extracted / deleted / kept)
+- ADR: cap formula or Standard/Deep toggle
+- Update `prompts/extract-expressions.md` + pipeline + tests
+- User validates 2 sample videos
 
 Definition of Done:
 
-- Measurable drop in `example_zh` null rate; sample audit documented
-- `npm run build` and relevant tests pass
+- Calibration table ≥5 videos documented
+- Cap/toggle implemented; documented in `docs/decisions.md`
+- Test video re-extract within expected range
 
 Then (Pre-Phase 5 queue):
 
-1. `feat/extraction-depth-tuning` — scheme-2 calibration table → cap/toggle
-2. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
-3. `feat/home-page-redesign` + `feat/settings-auth`
+1. `feat/collections-page` — Topic | Video | All, Move sheet, redirects
+2. `feat/home-page-redesign` + `feat/settings-auth`
 
 Do Not Build Yet:
 
@@ -31,5 +30,5 @@ Do Not Build Yet:
 
 Reference:
 
-- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §3
-- Cloud deploy: `docs/deployment.md` (production https://echo-speak-gray.vercel.app)
+- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §4
+- A/B clean reports: `docs/ab-clean-extract-*.md`

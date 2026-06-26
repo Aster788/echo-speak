@@ -51,10 +51,10 @@ export function validateTranscriptLength(rawText: string): void {
 export async function cleanTranscriptForImport(
   rawText: string
 ): Promise<string> {
-  if (
-    process.env.IMPORT_USE_SYNC_CLEANER === "1" ||
-    !hasLlmApiKey()
-  ) {
+  const useLlmCleaner =
+    process.env.IMPORT_USE_LLM_CLEANER === "1" && hasLlmApiKey();
+
+  if (!useLlmCleaner) {
     return cleanTranscriptSync(rawText);
   }
 

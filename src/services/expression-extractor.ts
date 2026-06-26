@@ -1,3 +1,11 @@
+import {
+  getChunkExtractCap,
+  getVideoExpressionTarget,
+  resolveExtractionDepth,
+  type ExtractionDepth,
+} from "@/lib/extraction-depth";
+import { formatDismissalHintsForPrompt } from "@/lib/dismissal-hints";
+import { filterLowQualityExpressions } from "@/lib/filter-expressions";
 import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 import { mergeExtractedExpressions } from "@/lib/merge-expressions";
 import {
@@ -8,8 +16,15 @@ import {
   chunkTranscriptForExtraction,
   MAX_EXTRACTION_TOTAL_LENGTH,
 } from "@/lib/transcript-chunks";
+import { rankExtractedExpressions } from "@/services/expression-ranker";
 import type { ExtractedExpression } from "@/types/expression";
 import type OpenAI from "openai";
+
+export type ExtractExpressionsOptions = {
+  depth?: ExtractionDepth;
+  /** Set false to skip second LLM rank pass (direction D). */
+  rankPass?: boolean;
+};
 
 export { MAX_EXTRACTION_TOTAL_LENGTH as MAX_EXTRACTION_LENGTH };
 
@@ -42,7 +57,7 @@ export function parseExtractResponse(content: string): ExtractedExpression[] {
       ? (parsed as ExtractedExpression[])
       : [];
 
-  return expressions
+  const normalized = expressions
     .filter(
       (item) =>
         item?.phrase?.trim() &&
@@ -56,15 +71,26 @@ export function parseExtractResponse(content: string): ExtractedExpression[] {
       example: item.example.trim(),
       topic_slug: item.topic_slug.trim().toLowerCase(),
     }));
+
+  return filterLowQualityExpressions(normalized);
 }
 
-async function buildSystemPrompt(): Promise<string> {
+async function buildSystemPrompt(maxExpressions: number): Promise<string> {
   const template = await loadPrompt("extract-expressions");
   const topicTree = formatTopicTreeForPrompt();
   const leafSlugs = listLeafTopicSlugs().join(", ");
+  const dismissalHints = await formatDismissalHintsForPrompt().catch(
+    () => ""
+  );
+  const dismissalSection = dismissalHints
+    ? `\n${dismissalHints}\n`
+    : "";
+
   return template
     .replace("{{TOPIC_TREE}}", topicTree)
-    .replace("{{LEAF_SLUGS}}", leafSlugs);
+    .replace("{{LEAF_SLUGS}}", leafSlugs)
+    .replace("{{MAX_EXPRESSIONS}}", String(maxExpressions))
+    .replace("{{DISMISSAL_HINTS}}", dismissalSection);
 }
 
 async function extractExpressionsFromChunk(
@@ -87,23 +113,40 @@ async function extractExpressionsFromChunk(
 }
 
 export async function extractExpressions(
-  cleanedText: string
+  cleanedText: string,
+  options: ExtractExpressionsOptions = {}
 ): Promise<ExtractedExpression[]> {
   validateExtractionInput(cleanedText);
 
-  const systemPrompt = await buildSystemPrompt();
+  const depth = resolveExtractionDepth(options.depth);
+  const rankPass =
+    options.rankPass ??
+    process.env.EXTRACTION_RANK_PASS?.toLowerCase() !== "0";
   const openai = getLlmClient();
   const chunks = chunkTranscriptForExtraction(cleanedText);
 
   const batches: ExtractedExpression[][] = [];
   for (const chunk of chunks) {
+    const extractCap = getChunkExtractCap(chunk.length, depth);
+    const systemPrompt = await buildSystemPrompt(extractCap);
     const batch = await extractExpressionsFromChunk(chunk, systemPrompt, openai);
     if (batch.length > 0) {
       batches.push(batch);
     }
   }
 
-  const expressions = mergeExtractedExpressions(batches);
+  let expressions = mergeExtractedExpressions(batches);
+  const targetCount = getVideoExpressionTarget(cleanedText, depth);
+
+  if (rankPass && expressions.length > targetCount) {
+    expressions = await rankExtractedExpressions(
+      expressions,
+      targetCount,
+      cleanedText,
+      openai
+    );
+  }
+
   if (expressions.length === 0) {
     throw new Error("Expression extractor returned no valid expressions.");
   }

@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExpressionRow } from "@/components/topics/ExpressionRow";
+import { DismissReasonDialog } from "@/components/topics/DismissReasonDialog";
 import { burstConfetti } from "@/components/topics/confetti";
 import { findDropTarget, TopicDock } from "@/components/topics/TopicDock";
 import { TopicTree } from "@/components/topics/TopicTree";
 import type { Expression } from "@/types/expression";
+import type { DismissReason } from "@/types/dismiss-reason";
 import type { TopicTreeNode } from "@/types/topic";
 
 type DockTopic = { id: string; name: string; slug: string };
@@ -20,6 +22,14 @@ type DragState = {
   expression: Expression;
   x: number;
   y: number;
+};
+
+type PendingDismiss = {
+  expressionId: string;
+  phrase: string;
+  viaTrash?: boolean;
+  x?: number;
+  y?: number;
 };
 
 export function TopicsManager({
@@ -45,6 +55,9 @@ export function TopicsManager({
   const [trashHoverSince, setTrashHoverSince] = useState<number | null>(null);
   const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
   const [celebratedDismiss, setCelebratedDismiss] = useState(false);
+  const [pendingDismiss, setPendingDismiss] = useState<PendingDismiss | null>(
+    null
+  );
   const dragRef = useRef<DragState | null>(null);
   const trashHoverRef = useRef<number | null>(null);
 
@@ -211,8 +224,38 @@ export function TopicsManager({
     setMessage(`Merged topics. Moved ${data.movedCount ?? 0} expression(s).`);
   }
 
+  function requestDismiss(
+    expressionId: string,
+    viaTrash = false,
+    x?: number,
+    y?: number
+  ) {
+    const expression = expressions.find((item) => item.id === expressionId);
+    if (!expression) {
+      return;
+    }
+    setPendingDismiss({
+      expressionId,
+      phrase: expression.phrase,
+      viaTrash,
+      x,
+      y,
+    });
+  }
+
+  async function confirmDismiss(reason: DismissReason) {
+    if (!pendingDismiss) {
+      return;
+    }
+
+    const { expressionId, viaTrash, x, y } = pendingDismiss;
+    setPendingDismiss(null);
+    await dismissWithAnimation(expressionId, reason, viaTrash, x, y);
+  }
+
   async function dismissWithAnimation(
     expressionId: string,
+    reason: DismissReason,
     viaTrash = false,
     x?: number,
     y?: number
@@ -222,6 +265,8 @@ export function TopicsManager({
 
     const response = await fetch(`/api/expressions/${expressionId}/dismiss`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
     });
     const data = (await response.json()) as { ok: boolean; message?: string };
     if (!data.ok) {
@@ -305,9 +350,9 @@ export function TopicsManager({
     setTrashHoverSince(null);
   }
 
-  const dismissRef = useRef(dismissWithAnimation);
+  const dismissRef = useRef(requestDismiss);
   const moveRef = useRef(handleMoveExpression);
-  dismissRef.current = dismissWithAnimation;
+  dismissRef.current = requestDismiss;
   moveRef.current = handleMoveExpression;
 
   useEffect(() => {
@@ -515,7 +560,7 @@ export function TopicsManager({
                 key={expression.id}
                 expression={expression}
                 fadingOut={fadingIds.has(expression.id)}
-                onDismiss={(id) => dismissWithAnimation(id)}
+                onDismiss={(id) => requestDismiss(id)}
                 onUnlock={handleUnlockExpression}
                 onDragStart={handleDragStart}
                 moveTopicOptions={dockTopics}
@@ -549,6 +594,13 @@ export function TopicsManager({
           {dragState.expression.phrase}
         </div>
       )}
+
+      <DismissReasonDialog
+        open={pendingDismiss !== null}
+        phrase={pendingDismiss?.phrase ?? ""}
+        onCancel={() => setPendingDismiss(null)}
+        onConfirm={confirmDismiss}
+      />
     </div>
   );
 }

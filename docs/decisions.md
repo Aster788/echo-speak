@@ -149,6 +149,56 @@ Consequences:
 
 ---
 
+2026-06-26
+
+Decision:
+
+**Extraction depth +「值得学」quality pass** (Pre-Phase 5 P1, `feat/extraction-depth-tuning`).
+
+Context:
+
+Extract relied on a short LLM prompt and a fixed 20 expressions/chunk cap. User curation showed ~3 trivial items deleted per 20-item batch (noise: single words, fragments, duplicate splits from one sentence). Directions D (second LLM pass) and E (dismiss feedback) deferred.
+
+Decision:
+
+1. **Prompt tightening (A):** `prompts/extract-expressions.md` — explicit include/exclude rules, good/bad table, transferable collocation forms; dynamic `{{MAX_EXPRESSIONS}}` per chunk.
+2. **Cap / mode (B):** Standard: `clamp(round(chars/1000), 6, 15)` per chunk; Deep: `clamp(round(chars/600), 12, 30)`. Video target = sum of chunk caps.
+3. **Post-filter (C):** `filterLowQualityExpressions` — reject single-word / stopword-only phrases; dedupe substring overlaps; one phrase per duplicate `example` sentence.
+4. **Rank pass (D):** Overfetch first pass (`getChunkExtractCap`); second LLM via `prompts/select-expressions.md` when merged count > video target. `EXTRACTION_RANK_PASS=0` to disable.
+5. **Dismiss reasons (E):** `expression_dismissals.reason` + Topics reason picker; `formatDismissalHintsForPrompt` feeds extract prompt; `scripts/dismissal-stats.ts`.
+6. **Calibration:** User fills Scheme 2 table in `docs/extraction-depth-calibration.md`.
+
+Consequences:
+
+- Default short vlog (~4k chars) targets ~6 items/chunk (not 10).
+- +1 LLM call per extract when rank pass runs.
+- Re-extract improves after dismiss audit via prompt hints.
+
+---
+
+2026-06-26 (c)
+
+Decision:
+
+**P1 extraction depth — Definition of Done excludes a personal “must-keep” phrase list.**
+
+Context:
+
+After re-extract on three sample videos, the user noted specific phrases they still wanted (e.g. `whole ass or no ass`, `make the most of`, `unblock yourself`, `take a step back`). Tighter caps + rank pass intentionally trade recall of every good item for lower noise. Feishu sync (Phase 6) will curate from notes; it does not guarantee the same phrases reappear from transcript extract alone.
+
+Decision:
+
+1. **P1 is done when:** default extract is cleaner (post-filter, lemma forms, elastic cap, dismiss hints, Scheme 2 calibration data) — not when every user-favored phrase from a prior batch is present.
+2. **Personal keep-list gaps** are addressed later via: Feishu word lists, manual add, per-video Deep re-extract, or `topic_locked` — not more global prompt/cap tuning in P1.
+3. **Re-extract validation** on 3 videos (internship, 29 easy things, Getting Married) accepted as sufficient for P1 gate.
+
+Consequences:
+
+- Avoid blocking Collections / Phase 5 gate on subjective phrase recall.
+- Future “I want this exact phrase” is a curation/sync feature, not extract depth regression.
+
+---
+
 2026-06-25
 
 Decision:

@@ -34,10 +34,10 @@
 
 ## 4. P1 — Extraction depth (`feat/extraction-depth-tuning`)
 
-- [ ] 4.1 User fills scheme-2 table (6 videos: extracted/deleted/kept)
-- [ ] 4.2 ADR: cap formula or Standard/Deep toggle
-- [ ] 4.3 Update prompt + pipeline + tests
-- [ ] 4.4 User validates 2 sample videos
+- [x] 4.1 User fills scheme-2 table (6 videos: extracted/deleted/kept) — auto via `extraction-depth-stats.ts`
+- [x] 4.2 ADR: cap formula or Standard/Deep toggle
+- [x] 4.3 Update prompt + pipeline + tests
+- [x] 4.4 User validates 2 sample videos — 3-video re-extract (internship, 29 easy, Getting Married)
 
 ## 5. P1 — Collections (`feat/collections-page`)
 

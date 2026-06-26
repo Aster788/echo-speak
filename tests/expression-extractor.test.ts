@@ -46,11 +46,17 @@ describe("expression-extractor", () => {
     ]);
   });
 
-  it("filters invalid expression rows", () => {
+  it("filters invalid expression rows and trivial phrases", () => {
     const parsed = parseExtractResponse(
       JSON.stringify({
         expressions: [
           { phrase: "", definition: "x", example: "y", topic_slug: "food" },
+          {
+            phrase: "track",
+            definition: "跟踪",
+            example: "Keep track of it.",
+            topic_slug: "uncategorized",
+          },
           {
             phrase: "meal prep",
             definition: "备餐",

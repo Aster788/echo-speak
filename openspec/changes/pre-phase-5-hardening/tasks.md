@@ -64,18 +64,18 @@
 
 ## 7. P2 — Settings + Auth (`feat/settings-auth`)
 
-- [ ] 7.1 Migration: `user_settings` (user_id FK, encrypted or vault columns for secrets)
-- [ ] 7.2 Supabase Auth: email or magic link (decide provider in design)
-- [ ] 7.3 Settings UI: decorative frames + input.jpeg for **user-editable fields only** (exclude SERVICE_ROLE)
-- [ ] 7.4 Document SERVICE_ROLE in `.env.local.example` only; server reads from `process.env`
-- [ ] 7.5 Server actions: load/save user_settings; merge with env fallback
-- [ ] 7.6 Wire LLM client to read user settings when authenticated
-- [ ] 7.7 Login gate before save
+- [x] 7.1 Migration: `user_settings` (user_id FK, RLS; secrets plaintext at rest — encryption deferred)
+- [x] 7.2 Supabase Auth: email magic link (`@supabase/ssr`, 5 min OTP)
+- [x] 7.3 Settings UI: decorative frames + input.jpeg for **user-editable fields only** (LLM + Feishu; exclude SERVICE_ROLE and public Supabase)
+- [x] 7.4 Document SERVICE_ROLE in `.env.local.example` only; server reads from `process.env`
+- [x] 7.5 Load/save via API routes + `user_settings`; per-user LLM/Feishu only (no env fallback when authenticated); Supabase URL/anon site-provided
+- [x] 7.6 Wire LLM client to read user settings when authenticated
+- [x] 7.7 Login gate before save
 
 ## 8. Docs & archive
 
-- [ ] 8.1 Update `docs/design-system.md` Collections / Home / Settings / Review finish sections
-- [ ] 8.2 Update `docs/progress.md` when workstreams complete
+- [x] 8.1 Update `docs/design-system.md` Collections / Home / Settings / Review finish sections
+- [x] 8.2 Update `docs/progress.md` when workstreams complete
 - [ ] 8.3 `openspec archive pre-phase-5-hardening` after all PRs merge
 
 ## Phase 5 gate

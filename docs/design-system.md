@@ -741,6 +741,65 @@ Primary motion 仍为 Fade / Opacity / Card Flip。
 
 ---
 
+# Home Page
+
+**Route:** `/`
+
+Layout order (430×932):
+
+1. Page header tagline (unchanged)
+2. Divider
+3. **Import transcript** → `/import`
+4. **Start review** → `/review`
+5. `Hello.jpeg` illustration (transparent, bottom)
+
+Assets: `public/home/`
+
+---
+
+# Collections Page
+
+**Route:** `/collections` (redirects from `/topics`, `/library`)
+
+- Description: `Build your personal library of natural English expressions.`
+- Tabs: **Topic | Video | All** in `title.jpeg`; default Topic; active tab floats
+- **Topic L1:** tree + New topic + bin/move; `arrow.jpeg` expand/collapse + rotate; `target.png` on leaf topics only
+- **Topic L2 / Video L2:** cards in `Rectangle.jpeg`; phrase, meaning, example_en, example_zh
+- **Video L2 header:** italic video title left, back right
+- **All view:** `共 N 个 video ｜ M 条 expressions` + back → Topic L1
+- **Move:** paper modal (`paper.jpeg`) — not inline dropdown
+
+Assets: `public/collections/`
+
+---
+
+# Settings Page
+
+**Route:** `/settings`
+
+- Page description: `Sign in to save your own keys. The site provides the shared database.`
+- **Auth strip:** email magic link (5 min OTP); sign-out when authenticated
+- **LLM block** (3 fields): decorative `frame.png` + `input.png`; hints — `Use your own API keys. AI features won't work if left empty.`
+- **Feishu block** (2 fields): same frames; hints — `Use your own Feishu app credentials. Feishu sync won't work if left empty.`
+- Label `KEY:` then `gap-[1ch]` then value; empty → placeholder `请输入` (muted)
+- Secret fields: password mask + eye reveal toggle
+- **Save settings** button; success message centered below button
+- **Not in UI:** Supabase URL/anon, service role (deployment env only)
+
+Assets: `public/settings/` (`frame.png`, `input.png`)
+
+---
+
+# Review Finish
+
+Shown when user completes a review session:
+
+- Copy: `You have completed.` + link `choose another mode` → mode selector
+- Hero: `congrats.jpeg` (transparent) below copy
+- **Back** from finish → scope picker (not mode selector)
+
+---
+
 # Accessibility
 
 必须通过：

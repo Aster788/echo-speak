@@ -330,11 +330,13 @@ Rollback: redirects can keep `/topics` working; cloud rollback = revert env to p
 
 ### Settings (Auth + frames)
 
-- Decorative label frames + `input.jpeg` value fields; horizontal scroll for long secrets
-- **Settings UI fields only:** `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `FEISHU_APP_ID`, `FEISHU_APP_SECRET`
-- **`SUPABASE_SERVICE_ROLE_KEY` MUST NOT appear in Settings**—server-only; documented in `.env.local` / Vercel env only
-- Login required to save user-editable fields into `user_settings`
-- Page line retained plus helper: env vars for deploy; logged-in users override via Settings
+- Decorative label frames + `input.jpeg` value fields; horizontal scroll for long secrets; eye toggle on secret fields
+- **Settings UI fields only:** `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `FEISHU_APP_ID`, `FEISHU_APP_SECRET`
+- **Site-provided (not in UI):** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- Login required to save; magic link auth (5 min OTP)
+- Per-user LLM/Feishu only — no deployment env fallback when authenticated
+- Grouped hints: LLM block + Feishu block; empty placeholder `请输入`
+- Page description: `Sign in to save your own keys. The site provides the shared database.`
 
 ### Collections
 

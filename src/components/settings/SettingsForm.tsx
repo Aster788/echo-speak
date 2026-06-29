@@ -152,9 +152,27 @@ export function SettingsForm({ initial, authReason }: SettingsFormProps) {
           </div>
         </form>
       ) : (
-        <p className="text-[0.75rem] leading-snug text-[#222222]/80">
-          Sign in above to view and save your LLM and Feishu keys.
-        </p>
+        <div className="relative w-full">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+            className="absolute top-1/2 left-0 -translate-y-1/2 -skew-x-[12deg] shrink-0 text-[#222222]/70"
+          >
+            <path
+              d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <p className="whitespace-nowrap text-center text-[0.6875rem] italic leading-snug text-[#222222]/70">
+            Use email sign-in above to unlock and save your personal settings.
+          </p>
+        </div>
       )}
     </div>
   );

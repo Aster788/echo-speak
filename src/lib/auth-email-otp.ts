@@ -6,15 +6,15 @@ export const EMAIL_OTP_EXPIRY_LABEL = "5 minutes";
 export const EMAIL_OTP_LENGTH = 6;
 
 export function emailOtpSentMessage(email: string): string {
-  return `Code sent to ${email}. Enter the ${EMAIL_OTP_LENGTH}-digit code within ${EMAIL_OTP_EXPIRY_LABEL}.`;
+  return `Code sent to ${email}.\nEnter the ${EMAIL_OTP_LENGTH}-digit code within ${EMAIL_OTP_EXPIRY_LABEL}.`;
 }
 
 export function emailOtpHelperText(): string {
-  return `We email a ${EMAIL_OTP_LENGTH}-digit code. It expires in ${EMAIL_OTP_EXPIRY_LABEL} and works once. No link to click.`;
+  return `Enter your email above to receive a ${EMAIL_OTP_LENGTH}-digit sign-in code.`;
 }
 
 export function emailOtpCodeHelperText(email: string): string {
-  return `Enter the code we sent to ${email}.`;
+  return `Enter the ${EMAIL_OTP_LENGTH}-digit code from your email to sign in.`;
 }
 
 export type EmailOtpAuthReason = "expired" | "invalid" | "failed";

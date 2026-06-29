@@ -21,6 +21,8 @@ type SettingsAuthStripProps = {
 
 type AuthStep = "email" | "code";
 
+const settingsAuthButtonClassName = `${pageHintFont.className} shrink-0 rounded-[0.625rem] border border-[#222222]/25 bg-[#222222]/5 px-3 py-1 text-[0.8125rem] text-[#222222] transition-colors duration-150 hover:bg-[#222222]/10 disabled:opacity-50`;
+
 export function SettingsAuthStrip({
   isAuthenticated,
   email,
@@ -112,42 +114,44 @@ export function SettingsAuthStrip({
 
   if (step === "code") {
     return (
-      <form onSubmit={handleVerifyCode} className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <SettingsFrame>
-              <label htmlFor="settings-login-code" className="sr-only">
-                Sign-in code
-              </label>
-              <input
-                id="settings-login-code"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={code}
-                onChange={(event) => setCode(normalizeEmailOtpCode(event.target.value))}
-                placeholder="000000"
-                maxLength={6}
-                className="block w-full bg-transparent text-center text-[0.9375rem] tracking-[0.35em] text-[#222222] outline-none placeholder:text-[#222222]/25"
-              />
-            </SettingsFrame>
-          </div>
+      <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
+        <div className="mx-auto w-full max-w-[20.5rem] min-w-0">
+          <SettingsFrame>
+            <label htmlFor="settings-login-code" className="sr-only">
+              Sign-in code
+            </label>
+            <input
+              id="settings-login-code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(event) => setCode(normalizeEmailOtpCode(event.target.value))}
+              placeholder="000000"
+              maxLength={6}
+              className="block w-full bg-transparent text-center text-[0.9375rem] tracking-[0.35em] text-[#222222] outline-none placeholder:text-[#222222]/25"
+            />
+          </SettingsFrame>
+        </div>
+        <div className="flex justify-center">
           <button
             type="submit"
             disabled={pending || code.length !== 6}
-            className={`${pageHintFont.className} shrink-0 text-[0.8125rem] text-[#222222] underline decoration-[#222222]/30 underline-offset-[3px] disabled:opacity-50`}
+            className={settingsAuthButtonClassName}
           >
             Sign in
           </button>
         </div>
         {message ? (
-          <p className="text-[0.75rem] leading-snug text-[#222222]/80">{message}</p>
+          <p className="whitespace-pre-line text-center text-[0.75rem] leading-snug text-[#222222]/80">
+            {message}
+          </p>
         ) : (
-          <p className="text-[0.75rem] leading-snug text-[#222222]/80">
+          <p className="text-center text-[0.75rem] leading-snug text-[#222222]/80">
             {emailOtpCodeHelperText(loginEmail.trim())}
           </p>
         )}
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem] text-[#222222]/80">
+        <div className="flex flex-col items-center gap-2">
           <button
             type="button"
             disabled={pending}
@@ -171,7 +175,7 @@ export function SettingsAuthStrip({
                 }
               });
             }}
-            className="underline decoration-[#222222]/30 underline-offset-2 disabled:opacity-50"
+            className={settingsAuthButtonClassName}
           >
             Send new code
           </button>
@@ -183,7 +187,7 @@ export function SettingsAuthStrip({
               setCode("");
               setMessage("");
             }}
-            className="underline decoration-[#222222]/30 underline-offset-2 disabled:opacity-50"
+            className={settingsAuthButtonClassName}
           >
             Use a different email
           </button>
@@ -193,36 +197,40 @@ export function SettingsAuthStrip({
   }
 
   return (
-    <form onSubmit={handleSendCode} className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <SettingsFrame>
-            <label htmlFor="settings-login-email" className="sr-only">
-              Email for sign-in code
-            </label>
-            <input
-              id="settings-login-email"
-              type="email"
-              value={loginEmail}
-              onChange={(event) => setLoginEmail(event.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              className="block w-full bg-transparent text-[0.8125rem] text-[#222222] outline-none placeholder:text-[#222222]/35"
-            />
-          </SettingsFrame>
-        </div>
+    <form onSubmit={handleSendCode} className="flex flex-col gap-4">
+      <div className="mx-auto w-full max-w-[20.5rem] min-w-0">
+        <SettingsFrame>
+          <label htmlFor="settings-login-email" className="sr-only">
+            Email for sign-in code
+          </label>
+          <input
+            id="settings-login-email"
+            type="email"
+            value={loginEmail}
+            onChange={(event) => setLoginEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            className="block w-full bg-transparent text-center text-[0.8125rem] text-[#222222] outline-none placeholder:text-[#222222]/35"
+          />
+        </SettingsFrame>
+      </div>
+      <div className="flex justify-center">
         <button
           type="submit"
           disabled={pending}
-          className={`${pageHintFont.className} shrink-0 text-[0.8125rem] text-[#222222] underline decoration-[#222222]/30 underline-offset-[3px] disabled:opacity-50`}
+          className={settingsAuthButtonClassName}
         >
           Send code
         </button>
       </div>
       {message ? (
-        <p className="text-[0.75rem] leading-snug text-[#222222]/80">{message}</p>
+        <p className="whitespace-pre-line text-center text-[0.75rem] leading-snug text-[#222222]/80">
+          {message}
+        </p>
       ) : (
-        <p className="text-[0.75rem] leading-snug text-[#222222]/80">{emailOtpHelperText()}</p>
+        <p className="text-center text-[0.75rem] leading-snug text-[#222222]/80">
+          {emailOtpHelperText()}
+        </p>
       )}
     </form>
   );

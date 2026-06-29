@@ -18,4 +18,4 @@ Reference:
 
 Optional (ops, not blocking SRS):
 
-- Resend SMTP + custom magic-link template on Supabase cloud
+- Resend SMTP + email OTP template on Supabase cloud (`supabase/templates/email-otp.html`)

@@ -4,18 +4,22 @@ import { useState, useTransition, type FormEvent } from "react";
 import { SettingsFrame } from "@/components/settings/SettingsFrame";
 import { pageHintFont } from "@/lib/page-hint-font";
 import {
-  magicLinkAuthErrorMessage,
-  magicLinkHelperText,
-  magicLinkSentMessage,
-  type MagicLinkAuthReason,
-} from "@/lib/auth-magic-link";
+  emailOtpAuthErrorMessage,
+  emailOtpCodeHelperText,
+  emailOtpHelperText,
+  emailOtpSentMessage,
+  normalizeEmailOtpCode,
+  type EmailOtpAuthReason,
+} from "@/lib/auth-email-otp";
 
 type SettingsAuthStripProps = {
   isAuthenticated: boolean;
   email: string | null;
-  authReason?: MagicLinkAuthReason | null;
+  authReason?: EmailOtpAuthReason | null;
   onAuthChange: () => void;
 };
+
+type AuthStep = "email" | "code";
 
 export function SettingsAuthStrip({
   isAuthenticated,
@@ -23,30 +27,64 @@ export function SettingsAuthStrip({
   authReason,
   onAuthChange,
 }: SettingsAuthStripProps) {
+  const [step, setStep] = useState<AuthStep>("email");
   const [loginEmail, setLoginEmail] = useState("");
+  const [code, setCode] = useState("");
   const [message, setMessage] = useState(
-    authReason ? magicLinkAuthErrorMessage(authReason) : ""
+    authReason ? emailOtpAuthErrorMessage(authReason) : ""
   );
   const [pending, startTransition] = useTransition();
 
-  function handleLogin(event: FormEvent<HTMLFormElement>) {
+  function handleSendCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     startTransition(async () => {
       try {
-        const response = await fetch("/api/auth/magic-link", {
+        const response = await fetch("/api/auth/otp/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: loginEmail }),
         });
         const data = (await response.json()) as { ok: boolean; error?: string };
         if (data.ok) {
-          setMessage(magicLinkSentMessage());
+          setStep("code");
+          setCode("");
+          setMessage(emailOtpSentMessage(loginEmail.trim()));
         } else {
-          setMessage(data.error ?? "Could not send magic link.");
+          setMessage(data.error ?? "Could not send sign-in code.");
         }
       } catch {
-        setMessage("Could not send magic link.");
+        setMessage("Could not send sign-in code.");
+      }
+    });
+  }
+
+  function handleVerifyCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/auth/otp/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: loginEmail.trim(), code }),
+        });
+        const data = (await response.json()) as {
+          ok: boolean;
+          error?: string;
+          reason?: EmailOtpAuthReason;
+        };
+        if (data.ok) {
+          onAuthChange();
+          return;
+        }
+        setMessage(
+          data.reason
+            ? emailOtpAuthErrorMessage(data.reason)
+            : (data.error ?? "Could not verify sign-in code.")
+        );
+      } catch {
+        setMessage("Could not verify sign-in code.");
       }
     });
   }
@@ -72,13 +110,95 @@ export function SettingsAuthStrip({
     );
   }
 
+  if (step === "code") {
+    return (
+      <form onSubmit={handleVerifyCode} className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <SettingsFrame>
+              <label htmlFor="settings-login-code" className="sr-only">
+                Sign-in code
+              </label>
+              <input
+                id="settings-login-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={code}
+                onChange={(event) => setCode(normalizeEmailOtpCode(event.target.value))}
+                placeholder="000000"
+                maxLength={6}
+                className="block w-full bg-transparent text-center text-[0.9375rem] tracking-[0.35em] text-[#222222] outline-none placeholder:text-[#222222]/25"
+              />
+            </SettingsFrame>
+          </div>
+          <button
+            type="submit"
+            disabled={pending || code.length !== 6}
+            className={`${pageHintFont.className} shrink-0 text-[0.8125rem] text-[#222222] underline decoration-[#222222]/30 underline-offset-[3px] disabled:opacity-50`}
+          >
+            Sign in
+          </button>
+        </div>
+        {message ? (
+          <p className="text-[0.75rem] leading-snug text-[#222222]/80">{message}</p>
+        ) : (
+          <p className="text-[0.75rem] leading-snug text-[#222222]/80">
+            {emailOtpCodeHelperText(loginEmail.trim())}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem] text-[#222222]/80">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              setMessage("");
+              startTransition(async () => {
+                try {
+                  const response = await fetch("/api/auth/otp/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: loginEmail.trim() }),
+                  });
+                  const data = (await response.json()) as { ok: boolean; error?: string };
+                  if (data.ok) {
+                    setMessage(emailOtpSentMessage(loginEmail.trim()));
+                  } else {
+                    setMessage(data.error ?? "Could not send sign-in code.");
+                  }
+                } catch {
+                  setMessage("Could not send sign-in code.");
+                }
+              });
+            }}
+            className="underline decoration-[#222222]/30 underline-offset-2 disabled:opacity-50"
+          >
+            Send new code
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              setStep("email");
+              setCode("");
+              setMessage("");
+            }}
+            className="underline decoration-[#222222]/30 underline-offset-2 disabled:opacity-50"
+          >
+            Use a different email
+          </button>
+        </div>
+      </form>
+    );
+  }
+
   return (
-    <form onSubmit={handleLogin} className="flex flex-col gap-2">
+    <form onSubmit={handleSendCode} className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <SettingsFrame>
             <label htmlFor="settings-login-email" className="sr-only">
-              Email for magic link
+              Email for sign-in code
             </label>
             <input
               id="settings-login-email"
@@ -96,15 +216,13 @@ export function SettingsAuthStrip({
           disabled={pending}
           className={`${pageHintFont.className} shrink-0 text-[0.8125rem] text-[#222222] underline decoration-[#222222]/30 underline-offset-[3px] disabled:opacity-50`}
         >
-          Send magic link
+          Send code
         </button>
       </div>
       {message ? (
         <p className="text-[0.75rem] leading-snug text-[#222222]/80">{message}</p>
       ) : (
-        <p className="text-[0.75rem] leading-snug text-[#222222]/80">
-          {magicLinkHelperText()}
-        </p>
+        <p className="text-[0.75rem] leading-snug text-[#222222]/80">{emailOtpHelperText()}</p>
       )}
     </form>
   );

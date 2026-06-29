@@ -47,18 +47,25 @@ npx vercel --prod
 
 Until `SUPABASE_SERVICE_ROLE_KEY` is set on Vercel, `/review` and `/topics` return 500 at runtime (build succeeds).
 
-### Settings magic link email (production)
+### Settings email OTP sign-in (production)
 
-- Magic links expire in **5 minutes** (`otp_expiry = 300` in `supabase/config.toml` for local). Each link works **once**.
-- Local dev uses `supabase/templates/magic-link.html` (`[auth.email.template.magic_link]`). After edits: `supabase stop && supabase start`.
-- **Cloud project `ejgybfiywdbnfzckjqao`** — you must set these in [Supabase Dashboard](https://supabase.com/dashboard/project/ejgybfiywdbnfzckjqao/auth/providers) (agents cannot click Dashboard for you):
+- Sign-in codes expire in **5 minutes** (`otp_expiry = 300` in `supabase/config.toml` for local). Each code works **once**.
+- Local dev uses `supabase/templates/email-otp.html` (`[auth.email.template.magic_link]`). After edits: `supabase stop && supabase start`.
+- **Cloud project `ejgybfiywdbnfzckjqao`** — set these in [Supabase Dashboard](https://supabase.com/dashboard/project/ejgybfiywdbnfzckjqao/auth/providers):
 
 | Step | Where | What to set |
 |------|--------|-------------|
-| 1 | **Authentication → Sign In / Providers → Email** | Enable Email provider |
+| 1 | **Authentication → Sign In / Providers → Email** | Enable Email provider; **Confirm email = off** |
 | 2 | **Authentication → Sign In / Providers → Email → Email OTP Expiration** | `300` seconds (5 minutes) |
-| 3 | **Authentication → Email Templates → Magic Link** | Subject: `Echo Speak sign-in link (expires in 5 minutes)`; body: copy from `supabase/templates/magic-link.html` (highlight 5 min + one-time use) |
-| 4 | **Authentication → URL Configuration → Redirect URLs** | Add `https://echo-speak-gray.vercel.app/auth/callback` |
+| 3 | **Authentication → Email Templates → Magic link or OTP** | Subject: `Your Echo Speak sign-in code (expires in 5 minutes)`; body: copy from `supabase/templates/email-otp.html` (shows `{{ .Token }}` only — no links) |
+| 4 | **Authentication → URL Configuration** | **Site URL:** `https://echo-speak-gray.vercel.app` (legacy magic-link callback optional) |
+| 5 | **Authentication → SMTP Settings** | Resend: host `smtp.resend.com`, port `587`, user `resend`, password = API key, sender `noreply@echo.veintastealbum.com` |
+
+**Flow:** Settings → enter email → **Send code** → enter 6-digit code from email → **Sign in**.
+
+**Resend shows Delivered but inbox is empty:** search `in:anywhere from:echo.veintastealbum.com`. School mail (`@nyu.edu`) may quarantine; plain-text OTP usually delivers better than magic links. Test with personal Gmail/QQ first.
+
+**Code invalid or expired:** codes are one-time and last 5 minutes — use **Send new code**.
 
 **New link vs old link:** Supabase issues a **new token on every** `signInWithOtp` call. The **latest** email is the one to use. Older links stop working once used, or when they pass the OTP expiry window — there is **no separate Dashboard toggle** named “revoke previous OTP”. Do not rely on old Inbucket messages after sending again.
 

@@ -25,6 +25,7 @@ export async function getAppOrigin(request?: Request): Promise<string> {
   return "http://localhost:3000";
 }
 
+/** Must match an entry in Supabase Auth redirect URLs (exact match; no query string). */
 export function settingsAuthCallbackUrl(origin: string): string {
-  return `${origin}/auth/callback?next=/settings`;
+  return `${origin}/auth/callback`;
 }

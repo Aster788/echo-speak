@@ -11,12 +11,12 @@ import {
   USER_SETTINGS_LLM_FIELDS,
   type UserSettingsFormKey,
 } from "@/lib/user-settings";
-import type { MagicLinkAuthReason } from "@/lib/auth-magic-link";
+import type { EmailOtpAuthReason } from "@/lib/auth-email-otp";
 import type { SettingsLoadResult } from "@/app/settings/types";
 
 type SettingsFormProps = {
   initial: SettingsLoadResult;
-  authReason?: MagicLinkAuthReason | null;
+  authReason?: EmailOtpAuthReason | null;
 };
 
 function SettingsFieldGroup({

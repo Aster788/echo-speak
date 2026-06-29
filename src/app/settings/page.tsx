@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { loadSettings } from "@/app/settings/actions";
-import { parseMagicLinkAuthReason } from "@/lib/auth-magic-link";
+import { parseEmailOtpAuthReason } from "@/lib/auth-email-otp";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const params = await searchParams;
   const initial = await loadSettings();
   const authReason =
-    params.auth === "error" ? parseMagicLinkAuthReason(params.reason) : null;
+    params.auth === "error" ? parseEmailOtpAuthReason(params.reason) : null;
 
   return (
     <PageShell>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { classifyMagicLinkVerifyError } from "@/lib/auth-magic-link";
+import { classifyEmailOtpVerifyError } from "@/lib/auth-email-otp";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function authErrorRedirect(origin: string, reason: string) {
@@ -39,5 +39,5 @@ export async function GET(request: Request) {
     lastErrorMessage = error.message;
   }
 
-  return authErrorRedirect(origin, classifyMagicLinkVerifyError(lastErrorMessage));
+  return authErrorRedirect(origin, classifyEmailOtpVerifyError(lastErrorMessage));
 }

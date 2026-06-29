@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getAppOrigin, settingsAuthCallbackUrl } from "@/lib/app-origin";
 
 export async function POST(request: Request) {
   try {
@@ -15,12 +14,11 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createSupabaseServerClient();
-    const origin = await getAppOrigin(request);
 
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
       options: {
-        emailRedirectTo: settingsAuthCallbackUrl(origin),
+        shouldCreateUser: true,
       },
     });
 
@@ -33,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Could not send magic link.",
+        error: error instanceof Error ? error.message : "Could not send sign-in code.",
       },
       { status: 500 }
     );

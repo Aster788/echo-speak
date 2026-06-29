@@ -778,7 +778,7 @@ Assets: `public/collections/`
 **Route:** `/settings`
 
 - Page description: `Sign in to save your own keys. The site provides the shared database.`
-- **Auth strip:** email magic link (5 min OTP); sign-out when authenticated
+- **Auth strip:** email 6-digit sign-in code (5 min, one use); sign-out when authenticated
 - **LLM block** (3 fields): decorative `frame.png` + `input.png`; hints — `Use your own API keys. AI features won't work if left empty.`
 - **Feishu block** (2 fields): same frames; hints — `Use your own Feishu app credentials. Feishu sync won't work if left empty.`
 - Label `KEY:` then `gap-[1ch]` then value; empty → placeholder `请输入` (muted)

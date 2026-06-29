@@ -235,12 +235,12 @@ max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-# Keep in sync with MAGIC_LINK_OTP_EXPIRY_SECONDS in src/lib/auth-magic-link.ts
+# Keep in sync with EMAIL_OTP_EXPIRY_SECONDS in src/lib/auth-email-otp.ts
 otp_expiry = 300
 
 [auth.email.template.magic_link]
-subject = "Echo Speak sign-in link (expires in 5 minutes)"
-content_path = "./supabase/templates/magic-link.html"
+subject = "Your Echo Speak sign-in code (expires in 5 minutes)"
+content_path = "./supabase/templates/email-otp.html"
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]

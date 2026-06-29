@@ -25,10 +25,12 @@ When the user asks to merge a PR and finish the phase:
    ```bash
    git fetch origin main
    git checkout main && git pull origin main
-   git tag -a phase-N <merge-commit-sha> -m "Phase N: <one-line summary> (PR #X)"
-   git push origin phase-N
+   git tag -a <tag-name> <merge-commit-sha> -m "<summary> (PR #X)"
+   git push origin <tag-name>
    ```
-   - Tag names: `phase-1`, `phase-2`, … — increment N; list existing with `git tag -l 'phase-*'`.
+   - **Roadmap phases** (`docs/roadmap.md`): `phase-1` … `phase-4` shipped; **`phase-5`** = Spaced Repetition (SRS); **`phase-6`** = Feishu sync. Use these only when that roadmap phase ships.
+   - **Pre-Phase 5 hardening** (Collections, Settings, etc.): `pre-phase-5-<short-description>` (e.g. `pre-phase-5-collections`, `pre-phase-5-settings-and-auth`). Do **not** consume `phase-5` / `phase-6` for pre-phase work.
+   - List tags: `git tag -l 'phase-*'` and `git tag -l 'pre-phase-5-*'`.
    - Always tag the merge commit on `main`, not the feature-branch tip.
 4. Delete the local feature branch:
    ```bash
@@ -41,7 +43,7 @@ When the user asks to merge a PR and finish the phase:
 If merge happened outside the session:
 
 1. `git checkout main && git pull origin main`
-2. Create and push `phase-N` tag on the merge commit (if not done yet).
+2. Create and push the appropriate tag on the merge commit (if not done yet) — `phase-N` for roadmap phases, or `pre-phase-5-*` for hardening PRs.
 3. `git branch -d feat/phase-N-short-description`
 
 ## Defaults
@@ -53,5 +55,5 @@ If merge happened outside the session:
 ## Do not
 
 - Force-push `main`.
-- Skip `phase-N` tagging when a phase or major milestone PR merges (unless user says otherwise).
+- Skip tagging when a phase or major milestone PR merges (unless user says otherwise). Use the correct tag family (`phase-N` vs `pre-phase-5-*`).
 - Leave stale local `feat/*` branches after merge without cleaning up.

@@ -14,40 +14,22 @@
 - Phase 4 design spec (`docs/design-system.md` Review Page / Review Card)
 - Phase 4 Active Recall (`/review`, flip cards, Video/Topic modes, `review_history`, bilingual examples)
 - Phase 4 release (`phase-4` tag on `main`)
-- Pre-Phase 5 planning (`openspec/changes/pre-phase-5-hardening`: proposal, design, specs, tasks)
-- Pre-Phase 5 Review UI polish (finish page, Back stack, card/report fixes) — PR #5 on `main`
-- Supabase cloud schema (all migrations on `ejgybfiywdbnfzckjqao`); Vercel project `echo-speak` linked
-- Supabase cloud + Vercel deploy (`docs/deployment.md`, production https://echo-speak-gray.vercel.app) — PR merged
-- Pre-Phase 5 `example_zh` + sync clean default (`example-zh-quality`)
-- Pre-Phase 5 extraction depth tuning (`feat/extraction-depth-tuning`)
-- Pre-Phase 5 Collections page (`feat/collections-page`)
-- Pre-Phase 5 Home page redesign (`feat/home-page-redesign`)
-- Pre-Phase 5 Settings + Auth (`feat/settings-auth`: magic link, `user_settings`, per-user LLM/Feishu)
+- **Pre-Phase 5 Hardening** (archived `openspec/changes/archive/2026-06-29-pre-phase-5-hardening`): Review polish, cloud deploy, `example_zh`, extraction depth, Collections, Home, Settings + Auth
+- Tags: `pre-phase-5-collections`, `pre-phase-5-settings-and-auth`
 
 ## In Progress
 
-- **Pre-Phase 5 Hardening** — ship `feat/settings-auth` PR; then archive openspec change
-
-Workstreams (see `openspec/changes/pre-phase-5-hardening/tasks.md`):
-
-| Priority | Workstream | Status |
-|----------|------------|--------|
-| P0 | Review UI polish | **done** |
-| P0 | Supabase cloud + deploy | **done** |
-| P0 | `example_zh` quality | **done** |
-| P1 | Extraction depth tuning | **done** |
-| P1 | Collections page | **done** |
-| P2 | Home page redesign | **done** |
-| P2 | Settings + Auth | **done** (branch `feat/settings-auth`, PR pending) |
+- **Phase 5 — Spaced Repetition** (`feat/phase-5-spaced-repetition`)
 
 ## Current Focus
 
-**Settings + Auth PR** — commit, push `feat/settings-auth`, merge to `main`, tag if milestone. See `docs/next-task.md`.
+Review queue, SRS scheduling, due reviews. See `docs/roadmap.md` Phase 5 and `docs/next-task.md`.
 
 ## Next Milestone
 
-Pre-Phase 5 gate complete → `openspec archive pre-phase-5-hardening` → Phase 5 spaced repetition.
+Phase 5 success: expressions reappear automatically per SRS schedule.
 
 ## Not Started
 
-- Phase 5: Spaced Repetition (blocked until Pre-Phase 5 gate PRs on `main`)
+- Phase 6: Feishu Sync
+- Phase 7: Gap Detection

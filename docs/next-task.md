@@ -2,21 +2,20 @@
 
 Objective:
 
-**Ship Settings + Auth** — commit, push, and open PR for `feat/settings-auth`.
+**Phase 5 — Spaced Repetition** on branch `feat/phase-5-spaced-repetition`.
 
-Scope:
+Scope (see `docs/roadmap.md`):
 
-- Branch: `feat/settings-auth` (magic link, `user_settings`, per-user LLM/Feishu UI)
-- Smoke test: sign in → save LLM keys → import uses user's key
-- Merge PR to `main`; then `openspec archive pre-phase-5-hardening`
-
-Optional (not blocking PR):
-
-- Cloud Auth: sync magic-link email template + OTP 300s in Supabase Dashboard
-- Daily use on https://echo-speak-gray.vercel.app with real email
+- Review queue
+- Scheduling algorithm
+- Due reviews surfaced in `/review`
 
 Reference:
 
-- OpenSpec: `openspec/changes/pre-phase-5-hardening/tasks.md` §7–8
-- ADR: `docs/decisions.md` (Settings + Auth)
-- Design: `docs/design-system.md` (Settings Page)
+- Archived plan: `openspec/changes/archive/2026-06-29-pre-phase-5-hardening/`
+- Database: `review_queue` (planned) in `docs/database.md`
+- Existing: `review_history`, rating actions in `docs/design-system.md`
+
+Optional (ops, not blocking SRS):
+
+- Resend SMTP + custom magic-link template on Supabase cloud

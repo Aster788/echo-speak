@@ -2,9 +2,8 @@
 
 - [x] 0.1 Add `scripts/process-collections-assets.ts` (or extend review script): transparent JPEG/PNG → `public/collections/`, `public/home/`, `public/review/`
 - [x] 0.2 Process: congrats, Hello, input, title, arrow, target, Rectangle, paper, bin, move, back, down-arrow
-- [ ] 0.3 Re-tint review sticky-note lighter (`#E0DBC8`); re-process broken-heart
-- [x] 0.4 Run `npm run audit:filenames`
-- [ ] 0.5 Add `docs/design/phase-4-review/README.md` asset map (sources → public paths)
+- [x] 0.3 Run `npm run audit:filenames`
+- [x] 0.4 Add `docs/design/phase-4-review/README.md` asset map (sources → public paths)
 
 ## 1. P0 — Review UI polish (`feat/review-ui-polish`) — can ship first
 
@@ -76,7 +75,7 @@
 
 - [x] 8.1 Update `docs/design-system.md` Collections / Home / Settings / Review finish sections
 - [x] 8.2 Update `docs/progress.md` when workstreams complete
-- [ ] 8.3 `openspec archive pre-phase-5-hardening` after all PRs merge
+- [x] 8.3 `openspec archive pre-phase-5-hardening` after all PRs merge
 
 ## Phase 5 gate
 

@@ -47,6 +47,25 @@ npx vercel --prod
 
 Until `SUPABASE_SERVICE_ROLE_KEY` is set on Vercel, `/review` and `/topics` return 500 at runtime (build succeeds).
 
+### Settings magic link email (production)
+
+- Magic links expire in **5 minutes** (`otp_expiry = 300` in `supabase/config.toml` for local). Each link works **once**.
+- Local dev uses `supabase/templates/magic-link.html` (`[auth.email.template.magic_link]`). After edits: `supabase stop && supabase start`.
+- **Cloud project `ejgybfiywdbnfzckjqao`** — you must set these in [Supabase Dashboard](https://supabase.com/dashboard/project/ejgybfiywdbnfzckjqao/auth/providers) (agents cannot click Dashboard for you):
+
+| Step | Where | What to set |
+|------|--------|-------------|
+| 1 | **Authentication → Sign In / Providers → Email** | Enable Email provider |
+| 2 | **Authentication → Sign In / Providers → Email → Email OTP Expiration** | `300` seconds (5 minutes) |
+| 3 | **Authentication → Email Templates → Magic Link** | Subject: `Echo Speak sign-in link (expires in 5 minutes)`; body: copy from `supabase/templates/magic-link.html` (highlight 5 min + one-time use) |
+| 4 | **Authentication → URL Configuration → Redirect URLs** | Add `https://echo-speak-gray.vercel.app/auth/callback` |
+
+**New link vs old link:** Supabase issues a **new token on every** `signInWithOtp` call. The **latest** email is the one to use. Older links stop working once used, or when they pass the OTP expiry window — there is **no separate Dashboard toggle** named “revoke previous OTP”. Do not rely on old Inbucket messages after sending again.
+
+**Rate limit:** By default, the same email can request a new link about once per **60 seconds** (`max_frequency` in local `config.toml` is `1s` for dev). This does not invalidate an unused previous link until expiry or use.
+
+**Local vs cloud:** Local OTP expiry and email template come from `supabase/config.toml`. Cloud uses Dashboard values above (not auto-synced from the repo).
+
 **Validate before sync** (catches local demo key pasted by mistake):
 
 ```bash

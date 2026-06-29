@@ -126,6 +126,33 @@ Consequences:
 
 Decision:
 
+**Settings + Auth: `user_settings` per account; site-hosted Supabase** (Pre-Phase 5 P2, `feat/settings-auth`).
+
+Context:
+
+Shared Vercel deployment: each user brings their own LLM and Feishu credentials; the site owner hosts one Supabase project (database + Auth) for all users. Server-only credentials must never appear in the Settings UI.
+
+Decision:
+
+1. **Auth:** Supabase magic link (email OTP, 5 min expiry) via `@supabase/ssr`; session refreshed in Next.js middleware; login/sign-out via API routes.
+2. **Storage:** `user_settings` keyed by `user_id` with RLS + table grants; Settings UI fields: LLM (3) + Feishu (2). Values stored plaintext at rest (RLS isolation); column encryption deferred.
+3. **Site-provided (not in Settings UI):** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — deployment env only.
+4. **Runtime:** Authenticated requests use **only** that user's saved LLM keys (`runWithLlmOverrides`); no deployment env fallback for LLM or Feishu when logged in. Unauthenticated dev requests may still use `.env.local` LLM keys.
+
+Consequences:
+
+- Multi-user deployments require sign-in before saving; each user pays their own LLM bill.
+- Empty LLM fields → AI features unavailable for that user (not the owner's keys).
+- Empty Feishu fields → sync unavailable for that user.
+- `.env.local.example` documents all vars including service role (with note).
+- English-learning prompts remain default; arbitrary target language is future work.
+
+---
+
+2026-06-26
+
+Decision:
+
 **Always LLM `example_zh` + default sync clean** (Pre-Phase 5 P0, `example-zh-quality`).
 
 Context:

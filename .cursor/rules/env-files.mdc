@@ -1,0 +1,29 @@
+# Environment files — local vs production
+
+**Do not mix these up.** When debugging Supabase, env mismatches, or API keys, read the file that matches the URL the user is using.
+
+| Environment | URL example | Env file to read |
+|-------------|-------------|------------------|
+| **Local dev** | `http://localhost:3000` (or `:3001`) | **`.env.development.local`** |
+| **Production** | `https://echo-speak-gray.vercel.app` | **`.env.local`** (and Vercel dashboard for deploy secrets) |
+
+## How Next.js loads them
+
+- `npm run dev` → `.env.development.local` **overrides** `.env.local` for Supabase URL/keys.
+- Production build / Vercel → `.env.local` is not deployed; use Vercel env vars (same values as local `.env.local` for cloud).
+
+## Local setup
+
+```bash
+npx supabase start
+npm run sync-dev-supabase-env   # writes .env.development.local from supabase status
+npm run dev
+```
+
+If local dev shows "URL points to 127.0.0.1 but key is for cloud", run `sync-dev-supabase-env` and restart dev — do **not** overwrite `.env.local` cloud keys.
+
+## Agent checklist
+
+1. User mentions **localhost** → inspect/fix **`.env.development.local`**, never assume `.env.local` is what `next dev` uses.
+2. User mentions **Vercel / echo-speak-gray** → inspect **`.env.local`** or Vercel env; `.env.development.local` is irrelevant.
+3. Never commit `.env*.local` files.

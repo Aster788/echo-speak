@@ -1,18 +1,25 @@
 import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
+import { SettingsForm } from "@/components/settings/SettingsForm";
+import { loadSettings } from "@/app/settings/actions";
+import { parseMagicLinkAuthReason } from "@/lib/auth-magic-link";
 
-export default function SettingsPage() {
+export const dynamic = "force-dynamic";
+
+type SettingsPageProps = {
+  searchParams: Promise<{ auth?: string; reason?: string }>;
+};
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  const params = await searchParams;
+  const initial = await loadSettings();
+  const authReason =
+    params.auth === "error" ? parseMagicLinkAuthReason(params.reason) : null;
+
   return (
     <PageShell>
-      <PageHeader description="API keys are configured via environment variables." />
-      <ul className="mt-6 space-y-2 text-[0.8125rem] font-normal text-[#222222]">
-        <li>LLM_API_KEY</li>
-        <li>LLM_BASE_URL (e.g. https://api.deepseek.com)</li>
-        <li>LLM_MODEL (e.g. deepseek-chat)</li>
-        <li>NEXT_PUBLIC_SUPABASE_URL</li>
-        <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
-        <li>SUPABASE_SERVICE_ROLE_KEY (scripts only)</li>
-      </ul>
+      <PageHeader description="Sign in to save your own keys. The site provides the shared database." />
+      <SettingsForm initial={initial} authReason={authReason} />
     </PageShell>
   );
 }

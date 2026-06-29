@@ -1,19 +1,52 @@
 import OpenAI from "openai";
+import { getLlmOverrides } from "@/lib/llm-context";
 
-let client: OpenAI | null = null;
+let defaultClient: OpenAI | null = null;
+
+function resolveApiKey(): string | undefined {
+  const overrides = getLlmOverrides();
+  if (overrides !== undefined) {
+    return overrides.apiKey?.trim() || undefined;
+  }
+  return (
+    process.env.LLM_API_KEY ||
+    process.env.OPENAI_API_KEY
+  );
+}
+
+function resolveBaseUrl(): string | undefined {
+  const overrides = getLlmOverrides();
+  if (overrides !== undefined) {
+    return overrides.baseUrl?.trim() || undefined;
+  }
+  return (
+    process.env.LLM_BASE_URL ||
+    process.env.OPENAI_BASE_URL
+  );
+}
+
+function resolveModel(): string {
+  const overrides = getLlmOverrides();
+  if (overrides !== undefined) {
+    return overrides.model?.trim() || "deepseek-chat";
+  }
+  return (
+    process.env.LLM_MODEL ||
+    process.env.OPENAI_MODEL ||
+    "deepseek-chat"
+  );
+}
 
 export function getLlmApiKey(): string | undefined {
-  return process.env.LLM_API_KEY ?? process.env.OPENAI_API_KEY;
+  return resolveApiKey();
 }
 
 export function getLlmBaseUrl(): string | undefined {
-  return process.env.LLM_BASE_URL ?? process.env.OPENAI_BASE_URL;
+  return resolveBaseUrl();
 }
 
 export function getLlmModel(): string {
-  return (
-    process.env.LLM_MODEL ?? process.env.OPENAI_MODEL ?? "deepseek-chat"
-  );
+  return resolveModel();
 }
 
 export function hasLlmApiKey(): boolean {
@@ -21,19 +54,31 @@ export function hasLlmApiKey(): boolean {
 }
 
 export function getLlmClient(): OpenAI {
-  if (!client) {
-    const apiKey = getLlmApiKey();
-    if (!apiKey) {
-      throw new Error("LLM_API_KEY is not set");
+  const overrides = getLlmOverrides();
+  if (!overrides) {
+    if (!defaultClient) {
+      const apiKey = getLlmApiKey();
+      if (!apiKey) {
+        throw new Error("LLM_API_KEY is not set");
+      }
+      const baseURL = getLlmBaseUrl();
+      defaultClient = new OpenAI({
+        apiKey,
+        ...(baseURL ? { baseURL } : {}),
+      });
     }
-
-    const baseURL = getLlmBaseUrl();
-    client = new OpenAI({
-      apiKey,
-      ...(baseURL ? { baseURL } : {}),
-    });
+    return defaultClient;
   }
-  return client;
+
+  const apiKey = getLlmApiKey();
+  if (!apiKey) {
+    throw new Error("LLM_API_KEY is not set");
+  }
+  const baseURL = getLlmBaseUrl();
+  return new OpenAI({
+    apiKey,
+    ...(baseURL ? { baseURL } : {}),
+  });
 }
 
 export async function loadPrompt(name: string): Promise<string> {

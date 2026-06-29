@@ -15,9 +15,11 @@
     "process-review-assets": "tsx scripts/process-review-assets.ts",
     "process-collections-assets": "tsx scripts/process-collections-assets.ts",
     "process-home-assets": "tsx scripts/process-home-assets.ts",
+    "process-settings-assets": "tsx scripts/process-settings-assets.ts",
     "sync-dev-supabase-env": "bash scripts/sync-dev-supabase-env.sh"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.0",
     "next": "^15.1.0",
     "openai": "^4.77.0",

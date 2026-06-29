@@ -18,11 +18,15 @@
 - Pre-Phase 5 Review UI polish (finish page, Back stack, card/report fixes) — PR #5 on `main`
 - Supabase cloud schema (all migrations on `ejgybfiywdbnfzckjqao`); Vercel project `echo-speak` linked
 - Supabase cloud + Vercel deploy (`docs/deployment.md`, production https://echo-speak-gray.vercel.app) — PR merged
-- Pre-Phase 5 `example_zh` + sync clean default (branch `example-zh-quality`: Always LLM `example_zh`, `IMPORT_USE_LLM_CLEANER` opt-in, A/B reports, stats/backfill scripts)
+- Pre-Phase 5 `example_zh` + sync clean default (`example-zh-quality`)
+- Pre-Phase 5 extraction depth tuning (`feat/extraction-depth-tuning`)
+- Pre-Phase 5 Collections page (`feat/collections-page`)
+- Pre-Phase 5 Home page redesign (`feat/home-page-redesign`)
+- Pre-Phase 5 Settings + Auth (`feat/settings-auth`: magic link, `user_settings`, per-user LLM/Feishu)
 
 ## In Progress
 
-- **Pre-Phase 5 Hardening** — next: extraction depth, Collections
+- **Pre-Phase 5 Hardening** — ship `feat/settings-auth` PR; then archive openspec change
 
 Workstreams (see `openspec/changes/pre-phase-5-hardening/tasks.md`):
 
@@ -30,20 +34,20 @@ Workstreams (see `openspec/changes/pre-phase-5-hardening/tasks.md`):
 |----------|------------|--------|
 | P0 | Review UI polish | **done** |
 | P0 | Supabase cloud + deploy | **done** |
-| P0 | `example_zh` quality | **done** (branch `example-zh-quality`: Always LLM + sync clean default) |
-| P1 | Extraction depth tuning | **next** |
-| P1 | Collections page | pending |
-| P2 | Home page redesign | pending |
-| P2 | Settings + Auth | pending |
+| P0 | `example_zh` quality | **done** |
+| P1 | Extraction depth tuning | **done** |
+| P1 | Collections page | **done** |
+| P2 | Home page redesign | **done** |
+| P2 | Settings + Auth | **done** (branch `feat/settings-auth`, PR pending) |
 
 ## Current Focus
 
-**Extraction depth tuning** (`feat/extraction-depth-tuning`). See `docs/next-task.md`.
+**Settings + Auth PR** — commit, push `feat/settings-auth`, merge to `main`, tag if milestone. See `docs/next-task.md`.
 
 ## Next Milestone
 
-Pre-Phase 5 gate: cloud DB live, `example_zh` improved, extraction cap calibrated, Collections + core polish on `main` — then Phase 5 spaced repetition.
+Pre-Phase 5 gate complete → `openspec archive pre-phase-5-hardening` → Phase 5 spaced repetition.
 
 ## Not Started
 
-- Phase 5: Spaced Repetition (blocked until Pre-Phase 5 gate)
+- Phase 5: Spaced Repetition (blocked until Pre-Phase 5 gate PRs on `main`)

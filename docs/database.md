@@ -19,6 +19,7 @@ supabase/migrations/
 | review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
 | gaps | planned (Phase 7) | — |
 | sync_logs | planned (Phase 6) | — |
+| user_settings | **implemented** (Pre-Phase 5 P2) | `20250626180000_user_settings.sql` |
 
 ---
 
@@ -223,6 +224,29 @@ Expressions discovered from transcript but not collected in notes.
 | status | text | pending / accepted / ignored |
 
 | created_at | timestamptz | |
+
+---
+
+# user_settings
+
+**Status: implemented (Pre-Phase 5 P2)**
+
+Per-user API configuration. Requires Supabase Auth; RLS + grants restrict rows to `auth.uid()`.
+
+| Column | Type | Notes |
+|----------|----------|----------|
+| user_id | uuid | PK, FK → `auth.users` |
+| llm_api_key | text | user's own; required for AI when authenticated |
+| llm_base_url | text | user's own |
+| llm_model | text | user's own |
+| supabase_url | text | legacy column; not shown in Settings UI |
+| supabase_anon_key | text | legacy column; not shown in Settings UI |
+| feishu_app_id | text | user's own |
+| feishu_app_secret | text | user's own |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+`SUPABASE_SERVICE_ROLE_KEY` is **not** stored here — server reads it from `process.env` only. Public Supabase URL/anon key are **site-provided** via deployment env, not user-editable in Settings.
 
 ---
 

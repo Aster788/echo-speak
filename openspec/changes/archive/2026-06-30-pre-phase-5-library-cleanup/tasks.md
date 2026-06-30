@@ -109,5 +109,5 @@
 - [ ] 11.5 Smoke test: All view merged cards render; Video view per-video
 - [ ] 11.6 Smoke test: Re-extract a video → unlocked rows replaced, locked preserved, dismissed phrases absent
 - [x] 11.7 Update `docs/progress.md`, `docs/next-task.md`
-- [ ] 11.8 `openspec archive pre-phase-5-library-cleanup` after all PRs merge
-- [ ] 11.9 Tag `pre-phase-5-library-cleanup` on merge commit (per git-workflow rule)
+- [x] 11.8 `openspec archive pre-phase-5-library-cleanup` after all PRs merge
+- [x] 11.9 Tag `pre-phase-5-library-cleanup` on merge commit (per git-workflow rule)

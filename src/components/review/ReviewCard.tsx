@@ -5,6 +5,7 @@ import {
   pickReviewCardColor,
   reviewCardTextColor,
 } from "@/lib/review-card-palette";
+import { formatExampleIndexLabel } from "@/lib/example-index-label";
 import type { ReviewDeckCard, ReviewMode, ReviewRating } from "@/types/review";
 import type { ExpressionExample } from "@/types/expression";
 import { ReviewRatingActions } from "./ReviewRatingActions";
@@ -21,19 +22,6 @@ type DisplayCardContent = Pick<
   ReviewDeckCard,
   "phrase" | "meaning" | "example_en" | "example_zh" | "examples"
 >;
-
-const EXAMPLE_ORDINALS = [
-  "one",
-  "two",
-  "three",
-  "four",
-  "five",
-  "six",
-  "seven",
-  "eight",
-  "nine",
-  "ten",
-];
 
 function collectExamples(card: Pick<ReviewDeckCard, "examples" | "example_en" | "example_zh">): ExpressionExample[] {
   if (card.examples && card.examples.length > 0) {
@@ -192,8 +180,8 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                   {examples.map((example, index) => (
                     <div key={index} className="space-y-1">
                       {isMultiExample && (
-                        <p className="text-[0.6875rem] font-medium uppercase tracking-wide opacity-70">
-                          Example {EXAMPLE_ORDINALS[index] ?? index + 1}
+                        <p className="text-[0.6875rem] font-medium tabular-nums tracking-wide opacity-70">
+                          {formatExampleIndexLabel(index)}
                         </p>
                       )}
                       {example.zh ? (
@@ -264,8 +252,8 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                   {examples.map((example, index) => (
                     <div key={index} className="space-y-1">
                       {isMultiExample && (
-                        <p className="text-[0.6875rem] font-medium uppercase tracking-wide opacity-70">
-                          Example {EXAMPLE_ORDINALS[index] ?? index + 1}
+                        <p className="text-[0.6875rem] font-medium tabular-nums tracking-wide opacity-70">
+                          {formatExampleIndexLabel(index)}
                         </p>
                       )}
                       {example.en ? (

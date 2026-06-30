@@ -2,6 +2,7 @@ import {
   createExpressions,
   deleteUnlockedExpressionsByVideoAndSource,
   listExpressions,
+  listExpressionsByVideo,
   listExpressionsMissingExampleZh,
   updateExpressionExampleZh,
 } from "@/db/expressions";
@@ -88,6 +89,15 @@ export async function extractExpressionsForTranscript(
     supabase
   );
 
+  // Locked (and any other surviving) rows stay on the video — do not insert
+  // another row for the same canonical phrase (re-extract would otherwise dup).
+  const surviving = await listExpressionsByVideo(transcript.video_id, supabase);
+  const occupiedCanonicalKeys = new Set(
+    surviving.map(
+      (row) => canonicalKey(row.phrase) || row.phrase.toLowerCase()
+    )
+  );
+
   // Resolve zh for every example, then group by canonical key so near-duplicates
   // (e.g. "let go of something" / "let go of") collapse into one row per video.
   const withZh = await Promise.all(
@@ -109,22 +119,27 @@ export async function extractExpressionsForTranscript(
     groups.set(key, list);
   }
 
-  const rows = [...groups.values()].map((group) => {
-    const displayPhrase = pickDisplayPhrase(group.map((g) => g.phrase));
-    const first = group[0];
-    const examples = group.map((g) => ({ en: g.example, zh: g.exampleZh }));
-    return {
-      video_id: transcript.video_id,
-      phrase: displayPhrase,
-      meaning: first.meaning,
-      example_en: examples[0]?.en ?? first.example,
-      example_zh: examples[0]?.zh ?? null,
-      examples,
-      topic_id: resolveTopicSlug(first.topic_slug, topicIndex),
-      source_type: "transcript" as const,
-      weight: 1.0,
-    };
-  });
+  const rows = [...groups.values()]
+    .filter((group) => {
+      const key = group[0]?.canonical || group[0]?.phrase.toLowerCase() || "";
+      return key && !occupiedCanonicalKeys.has(key);
+    })
+    .map((group) => {
+      const displayPhrase = pickDisplayPhrase(group.map((g) => g.phrase));
+      const first = group[0];
+      const examples = group.map((g) => ({ en: g.example, zh: g.exampleZh }));
+      return {
+        video_id: transcript.video_id,
+        phrase: displayPhrase,
+        meaning: first.meaning,
+        example_en: examples[0]?.en ?? first.example,
+        example_zh: examples[0]?.zh ?? null,
+        examples,
+        topic_id: resolveTopicSlug(first.topic_slug, topicIndex),
+        source_type: "transcript" as const,
+        weight: 1.0,
+      };
+    });
 
   const expressions = await createExpressions(rows, supabase);
 

@@ -9,6 +9,7 @@ import { extractExpressionsForTranscript } from "@/services/expression-pipeline"
 import { getAuthenticatedUser } from "@/lib/auth-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Topic } from "@/types/topic";
+import type { Expression } from "@/types/expression";
 
 const topics: Topic[] = [
   {
@@ -42,7 +43,8 @@ const topics: Topic[] = [
 
 function mockSupabase(
   perVideoDismissed: string[] = [],
-  globalDismissed: string[] = []
+  globalDismissed: string[] = [],
+  existingExpressions: Expression[] = []
 ): SupabaseClient {
   const transcript = {
     id: "transcript-1",
@@ -53,6 +55,7 @@ function mockSupabase(
   };
 
   let deleted = false;
+  let rows = [...existingExpressions];
 
   return {
     from(table: string) {
@@ -102,26 +105,70 @@ function mockSupabase(
           delete() {
             deleted = true;
             return {
-              eq() {
+              eq(column: string, value: unknown) {
+                if (column === "video_id") {
+                  const videoId = value as string;
+                  return {
+                    eq(col2: string, val2: unknown) {
+                      if (col2 === "source_type") {
+                        const sourceType = val2 as string;
+                        return {
+                          eq: async (col3: string, val3: unknown) => {
+                            if (col3 === "topic_locked" && val3 === false) {
+                              rows = rows.filter(
+                                (row) =>
+                                  !(
+                                    row.video_id === videoId &&
+                                    row.source_type === sourceType &&
+                                    row.topic_locked === false
+                                  )
+                              );
+                            }
+                            return { error: null };
+                          },
+                        };
+                      }
+                      return { eq: async () => ({ error: null }) };
+                    },
+                  };
+                }
                 return {
                   eq() {
-                    return {
-                      eq: async () => ({ error: null }),
-                    };
+                    return { eq: async () => ({ error: null }) };
                   },
                 };
               },
             };
           },
-          insert(rows: unknown[]) {
+          select() {
+            return {
+              eq(column: string, value: unknown) {
+                if (column === "video_id") {
+                  const videoId = value as string;
+                  return {
+                    order: async () => ({
+                      data: rows.filter((row) => row.video_id === videoId),
+                      error: null,
+                    }),
+                  };
+                }
+                throw new Error(`Unexpected select eq: ${column}`);
+              },
+            };
+          },
+          insert(insertRows: unknown[]) {
+            const created = (insertRows as Record<string, unknown>[]).map(
+              (row, index) => ({
+                id: `expr-${rows.length + index + 1}`,
+                topic_locked: false,
+                created_at: "2026-01-01T00:00:00Z",
+                ...row,
+              })
+            ) as Expression[];
+            rows.push(...created);
             return {
               select: async () => ({
-                data: (rows as Record<string, unknown>[]).map((row, index) => ({
-                  id: `expr-${index + 1}`,
-                  topic_locked: false,
-                  ...row,
-                  created_at: "2026-01-01T00:00:00Z",
-                })),
+                data: created,
                 error: null,
               }),
             };
@@ -310,6 +357,48 @@ describe("expression-pipeline", () => {
 
     expect(result.expressionCount).toBe(1);
     expect(result.expressions[0]?.phrase).toBe("iced latte");
+  });
+
+  it("skips insert when canonical key already exists on video (locked row kept)", async () => {
+    vi.mocked(getAuthenticatedUser).mockResolvedValueOnce(null);
+    const locked: Expression = {
+      id: "locked-1",
+      video_id: "video-1",
+      phrase: "a spark of passion",
+      meaning: "一丝激情",
+      example_en: "First there's curiosity, then maybe there's a spark of passion.",
+      example_zh: "先有好奇心，然后也许有一丝激情。",
+      examples: null,
+      topic_id: "uncategorized-id",
+      source_type: "transcript",
+      weight: 1,
+      topic_locked: true,
+      created_at: "2026-01-01T00:00:00Z",
+    };
+    const supabase = mockSupabase([], [], [locked]);
+    const extractFn = async () => [
+      {
+        phrase: "a spark of passion",
+        definition: "激情的火花",
+        example: "First there's curiosity, then maybe there's a spark of passion.",
+        topic_slug: "daily",
+      },
+      {
+        phrase: "at the very end",
+        definition: "在最后",
+        example: "At the very end there's joy like nothing else.",
+        topic_slug: "daily",
+      },
+    ];
+
+    const result = await extractExpressionsForTranscript("transcript-1", {
+      supabase,
+      extractFn,
+      resolveExampleZhFn: async () => "示例中文",
+    });
+
+    expect(result.expressionCount).toBe(1);
+    expect(result.expressions[0]?.phrase).toBe("at the very end");
   });
 });
 

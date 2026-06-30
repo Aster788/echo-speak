@@ -6,17 +6,21 @@ import type { ReactNode } from "react";
 type CollectionsBackHeaderProps = {
   title: ReactNode;
   onBack: () => void;
+  /** Optional action centered between title and back (e.g. Re-extract). */
+  center?: ReactNode;
 };
 
 export function CollectionsBackHeader({
   title,
   onBack,
+  center,
 }: CollectionsBackHeaderProps) {
   return (
-    <div className="mb-4 flex min-h-[33px] items-center justify-between gap-3">
+    <div className="mb-4 flex min-h-[33px] items-center gap-2">
       <div className="flex min-w-0 flex-1 items-center text-[#222222]">
         {title}
       </div>
+      {center ? <div className="shrink-0">{center}</div> : null}
       <button
         type="button"
         onClick={onBack}

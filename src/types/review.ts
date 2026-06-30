@@ -1,3 +1,5 @@
+import type { ExpressionExample } from "@/types/expression";
+
 export type ReviewRating = "mastered" | "again" | "unsure";
 export type ReviewMode = "video" | "topic";
 
@@ -34,6 +36,7 @@ export interface ReviewDeckCard {
   meaning: string;
   example_en: string;
   example_zh: string | null;
+  examples?: ExpressionExample[] | null;
   topic_id: string;
   source_type: "transcript" | "feishu";
   weight: number;

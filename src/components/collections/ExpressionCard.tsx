@@ -129,8 +129,9 @@ function ExpressionCardActions({
           className="p-0.5 transition-opacity duration-150 active:opacity-70"
           aria-label="Merge with another expression"
         >
-          <Image
-            src="/collections/move.png"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/collections/transfer.svg"
             alt=""
             width={18}
             height={18}

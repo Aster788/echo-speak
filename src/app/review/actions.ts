@@ -1,9 +1,10 @@
 "use server";
 
-import { listExpressionsByTopicSubtree, listExpressionsByVideo } from "@/db/expressions";
+import { listExpressionsMergedByCanonicalKey, listExpressionsByVideo } from "@/db/expressions";
 import { insertReviewRating, isReviewRating } from "@/db/review-history";
 import { getTopic, listTopicSubtreeIds, listTopics } from "@/db/topics";
 import { listVideos } from "@/db/videos";
+import { sortVideosByTitle } from "@/lib/sort-collections";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { ReviewDeckCard, ReviewMode, ReviewScopeOption } from "@/types/review";
 
@@ -30,7 +31,10 @@ export async function loadReviewDeck(
   const [expressions, videos, topics] = await Promise.all([
     mode === "video"
       ? listExpressionsByVideo(scopeId, supabase)
-      : listExpressionsByTopicSubtree(scopeId, supabase),
+      : listExpressionsMergedByCanonicalKey(
+          { kind: "topic", topicId: scopeId },
+          supabase
+        ),
     listVideos(supabase),
     listTopics(supabase),
   ]);
@@ -78,14 +82,13 @@ export async function listReviewVideoScopes(): Promise<ReviewScopeOption[]> {
     import("@/db/expressions").then((mod) => mod.listVideoExpressionCounts(supabase)),
   ]);
 
-  return videos
+  return sortVideosByTitle(videos)
     .map((video) => ({
       id: video.id,
       label: video.title,
       count: counts.get(video.id) ?? 0,
     }))
-    .filter((item) => item.count > 0)
-    .sort((a, b) => a.label.localeCompare(b.label));
+    .filter((item) => item.count > 0);
 }
 
 export async function listReviewTopicScopes(): Promise<ReviewScopeOption[]> {

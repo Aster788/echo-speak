@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  compareVideoTitles,
+  isChinesePrimaryTitle,
   sortExpressionsByPhrase,
   sortTopicsByName,
   sortVideosByTitle,
@@ -55,5 +57,20 @@ describe("sort-collections", () => {
       "Alpha clip",
       "Zebra vlog",
     ]);
+  });
+
+  it("sorts English titles before Chinese titles", () => {
+    const sorted = sortVideosByTitle([
+      { id: "cn", title: "没有安排的一天", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
+      { id: "en", title: "a normal day in my life", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
+    ]);
+
+    expect(sorted.map((item) => item.id)).toEqual(["en", "cn"]);
+    expect(isChinesePrimaryTitle("没有安排的一天")).toBe(true);
+    expect(isChinesePrimaryTitle("a normal day")).toBe(false);
+  });
+
+  it("sorts Chinese titles by pinyin within the Chinese group", () => {
+    expect(compareVideoTitles("谷爱凌的演讲", "没有安排的一天")).toBeLessThan(0);
   });
 });

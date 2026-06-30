@@ -79,6 +79,39 @@ async function removeEdgeWhiteBackground(buffer: Buffer): Promise<Buffer> {
     .toBuffer();
 }
 
+async function writeTransferSvg(sourceName: string, outName: string) {
+  const src = path.join(SOURCES, sourceName);
+  const SIZE = 24;
+  const { data, info } = await sharp(src)
+    .trim({ threshold: 8 })
+    .resize(SIZE, SIZE, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { width: w, height: h } = info;
+  const paths: string[] = [];
+  for (let y = 0; y < h; y++) {
+    let start = -1;
+    for (let x = 0; x <= w; x++) {
+      const on = x < w && data[(y * w + x) * 4 + 3] > 128;
+      if (on && start < 0) start = x;
+      if ((!on || x === w) && start >= 0) {
+        paths.push(`M${start} ${y}h${x - start}v1h-${x - start}z`);
+        start = -1;
+      }
+    }
+  }
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" fill="#000">${paths.map((d) => `<path d="${d}"/>`).join("")}</svg>`;
+  const outPath = path.join(OUT, outName);
+  fs.writeFileSync(outPath, svg);
+  console.log(`  ${outName} (${w}×${h} svg, ${paths.length} paths)`);
+}
+
 async function processRaster(
   sourceName: string,
   outName: string,
@@ -112,6 +145,7 @@ async function main() {
   await processRaster("move.png", "move.png", { width: 24 });
   await processRaster("back.png", "back.png", { width: 28 });
   await processRaster("target.png", "target.png", { width: 20 });
+  await writeTransferSvg("transfer.png", "transfer.svg");
   await processRaster("down-arrow.png", "down-arrow.png", { width: 16 });
 
   console.log(`Done → ${OUT}`);

@@ -6,6 +6,7 @@ import {
   reviewCardTextColor,
 } from "@/lib/review-card-palette";
 import type { ReviewDeckCard, ReviewMode, ReviewRating } from "@/types/review";
+import type { ExpressionExample } from "@/types/expression";
 import { ReviewRatingActions } from "./ReviewRatingActions";
 
 type ReviewCardProps = {
@@ -18,8 +19,39 @@ type ReportType = "english" | "chinese" | "punctuation";
 
 type DisplayCardContent = Pick<
   ReviewDeckCard,
-  "phrase" | "meaning" | "example_en" | "example_zh"
+  "phrase" | "meaning" | "example_en" | "example_zh" | "examples"
 >;
+
+const EXAMPLE_ORDINALS = [
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+];
+
+function collectExamples(card: Pick<ReviewDeckCard, "examples" | "example_en" | "example_zh">): ExpressionExample[] {
+  if (card.examples && card.examples.length > 0) {
+    return card.examples;
+  }
+  return [{ en: card.example_en, zh: card.example_zh }];
+}
+
+function cardToDisplay(card: ReviewDeckCard): DisplayCardContent {
+  const examples = collectExamples(card);
+  return {
+    phrase: card.phrase,
+    meaning: card.meaning,
+    example_en: examples[0]?.en ?? card.example_en,
+    example_zh: examples[0]?.zh ?? card.example_zh,
+    examples,
+  };
+}
 
 const REPORT_TYPES: Array<{ value: ReportType; label: string }> = [
   { value: "english", label: "英文有误" },
@@ -41,12 +73,11 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
   const [reportType, setReportType] = useState<ReportType>("chinese");
   const [correctContent, setCorrectContent] = useState("");
   const [successVisible, setSuccessVisible] = useState(false);
-  const [displayCard, setDisplayCard] = useState<DisplayCardContent>({
-    phrase: card.phrase,
-    meaning: card.meaning,
-    example_en: card.example_en,
-    example_zh: card.example_zh,
-  });
+  const [displayCard, setDisplayCard] = useState<DisplayCardContent>(() =>
+    cardToDisplay(card)
+  );
+  const examples = collectExamples(displayCard);
+  const isMultiExample = examples.length > 1;
 
   const background = useMemo(
     () => pickReviewCardColor(card.id),
@@ -64,12 +95,7 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
   };
 
   useEffect(() => {
-    setDisplayCard({
-      phrase: card.phrase,
-      meaning: card.meaning,
-      example_en: card.example_en,
-      example_zh: card.example_zh,
-    });
+    setDisplayCard(cardToDisplay(card));
     setIsBack(false);
     setReportOpen(false);
     setReportType("chinese");
@@ -162,13 +188,24 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                 <p className="text-[1.375rem] font-normal leading-relaxed">
                   {displayCard.meaning}
                 </p>
-                {displayCard.example_zh ? (
-                  <p className="mt-4 text-[1rem] leading-relaxed opacity-90">
-                    {displayCard.example_zh}
-                  </p>
-                ) : (
-                  <p className="mt-4 text-[1rem] leading-relaxed opacity-50">—</p>
-                )}
+                <div className="mt-4 w-full space-y-3">
+                  {examples.map((example, index) => (
+                    <div key={index} className="space-y-1">
+                      {isMultiExample && (
+                        <p className="text-[0.6875rem] font-medium uppercase tracking-wide opacity-70">
+                          Example {EXAMPLE_ORDINALS[index] ?? index + 1}
+                        </p>
+                      )}
+                      {example.zh ? (
+                        <p className="text-[1rem] leading-relaxed opacity-90">
+                          {example.zh}
+                        </p>
+                      ) : (
+                        <p className="text-[1rem] leading-relaxed opacity-50">—</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
               <div
                 className={`${footerDividerClassName} px-4 py-3 text-center text-[0.75rem] opacity-80`}
@@ -223,9 +260,22 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                 <p className="text-[1.5rem] font-normal leading-snug">
                   {displayCard.phrase}
                 </p>
-                <p className="mt-4 text-[0.9375rem] leading-relaxed opacity-90">
-                  {displayCard.example_en}
-                </p>
+                <div className="mt-4 w-full space-y-3">
+                  {examples.map((example, index) => (
+                    <div key={index} className="space-y-1">
+                      {isMultiExample && (
+                        <p className="text-[0.6875rem] font-medium uppercase tracking-wide opacity-70">
+                          Example {EXAMPLE_ORDINALS[index] ?? index + 1}
+                        </p>
+                      )}
+                      {example.en ? (
+                        <p className="text-[0.9375rem] leading-relaxed opacity-90">
+                          {example.en}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
               </div>
             </button>
             <ReviewRatingActions

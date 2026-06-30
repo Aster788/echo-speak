@@ -681,17 +681,17 @@ export function CollectionsManager({
               </p>
             }
             onBack={handleBackFromVideoL2}
+            center={
+              <button
+                type="button"
+                onClick={() => setReextractConfirmOpen(true)}
+                disabled={reextractBusy}
+                className="rounded-full border border-[#222222]/20 px-3 py-1 text-[0.75rem] leading-none transition-opacity duration-150 active:opacity-70 disabled:opacity-50"
+              >
+                {reextractBusy ? "Re-extracting…" : "Re-extract"}
+              </button>
+            }
           />
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setReextractConfirmOpen(true)}
-              disabled={reextractBusy}
-              className="rounded-full border border-[#222222]/20 px-4 py-1.5 text-[0.8125rem] transition-opacity duration-150 active:opacity-70 disabled:opacity-50"
-            >
-              {reextractBusy ? "Re-extracting…" : "Re-extract"}
-            </button>
-          </div>
           {loading && (
             <p className="text-sm text-[#222222] opacity-70">Loading…</p>
           )}

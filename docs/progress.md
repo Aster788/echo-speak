@@ -16,14 +16,16 @@
 - Phase 4 release (`phase-4` tag on `main`)
 - **Pre-Phase 5 Hardening** (archived `openspec/changes/archive/2026-06-29-pre-phase-5-hardening`): Review polish, cloud deploy, `example_zh`, extraction depth, Collections, Home, Settings + Auth
 - Tags: `pre-phase-5-collections`, `pre-phase-5-settings-and-auth`
+- **Pre-Phase 5 library cleanup — cloud data prep** (2026-06-30): migrations applied (`user_id`, `examples`, `review_queue`, `dismissal_reasons`); merge backfill no-op (0 within-video dups); 27-video calibration refresh (median delete rate 16.7%, constants unchanged); `example_zh` 100% non-null
 
 ## In Progress
 
+- **Pre-Phase 5 library cleanup** (`openspec/changes/pre-phase-5-library-cleanup`): code complete; cloud DB ready. Pending: Vercel deploy + browser smoke tests (dismiss reason, merged All view, re-extract).
 - **Phase 5 — Spaced Repetition** (`feat/phase-5-spaced-repetition`)
 
 ## Current Focus
 
-Review queue, SRS scheduling, due reviews. See `docs/roadmap.md` Phase 5 and `docs/next-task.md`.
+Deploy pre-phase-5-library-cleanup to Vercel, run smoke tests at 430×932, then merge/tag. `review_queue` schema is in place for Phase 5 SRS scheduling. See `docs/roadmap.md` Phase 5 and `docs/next-task.md`.
 
 ## Next Milestone
 

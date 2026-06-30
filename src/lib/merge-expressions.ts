@@ -1,3 +1,4 @@
+import { canonicalKey } from "@/lib/phrase-canonical";
 import type { ExtractedExpression } from "@/types/expression";
 
 export function normalizePhraseKey(phrase: string): string {
@@ -8,8 +9,15 @@ export function filterDismissedExpressions(
   expressions: ExtractedExpression[],
   dismissedKeys: Set<string>
 ): ExtractedExpression[] {
+  // Canonicalize dismissed keys so near-duplicates (e.g. "let go of something"
+  // vs "let go of") are also blocked, matching the canonical dedup logic.
+  const canonicalDismissed = new Set<string>();
+  for (const key of dismissedKeys) {
+    const c = canonicalKey(key);
+    canonicalDismissed.add(c || key);
+  }
   return expressions.filter(
-    (item) => !dismissedKeys.has(normalizePhraseKey(item.phrase))
+    (item) => !canonicalDismissed.has(canonicalKey(item.phrase))
   );
 }
 

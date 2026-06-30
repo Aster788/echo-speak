@@ -1,3 +1,5 @@
+import type { Topic } from "@/types/topic";
+
 export type TopicSeed = {
   slug: string;
   name: string;
@@ -57,10 +59,48 @@ export function flattenTopicSeeds(
   return rows;
 }
 
-export function formatTopicTreeForPrompt(
-  seeds: TopicSeed[] = TOPIC_SEEDS,
-  indent = 0
-): string {
+/**
+ * Build a nested seed tree from flat DB topic rows (joined via parent_id).
+ * Topics with a `merged_into_id` are skipped (already merged away).
+ */
+export function topicsToSeeds(topics: Topic[]): TopicSeed[] {
+  const active = topics.filter((t) => !t.merged_into_id);
+  const byParent = new Map<string | null, Topic[]>();
+  for (const topic of active) {
+    const key = topic.parent_id ?? null;
+    const list = byParent.get(key) ?? [];
+    list.push(topic);
+    byParent.set(key, list);
+  }
+
+  function build(parentId: string | null): TopicSeed[] {
+    const children = byParent.get(parentId) ?? [];
+    return children.map((topic) => {
+      const childSeeds = build(topic.id);
+      return {
+        slug: topic.slug,
+        name: topic.name,
+        ...(childSeeds.length ? { children: childSeeds } : {}),
+      };
+    });
+  }
+
+  return build(null);
+}
+
+/**
+ * Format the topic tree for the extraction prompt.
+ *
+ * Production callers should pass the live `topics` loaded from the DB so the
+ * prompt reflects user-curated topics. The no-arg overload (TOPIC_SEEDS) is
+ * kept for unit-test fixtures only and is deprecated for production use.
+ */
+export function formatTopicTreeForPrompt(topics?: Topic[]): string {
+  const seeds = topics ? topicsToSeeds(topics) : TOPIC_SEEDS;
+  return formatTopicTreeFromSeeds(seeds, 0);
+}
+
+function formatTopicTreeFromSeeds(seeds: TopicSeed[], indent: number): string {
   const pad = "  ".repeat(indent);
   return seeds
     .map((seed) => {
@@ -68,16 +108,27 @@ export function formatTopicTreeForPrompt(
       if (!seed.children?.length) {
         return line;
       }
-      return `${line}\n${formatTopicTreeForPrompt(seed.children, indent + 1)}`;
+      return `${line}\n${formatTopicTreeFromSeeds(seed.children, indent + 1)}`;
     })
     .join("\n");
 }
 
-export function listLeafTopicSlugs(seeds: TopicSeed[] = TOPIC_SEEDS): string[] {
+/**
+ * List leaf topic slugs (topics with no children).
+ *
+ * Production callers should pass live `topics`; the no-arg overload uses
+ * TOPIC_SEEDS for unit-test fixtures only.
+ */
+export function listLeafTopicSlugs(topics?: Topic[]): string[] {
+  const seeds = topics ? topicsToSeeds(topics) : TOPIC_SEEDS;
+  return collectLeafSlugs(seeds);
+}
+
+function collectLeafSlugs(seeds: TopicSeed[]): string[] {
   const leaves: string[] = [];
   for (const seed of seeds) {
     if (seed.children?.length) {
-      leaves.push(...listLeafTopicSlugs(seed.children));
+      leaves.push(...collectLeafSlugs(seed.children));
     } else {
       leaves.push(seed.slug);
     }

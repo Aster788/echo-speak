@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { countExpressionsByVideo } from "@/db/expressions";
 import { parseTranscriptFile } from "@/lib/transcript-parse";
 import { titleFromTranscriptFilename } from "@/lib/transcript-filename";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { withRequestLlmOverrides } from "@/lib/request-llm";
 import { importTranscript } from "@/services/transcript-importer";
 import { isDuplicateImportError } from "@/services/import-duplicate-error";
@@ -51,6 +53,11 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       if (isDuplicateImportError(error)) {
+        const expressionCount = await countExpressionsByVideo(
+          error.videoId,
+          getSupabaseAdmin()
+        );
+
         return NextResponse.json(
           {
             ok: false,
@@ -60,6 +67,7 @@ export async function POST(request: Request) {
             videoId: error.videoId,
             transcriptId: error.transcriptId ?? undefined,
             videoTitle: error.videoTitle ?? undefined,
+            expressionCount,
           },
           { status: 409 }
         );

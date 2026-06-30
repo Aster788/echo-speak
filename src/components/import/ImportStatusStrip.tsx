@@ -15,7 +15,8 @@ type ImportStatusStripProps = {
   duplicateVideoTitle?: string;
   extractCount?: number;
   extractFailed?: boolean;
-  showTopicsLink?: boolean;
+  showCollectionsLink?: boolean;
+  importPendingExtract?: boolean;
 };
 
 export function ImportStatusStrip({
@@ -25,7 +26,8 @@ export function ImportStatusStrip({
   duplicateVideoTitle,
   extractCount,
   extractFailed,
-  showTopicsLink,
+  showCollectionsLink,
+  importPendingExtract,
 }: ImportStatusStripProps) {
   const hasExtractResult = extractCount !== undefined && !extractFailed;
   const hasStatus =
@@ -68,15 +70,18 @@ export function ImportStatusStrip({
         {importDuplicate && duplicateVideoTitle && !hasExtractResult && (
           <p className="opacity-90">Existing video: {duplicateVideoTitle}</p>
         )}
+        {importPendingExtract && !hasExtractResult && !extractFailed && (
+          <p role="status">Transcript already saved — use Extract below.</p>
+        )}
         {hasExtractResult && (
           <p role="status">Extract {extractCount} expression(s).</p>
         )}
         {extractFailed && (
           <p role="alert">Extraction failed. Try again.</p>
         )}
-        {showTopicsLink && (
+        {showCollectionsLink && (
           <Link href="/collections" className="underline opacity-95">
-            Open Topics to curate expressions.
+            Open Collections to curate expressions.
           </Link>
         )}
       </div>

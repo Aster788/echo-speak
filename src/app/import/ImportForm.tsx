@@ -103,12 +103,20 @@ export function ImportForm() {
 
   const importReceiptMessage = state.message && !state.ok ? state.message : undefined;
 
-  const showExtract = Boolean(state.ok && state.transcriptId && !state.duplicate);
-  const showTopicsLink = Boolean(
-    (extractCount !== undefined && !extractMessage.includes("failed")) ||
-      state.duplicate
+  const canExtract = Boolean(
+    state.transcriptId && (state.ok || state.duplicate)
   );
-  const extractFailed = Boolean(extractMessage && extractMessage.includes("failed"));
+  const existingExpressionCount =
+    extractCount ?? state.expressionCount ?? 0;
+  const showCollectionsLink = Boolean(
+    existingExpressionCount > 0 &&
+      (extractCount !== undefined
+        ? !extractMessage.toLowerCase().includes("failed")
+        : state.duplicate)
+  );
+  const extractFailed = Boolean(
+    extractMessage && extractMessage.toLowerCase().includes("failed")
+  );
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
@@ -161,7 +169,7 @@ export function ImportForm() {
           <ImportActionStrip
             importLoading={loading}
             extractLoading={extractLoading}
-            showExtract={showExtract}
+            showExtract={canExtract}
             onExtract={handleExtract}
           />
 
@@ -182,7 +190,12 @@ export function ImportForm() {
         duplicateVideoTitle={state.videoTitle}
         extractCount={extractCount}
         extractFailed={extractFailed}
-        showTopicsLink={showTopicsLink}
+        showCollectionsLink={showCollectionsLink}
+        importPendingExtract={Boolean(
+          state.duplicate &&
+            state.transcriptId &&
+            (state.expressionCount ?? 0) === 0
+        )}
       />
     </form>
   );

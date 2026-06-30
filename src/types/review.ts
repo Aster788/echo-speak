@@ -48,3 +48,13 @@ export interface ReviewScopeOption {
   label: string;
   count: number;
 }
+
+export type ReviewQueueSource = "transcript" | "feishu" | "manual";
+
+export type ReviewQueueEntry = {
+  id: string;
+  expression_id: string;
+  due_at: string;
+  source: ReviewQueueSource;
+  created_at: string;
+};

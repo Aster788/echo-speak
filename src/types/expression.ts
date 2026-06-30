@@ -1,3 +1,8 @@
+export interface ExpressionExample {
+  en: string;
+  zh: string | null;
+}
+
 export interface Expression {
   id: string;
   video_id: string;
@@ -5,6 +10,7 @@ export interface Expression {
   meaning: string;
   example_en: string;
   example_zh: string | null;
+  examples: ExpressionExample[] | null;
   topic_id: string;
   source_type: "transcript" | "feishu";
   weight: number;
@@ -25,6 +31,7 @@ export type CreateExpressionInput = {
   meaning: string;
   example_en: string;
   example_zh?: string | null;
+  examples?: ExpressionExample[] | null;
   topic_id: string;
   source_type?: "transcript" | "feishu";
   weight?: number;

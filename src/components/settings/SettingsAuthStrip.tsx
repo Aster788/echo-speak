@@ -104,7 +104,7 @@ export function SettingsAuthStrip({
               onAuthChange();
             })
           }
-          className="shrink-0 underline decoration-[#222222]/30 underline-offset-2 disabled:opacity-50"
+          className={settingsAuthButtonClassName}
         >
           Sign out
         </button>
@@ -129,7 +129,7 @@ export function SettingsAuthStrip({
               onChange={(event) => setCode(normalizeEmailOtpCode(event.target.value))}
               placeholder="000000"
               maxLength={6}
-              className="block w-full bg-transparent text-center text-[0.9375rem] tracking-[0.35em] text-[#222222] outline-none placeholder:text-[#222222]/25"
+              className="block w-full min-w-0 bg-transparent text-center text-[0.9375rem] tracking-[0.35em] text-[#222222] outline-none placeholder:text-[#222222]/25"
             />
           </SettingsFrame>
         </div>
@@ -210,7 +210,7 @@ export function SettingsAuthStrip({
             onChange={(event) => setLoginEmail(event.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
-            className="block w-full bg-transparent text-center text-[0.8125rem] text-[#222222] outline-none placeholder:text-[#222222]/35"
+            className="block w-full min-w-0 truncate bg-transparent text-center text-[0.8125rem] text-[#222222] outline-none placeholder:text-[#222222]/35"
           />
         </SettingsFrame>
       </div>

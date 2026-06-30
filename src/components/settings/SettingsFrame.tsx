@@ -29,7 +29,7 @@ export function SettingsFrame({
         aria-hidden="true"
       />
       <div
-        className={`relative z-10 flex h-full min-w-0 items-center ${SETTINGS_FRAME_INSET_CLASS} ${className}`}
+        className={`relative z-10 flex h-full min-w-0 items-center overflow-hidden ${SETTINGS_FRAME_INSET_CLASS} ${className}`}
       >
         {children}
       </div>

@@ -5,12 +5,17 @@ import {
   listExpressionsMissingExampleZh,
   updateExpressionExampleZh,
 } from "@/db/expressions";
-import { listDismissedPhraseKeysForVideo } from "@/db/expression-dismissals";
+import {
+  listDismissedPhraseKeysForVideo,
+  listGlobalDismissedPhraseKeys,
+} from "@/db/expression-dismissals";
 import { getTranscript } from "@/db/transcripts";
 import { buildTopicIndex, listTopics } from "@/db/topics";
 import { filterDismissedExpressions } from "@/lib/merge-expressions";
+import { canonicalKey, pickDisplayPhrase } from "@/lib/phrase-canonical";
 import { resolveTopicSlug } from "@/lib/topic-resolve";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getAuthenticatedUser } from "@/lib/auth-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Expression } from "@/types/expression";
 import type { ExtractedExpression } from "@/types/expression";
@@ -63,8 +68,17 @@ export async function extractExpressionsForTranscript(
     supabase
   );
 
-  const extracted = filterDismissedExpressions(
-    await extractFn(cleanedText, { depth: options.depth }),
+  // Union with the user's global blocklist (dismissed across all videos).
+  const user = await getAuthenticatedUser();
+  if (user) {
+    const globalKeys = await listGlobalDismissedPhraseKeys(user.id, supabase);
+    for (const key of globalKeys) {
+      dismissedKeys.add(key);
+    }
+  }
+
+  const filtered = filterDismissedExpressions(
+    await extractFn(cleanedText, { depth: options.depth, topics }),
     dismissedKeys
   );
 
@@ -74,18 +88,43 @@ export async function extractExpressionsForTranscript(
     supabase
   );
 
-  const rows = await Promise.all(
-    extracted.map(async (item) => ({
-      video_id: transcript.video_id,
+  // Resolve zh for every example, then group by canonical key so near-duplicates
+  // (e.g. "let go of something" / "let go of") collapse into one row per video.
+  const withZh = await Promise.all(
+    filtered.map(async (item) => ({
       phrase: item.phrase,
       meaning: item.definition,
-      example_en: item.example,
-      example_zh: await resolveExampleZhFn(item.example),
-      topic_id: resolveTopicSlug(item.topic_slug, topicIndex),
-      source_type: "transcript" as const,
-      weight: 1.0,
+      example: item.example,
+      exampleZh: await resolveExampleZhFn(item.example),
+      topic_slug: item.topic_slug,
+      canonical: canonicalKey(item.phrase),
     }))
   );
+
+  const groups = new Map<string, typeof withZh>();
+  for (const item of withZh) {
+    const key = item.canonical || item.phrase.toLowerCase();
+    const list = groups.get(key) ?? [];
+    list.push(item);
+    groups.set(key, list);
+  }
+
+  const rows = [...groups.values()].map((group) => {
+    const displayPhrase = pickDisplayPhrase(group.map((g) => g.phrase));
+    const first = group[0];
+    const examples = group.map((g) => ({ en: g.example, zh: g.exampleZh }));
+    return {
+      video_id: transcript.video_id,
+      phrase: displayPhrase,
+      meaning: first.meaning,
+      example_en: examples[0]?.en ?? first.example,
+      example_zh: examples[0]?.zh ?? null,
+      examples,
+      topic_id: resolveTopicSlug(first.topic_slug, topicIndex),
+      source_type: "transcript" as const,
+      weight: 1.0,
+    };
+  });
 
   const expressions = await createExpressions(rows, supabase);
 

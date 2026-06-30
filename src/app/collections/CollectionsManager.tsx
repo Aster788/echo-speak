@@ -5,6 +5,8 @@ import { CollectionsBackHeader } from "@/components/collections/CollectionsBackH
 import { CollectionsTopicTree } from "@/components/collections/CollectionsTopicTree";
 import { ExpressionListWithAlphabet } from "@/components/collections/ExpressionListWithAlphabet";
 import { MoveSheet } from "@/components/collections/MoveSheet";
+import { DismissReasonSheet } from "@/components/collections/DismissReasonSheet";
+import { MergeExpressionSheet } from "@/components/collections/MergeExpressionSheet";
 import { SuccessToast } from "@/components/collections/SuccessToast";
 import {
   ViewTabs,
@@ -14,6 +16,7 @@ import { pageHintFont } from "@/lib/page-hint-font";
 import { sortTopicsByName } from "@/lib/sort-collections";
 import type { Expression } from "@/types/expression";
 import type { TopicTreeNode } from "@/types/topic";
+import type { DismissReason } from "@/types/dismiss-reason";
 
 const VIEW_TAB_KEY = "collections-view-tab";
 const EXPANDED_KEY = "collections-topic-expanded";
@@ -110,10 +113,23 @@ export function CollectionsManager({
   const [newTopicName, setNewTopicName] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
-  const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
   const [moveTarget, setMoveTarget] = useState<MoveTarget | null>(null);
   const [moveTopicId, setMoveTopicId] = useState("");
   const [moveBusy, setMoveBusy] = useState(false);
+  const [dismissTarget, setDismissTarget] = useState<{
+    id: string;
+    phrase: string;
+  } | null>(null);
+  const [dismissReason, setDismissReason] = useState<DismissReason | null>(null);
+  const [dismissBusy, setDismissBusy] = useState(false);
+  const [mergeSource, setMergeSource] = useState<{
+    id: string;
+    phrase: string;
+  } | null>(null);
+  const [mergeTargetId, setMergeTargetId] = useState("");
+  const [mergeBusy, setMergeBusy] = useState(false);
+  const [reextractBusy, setReextractBusy] = useState(false);
+  const [reextractConfirmOpen, setReextractConfirmOpen] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [message, setMessage] = useState("");
@@ -318,25 +334,16 @@ export function CollectionsManager({
     showSuccess("Topic deleted.");
   }
 
-  async function dismissExpression(expressionId: string) {
-    setFadingIds((current) => new Set(current).add(expressionId));
-    await new Promise((resolve) => window.setTimeout(resolve, 180));
+  function openDismiss(expressionId: string, phrase: string) {
+    setDismissTarget({ id: expressionId, phrase });
+    setDismissReason(null);
+  }
 
-    const response = await fetch(`/api/expressions/${expressionId}/dismiss`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-    const data = (await response.json()) as { ok: boolean; message?: string };
-    if (!data.ok) {
-      setFadingIds((current) => {
-        const next = new Set(current);
-        next.delete(expressionId);
-        return next;
-      });
-      setMessage(data.message ?? "Failed to dismiss expression.");
-      return;
-    }
+  async function dismissExpression(expressionId: string, reason: DismissReason) {
+    setDismissBusy(true);
+    const previousTopicExpressions = topicExpressions;
+    const previousVideoExpressions = videoExpressions;
+    const previousAllExpressions = allExpressions;
 
     setTopicExpressions((current) =>
       current.filter((item) => item.id !== expressionId)
@@ -347,18 +354,38 @@ export function CollectionsManager({
     setAllExpressions((current) =>
       current.filter((item) => item.id !== expressionId)
     );
-    setFadingIds((current) => {
-      const next = new Set(current);
-      next.delete(expressionId);
-      return next;
-    });
+    setAllExpressionCount((count) => Math.max(0, count - 1));
 
-    await refreshTopics();
-    if (viewTab === "video" && videoLevel === "l1") {
-      await loadVideos();
-    }
-    if (viewTab === "all") {
-      await loadAllExpressions();
+    try {
+      const response = await fetch(`/api/expressions/${expressionId}/dismiss`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const data = (await response.json()) as { ok: boolean; message?: string };
+      if (!response.ok || !data.ok) {
+        setTopicExpressions(previousTopicExpressions);
+        setVideoExpressions(previousVideoExpressions);
+        setAllExpressions(previousAllExpressions);
+        setAllExpressionCount(previousAllExpressions.length);
+        setMessage(data.message ?? "Failed to dismiss expression.");
+        return;
+      }
+
+      setDismissTarget(null);
+      setDismissReason(null);
+      await refreshTopics();
+      if (viewTab === "video" && videoLevel === "l1") {
+        await loadVideos();
+      }
+    } catch {
+      setTopicExpressions(previousTopicExpressions);
+      setVideoExpressions(previousVideoExpressions);
+      setAllExpressions(previousAllExpressions);
+      setAllExpressionCount(previousAllExpressions.length);
+      setMessage("Failed to dismiss expression.");
+    } finally {
+      setDismissBusy(false);
     }
   }
 
@@ -367,9 +394,93 @@ export function CollectionsManager({
     setMoveTarget({ kind: "expression", id: expressionId });
   }
 
+  function openMergeExpression(expressionId: string, phrase: string) {
+    setMergeSource({ id: expressionId, phrase });
+    setMergeTargetId("");
+  }
+
+  async function confirmMergeExpression() {
+    if (!mergeSource || !mergeTargetId) return;
+    setMergeBusy(true);
+    const previousTopicExpressions = topicExpressions;
+    const previousAllExpressions = allExpressions;
+    // Optimistically remove the source row (it will be deleted by the merge).
+    const removeSource = (list: Expression[]) =>
+      list.filter((item) => item.id !== mergeSource.id);
+    setTopicExpressions(removeSource);
+    setAllExpressions(removeSource);
+    setAllExpressionCount((count) => Math.max(0, count - 1));
+
+    try {
+      const response = await fetch(
+        `/api/expressions/${mergeSource.id}/merge`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetId: mergeTargetId }),
+        }
+      );
+      const data = (await response.json()) as { ok: boolean; message?: string };
+      if (!response.ok || !data.ok) {
+        setTopicExpressions(previousTopicExpressions);
+        setAllExpressions(previousAllExpressions);
+        setAllExpressionCount(previousAllExpressions.length);
+        setMessage(data.message ?? "Failed to merge expressions.");
+        return;
+      }
+      setMergeSource(null);
+      setMergeTargetId("");
+      showSuccess("Merged successfully.");
+      await refreshTopics();
+      if (viewTab === "all") {
+        await loadAllExpressions();
+      } else if (viewTab === "topic" && selectedTopicId) {
+        await loadTopicExpressions(selectedTopicId);
+      }
+    } catch {
+      setTopicExpressions(previousTopicExpressions);
+      setAllExpressions(previousAllExpressions);
+      setAllExpressionCount(previousAllExpressions.length);
+      setMessage("Failed to merge expressions.");
+    } finally {
+      setMergeBusy(false);
+    }
+  }
+
   function openMoveTopic(topicId: string) {
     setMoveTopicId("");
     setMoveTarget({ kind: "topic", id: topicId });
+  }
+
+  async function handleReextract() {
+    if (!selectedVideoId) return;
+    setReextractConfirmOpen(false);
+    setReextractBusy(true);
+    try {
+      const response = await fetch(
+        `/api/videos/${selectedVideoId}/reextract`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        }
+      );
+      const data = (await response.json()) as {
+        ok: boolean;
+        message?: string;
+        expressionCount?: number;
+      };
+      if (!response.ok || !data.ok) {
+        setMessage(data.message ?? "Failed to re-extract expressions.");
+        return;
+      }
+      await loadVideoExpressions(selectedVideoId);
+      showSuccess(`Re-extracted ${data.expressionCount ?? 0} expressions.`);
+    } catch {
+      setMessage("Failed to re-extract expressions.");
+    } finally {
+      setReextractBusy(false);
+    }
   }
 
   async function confirmMove() {
@@ -514,10 +625,19 @@ export function CollectionsManager({
           )}
           <ExpressionListWithAlphabet
             expressions={topicExpressions}
-            fadingIds={fadingIds}
             scopeId="topic-expressions"
             onMove={openMoveExpression}
-            onDelete={(expressionId) => void dismissExpression(expressionId)}
+            onMerge={(expressionId) => {
+              const expr = topicExpressions.find((e) => e.id === expressionId);
+              openMergeExpression(expressionId, expr?.phrase ?? "");
+            }}
+            onDelete={(expressionId) => {
+              const expr =
+                topicExpressions.find((e) => e.id === expressionId) ??
+                videoExpressions.find((e) => e.id === expressionId) ??
+                allExpressions.find((e) => e.id === expressionId);
+              openDismiss(expressionId, expr?.phrase ?? "");
+            }}
           />
         </section>
       )}
@@ -562,15 +682,30 @@ export function CollectionsManager({
             }
             onBack={handleBackFromVideoL2}
           />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setReextractConfirmOpen(true)}
+              disabled={reextractBusy}
+              className="rounded-full border border-[#222222]/20 px-4 py-1.5 text-[0.8125rem] transition-opacity duration-150 active:opacity-70 disabled:opacity-50"
+            >
+              {reextractBusy ? "Re-extracting…" : "Re-extract"}
+            </button>
+          </div>
           {loading && (
             <p className="text-sm text-[#222222] opacity-70">Loading…</p>
           )}
           <ExpressionListWithAlphabet
             expressions={videoExpressions}
-            fadingIds={fadingIds}
             scopeId="video-expressions"
             onMove={openMoveExpression}
-            onDelete={(expressionId) => void dismissExpression(expressionId)}
+            onDelete={(expressionId) => {
+              const expr =
+                topicExpressions.find((e) => e.id === expressionId) ??
+                videoExpressions.find((e) => e.id === expressionId) ??
+                allExpressions.find((e) => e.id === expressionId);
+              openDismiss(expressionId, expr?.phrase ?? "");
+            }}
           />
         </section>
       )}
@@ -587,10 +722,19 @@ export function CollectionsManager({
           />
           <ExpressionListWithAlphabet
             expressions={allExpressions}
-            fadingIds={fadingIds}
             scopeId="all-expressions"
             onMove={openMoveExpression}
-            onDelete={(expressionId) => void dismissExpression(expressionId)}
+            onMerge={(expressionId) => {
+              const expr = allExpressions.find((e) => e.id === expressionId);
+              openMergeExpression(expressionId, expr?.phrase ?? "");
+            }}
+            onDelete={(expressionId) => {
+              const expr =
+                topicExpressions.find((e) => e.id === expressionId) ??
+                videoExpressions.find((e) => e.id === expressionId) ??
+                allExpressions.find((e) => e.id === expressionId);
+              openDismiss(expressionId, expr?.phrase ?? "");
+            }}
           />
         </section>
       )}
@@ -616,6 +760,77 @@ export function CollectionsManager({
         message={toastMessage || "Moved successfully."}
         visible={successVisible}
       />
+
+      <DismissReasonSheet
+        open={dismissTarget !== null}
+        phrase={dismissTarget?.phrase}
+        selectedReason={dismissReason}
+        onSelectReason={setDismissReason}
+        onCancel={() => {
+          setDismissTarget(null);
+          setDismissReason(null);
+        }}
+        onConfirm={() => {
+          if (dismissTarget && dismissReason) {
+            void dismissExpression(dismissTarget.id, dismissReason);
+          }
+        }}
+        busy={dismissBusy}
+      />
+
+      <MergeExpressionSheet
+        open={mergeSource !== null}
+        sourcePhrase={mergeSource?.phrase}
+        candidates={(viewTab === "topic" ? topicExpressions : allExpressions).filter(
+          (expr) => expr.id !== mergeSource?.id
+        )}
+        selectedTargetId={mergeTargetId}
+        onSelectTarget={setMergeTargetId}
+        onCancel={() => {
+          setMergeSource(null);
+          setMergeTargetId("");
+        }}
+        onConfirm={() => void confirmMergeExpression()}
+        busy={mergeBusy}
+      />
+
+      {reextractConfirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#222222]/30 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm re-extract"
+          onClick={() => setReextractConfirmOpen(false)}
+        >
+          <div
+            className="w-full max-w-[340px] rounded-2xl bg-[#FBF8F1] p-6 text-center shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="mb-1 text-[1rem] font-medium text-[#222222]">
+              Re-extract expressions?
+            </p>
+            <p className="mb-4 text-sm text-[#222222]/70">
+              This will replace non-locked expressions for this video. Locked topics stay. Continue?
+            </p>
+            <div className="flex items-center justify-center gap-6 text-[0.875rem]">
+              <button
+                type="button"
+                onClick={() => setReextractConfirmOpen(false)}
+                className="rounded-full border border-[#222222]/20 px-5 py-2 transition-opacity duration-150 active:opacity-70"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleReextract()}
+                className="rounded-full border border-[#222222]/20 px-5 py-2 transition-opacity duration-150 active:opacity-70"
+              >
+                Re-extract
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

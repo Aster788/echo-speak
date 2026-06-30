@@ -15,7 +15,7 @@ supabase/migrations/
 | topics | **implemented** (Phase 3) | `20250620120000_phase3_topics_expressions.sql` |
 | expressions | **implemented** (Phase 3–4) | `20250620120000_phase3_topics_expressions.sql`, `20250621160000_phase4_active_recall.sql` |
 | expression_dismissals | **implemented** (Phase 3.5) | `20250620180000_phase35_topic_curation.sql` |
-| review_queue | planned (Phase 5) | — |
+| review_queue | **implemented** (schema only; scheduling deferred to Phase 5) | `20260629230000_review_queue.sql` |
 | review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
 | gaps | planned (Phase 7) | — |
 | sync_logs | planned (Phase 6) | — |
@@ -161,9 +161,9 @@ Unique on `(video_id, phrase_key)`.
 
 # review_queue
 
-**Status: planned (Phase 5)**
+**Status: implemented (schema only; scheduling deferred to Phase 5)**
 
-Expressions waiting for review.
+Expressions waiting for review. Scheduling (enqueue / `due_at` computation) is deferred to Phase 5 Spaced Repetition.
 
 | Column | Type | Notes |
 

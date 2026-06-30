@@ -14,6 +14,7 @@ function expression(
     meaning: "",
     example_en: "",
     example_zh: null,
+    examples: null,
     topic_id: "t1",
     source_type: "transcript",
     weight: 1,
@@ -46,8 +47,8 @@ describe("sort-collections", () => {
 
   it("sorts videos by title", () => {
     const sorted = sortVideosByTitle([
-      { id: "2", title: "Zebra vlog", youtube_url: "", source: "youtube" },
-      { id: "1", title: "Alpha clip", youtube_url: "", source: "youtube" },
+      { id: "2", title: "Zebra vlog", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
+      { id: "1", title: "Alpha clip", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
     ]);
 
     expect(sorted.map((item) => item.title)).toEqual([

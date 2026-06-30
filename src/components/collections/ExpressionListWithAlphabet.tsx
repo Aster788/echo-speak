@@ -9,10 +9,10 @@ const LETTERS = "abcdefghijklmnopqrstuvwxyz".split("");
 
 type ExpressionListWithAlphabetProps = {
   expressions: Expression[];
-  fadingIds: Set<string>;
   scopeId: string;
   onMove: (expressionId: string) => void;
   onDelete: (expressionId: string) => void;
+  onMerge?: (expressionId: string) => void;
 };
 
 function expressionLetter(expression: Expression): string | null {
@@ -23,10 +23,10 @@ function expressionLetter(expression: Expression): string | null {
 
 export function ExpressionListWithAlphabet({
   expressions,
-  fadingIds,
   scopeId,
   onMove,
   onDelete,
+  onMerge,
 }: ExpressionListWithAlphabetProps) {
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const availableLetters = new Set(
@@ -57,9 +57,9 @@ export function ExpressionListWithAlphabet({
             <div key={expression.id} id={anchorId} className="scroll-mt-3">
               <ExpressionCard
                 expression={expression}
-                fadingOut={fadingIds.has(expression.id)}
                 onMove={() => onMove(expression.id)}
                 onDelete={() => onDelete(expression.id)}
+                onMerge={onMerge ? () => onMerge(expression.id) : undefined}
               />
             </div>
           );

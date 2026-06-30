@@ -1,9 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
- * Auto-generate Scheme 2 calibration table from local/cloud DB.
+ * Auto-generate Scheme 2 calibration table from cloud DB (via `.env.local`) or local CLI.
  *
  *   npx tsx scripts/extraction-depth-stats.ts
  *   npx tsx scripts/extraction-depth-stats.ts --write
+ *
+ * Override target: STATS_SUPABASE_URL / STATS_SUPABASE_SERVICE_ROLE_KEY
+ * Local only: STATS_SUPABASE_URL=http://127.0.0.1:54321
  */
 
 import { writeFileSync } from "fs";

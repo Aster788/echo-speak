@@ -1,4 +1,4 @@
-import { listExpressionsByTopicId } from "@/db/expressions";
+import { listExpressionsMergedByCanonicalKey } from "@/db/expressions";
 import { getTopic } from "@/db/topics";
 import { errorMessage, jsonError, jsonOk } from "@/lib/api-response";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -16,7 +16,10 @@ export async function GET(_request: Request, context: RouteContext) {
       return jsonError("Topic not found.", 404);
     }
 
-    const expressions = await listExpressionsByTopicId(id, supabase);
+    const expressions = await listExpressionsMergedByCanonicalKey(
+      { kind: "topic", topicId: id },
+      supabase
+    );
     return jsonOk({ topic, expressions });
   } catch (error) {
     return jsonError(errorMessage(error, "Failed to load expressions."), 500);

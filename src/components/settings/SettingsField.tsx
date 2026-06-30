@@ -65,7 +65,7 @@ export function SettingsField({
   }
 
   return (
-    <SettingsFrame className={secret ? "pr-6" : undefined}>
+    <SettingsFrame>
       <div
         className={`${pageHintFont.className} flex w-full min-w-0 items-center gap-[1ch] text-[0.8125rem] font-normal tracking-[0.01em] text-[#222222]`}
       >

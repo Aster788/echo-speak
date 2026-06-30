@@ -31,7 +31,11 @@ export function getStatsSupabaseUrl(): string {
   if (process.env.STATS_SUPABASE_URL?.trim()) {
     return process.env.STATS_SUPABASE_URL.trim();
   }
-  // Stats scripts default to local CLI (where dismiss audit + 120 expressions live).
+  const cloudUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (cloudUrl) {
+    return cloudUrl;
+  }
+  // Local Supabase CLI fallback (e.g. after `supabase start` with no .env.local).
   return "http://127.0.0.1:54321";
 }
 

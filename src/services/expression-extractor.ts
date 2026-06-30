@@ -18,12 +18,15 @@ import {
 } from "@/lib/transcript-chunks";
 import { rankExtractedExpressions } from "@/services/expression-ranker";
 import type { ExtractedExpression } from "@/types/expression";
+import type { Topic } from "@/types/topic";
 import type OpenAI from "openai";
 
 export type ExtractExpressionsOptions = {
   depth?: ExtractionDepth;
   /** Set false to skip second LLM rank pass (direction D). */
   rankPass?: boolean;
+  /** Live topics from the DB; when provided the prompt reflects user curation. */
+  topics?: Topic[];
 };
 
 export { MAX_EXTRACTION_TOTAL_LENGTH as MAX_EXTRACTION_LENGTH };
@@ -75,10 +78,13 @@ export function parseExtractResponse(content: string): ExtractedExpression[] {
   return filterLowQualityExpressions(normalized);
 }
 
-async function buildSystemPrompt(maxExpressions: number): Promise<string> {
+async function buildSystemPrompt(
+  maxExpressions: number,
+  topics?: Topic[]
+): Promise<string> {
   const template = await loadPrompt("extract-expressions");
-  const topicTree = formatTopicTreeForPrompt();
-  const leafSlugs = listLeafTopicSlugs().join(", ");
+  const topicTree = formatTopicTreeForPrompt(topics);
+  const leafSlugs = listLeafTopicSlugs(topics).join(", ");
   const dismissalHints = await formatDismissalHintsForPrompt().catch(
     () => ""
   );
@@ -128,7 +134,7 @@ export async function extractExpressions(
   const batches: ExtractedExpression[][] = [];
   for (const chunk of chunks) {
     const extractCap = getChunkExtractCap(chunk.length, depth);
-    const systemPrompt = await buildSystemPrompt(extractCap);
+    const systemPrompt = await buildSystemPrompt(extractCap, options.topics);
     const batch = await extractExpressionsFromChunk(chunk, systemPrompt, openai);
     if (batch.length > 0) {
       batches.push(batch);

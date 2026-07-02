@@ -2,8 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
+import { getTodaysReviewSummary } from "@/app/review/actions";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const summary = await getTodaysReviewSummary();
+
   return (
     <PageShell mainClassName="flex min-h-0 flex-1 flex-col">
       <PageHeader description="Turn video transcripts into expressions you actually remember." />
@@ -15,10 +18,13 @@ export default function HomePage() {
           Import transcript
         </Link>
         <Link
-          href="/review"
+          href="/review?start=todays"
           className="rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#222222] transition-opacity duration-150 hover:opacity-80"
         >
-          Start review
+          <span className="block">Start today&apos;s review</span>
+          <span className="mt-0.5 block text-[0.75rem] font-normal opacity-70">
+            {summary.displayLabel}
+          </span>
         </Link>
       </div>
       <div className="mt-4 flex min-h-0 flex-1 items-center justify-center pb-2">

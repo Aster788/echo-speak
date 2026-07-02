@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UserSettingsRecord, UserSettingsStoredValues } from "@/lib/user-settings";
 import { formValuesToRow } from "@/lib/user-settings";
+import { DEFAULT_DAILY_REVIEW_BUDGET } from "@/lib/daily-review-budget";
 
 export async function getUserSettings(
   userId: string,
@@ -23,6 +24,7 @@ export async function upsertUserSettings(
   values: UserSettingsStoredValues,
   supabase: SupabaseClient
 ): Promise<UserSettingsRecord> {
+  const existing = await getUserSettings(userId, supabase);
   const row = formValuesToRow(values);
   const { data, error } = await supabase
     .from("user_settings")
@@ -30,6 +32,8 @@ export async function upsertUserSettings(
       {
         user_id: userId,
         ...row,
+        daily_review_budget:
+          existing?.daily_review_budget ?? DEFAULT_DAILY_REVIEW_BUDGET,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }

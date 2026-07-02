@@ -1,7 +1,8 @@
 import type { ExpressionExample } from "@/types/expression";
 
 export type ReviewRating = "mastered" | "again" | "unsure";
-export type ReviewMode = "video" | "topic";
+export type ReviewMode = "todays_review" | "video" | "topic";
+export type MemoryState = "learning" | "reviewing";
 
 export type CardType = "phrase_to_meaning" | "meaning_to_phrase" | "fill_blank";
 
@@ -54,10 +55,42 @@ export interface ReviewScopeOption {
 
 export type ReviewQueueSource = "transcript" | "feishu" | "manual";
 
-export type ReviewQueueEntry = {
+export type ReviewQueueRow = {
   id: string;
   expression_id: string;
   due_at: string;
   source: ReviewQueueSource;
+  created_at: string;
+  memory_state: MemoryState;
+  interval_days: number;
+  last_reviewed_at: string | null;
+  first_reviewed_at: string | null;
+};
+
+export type ReviewQueueUpsert = {
+  expressionId: string;
+  dueAt: Date;
+  memoryState: MemoryState;
+  intervalDays: number;
+  lastReviewedAt: string;
+  firstReviewedAt: string;
+  source?: ReviewQueueSource;
+};
+
+export type TodaysReviewSummary = {
+  budget: number;
+  sliceSize: number;
+  dueEligible: number;
+  newEligible: number;
+  totalEligible: number;
+  displayLabel: string;
+  canContinueToday: boolean;
+  isCaughtUp: boolean;
+};
+
+export type NewExpressionCandidate = {
+  id: string;
+  video_id: string;
+  topic_id: string;
   created_at: string;
 };

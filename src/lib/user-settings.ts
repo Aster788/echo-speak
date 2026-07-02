@@ -1,3 +1,5 @@
+import { DEFAULT_DAILY_REVIEW_BUDGET } from "@/lib/daily-review-budget";
+
 export type UserSettingsFormKey =
   | "LLM_API_KEY"
   | "LLM_BASE_URL"
@@ -24,6 +26,7 @@ export type UserSettingsRecord = {
   supabase_anon_key: string | null;
   feishu_app_id: string | null;
   feishu_app_secret: string | null;
+  daily_review_budget: number;
   created_at: string;
   updated_at: string;
 };
@@ -88,7 +91,7 @@ export const USER_SETTINGS_FIELDS = USER_SETTINGS_STORED_FIELDS;
 
 const KEY_TO_COLUMN: Record<
   UserSettingsStoredKey,
-  keyof Omit<UserSettingsRecord, "user_id" | "created_at" | "updated_at">
+  keyof Omit<UserSettingsRecord, "user_id" | "created_at" | "updated_at" | "daily_review_budget">
 > = {
   LLM_API_KEY: "llm_api_key",
   LLM_BASE_URL: "llm_base_url",
@@ -110,13 +113,16 @@ export function emptyFormValues(): UserSettingsFormValues {
 export function formValuesToRow(
   values: UserSettingsStoredValues
 ): Omit<UserSettingsRecord, "user_id" | "created_at" | "updated_at"> {
-  const row = {} as Omit<UserSettingsRecord, "user_id" | "created_at" | "updated_at">;
+  const row = {} as Omit<UserSettingsRecord, "user_id" | "created_at" | "updated_at" | "daily_review_budget">;
   for (const field of USER_SETTINGS_STORED_FIELDS) {
     const column = KEY_TO_COLUMN[field.key];
     const value = values[field.key]?.trim() ?? "";
     row[column] = value || null;
   }
-  return row;
+  return {
+    ...row,
+    daily_review_budget: DEFAULT_DAILY_REVIEW_BUDGET,
+  };
 }
 
 export function rowToStoredValues(

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatExampleIndexLabel } from "@/lib/example-index-label";
 import type { Expression, ExpressionExample } from "@/types/expression";
 
 type ExpressionCardProps = {
@@ -9,23 +10,6 @@ type ExpressionCardProps = {
   onDelete: () => void;
   onMerge?: () => void;
 };
-
-const ORDINAL_WORDS = [
-  "one",
-  "two",
-  "three",
-  "four",
-  "five",
-  "six",
-  "seven",
-  "eight",
-  "nine",
-  "ten",
-];
-
-function ordinalLabel(index: number): string {
-  return ORDINAL_WORDS[index] ?? String(index + 1);
-}
 
 function collectExamples(expression: Expression): ExpressionExample[] {
   if (expression.examples && expression.examples.length > 0) {
@@ -95,8 +79,8 @@ function ExampleBlocks({
       {examples.map((example, index) => (
         <div key={index} className="space-y-0.5">
           {multi && (
-            <p className="text-[0.6875rem] font-medium uppercase tracking-wide opacity-60">
-              Example {ordinalLabel(index)}
+            <p className="text-[0.6875rem] font-medium tabular-nums tracking-wide opacity-60">
+              {formatExampleIndexLabel(index)}
             </p>
           )}
           {example.en && (

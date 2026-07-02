@@ -76,7 +76,7 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
     textColor === "#FFFFFF"
       ? "border-t border-[#FFFFFF]/45"
       : "border-t border-[#222222]/40";
-  const sourceLabel = mode === "video" ? card.videoTitle : card.topicName;
+  const sourceLabel = mode === "topic" ? card.topicName : card.videoTitle;
   const hiddenFaceStyle: CSSProperties = {
     backfaceVisibility: "hidden",
     WebkitBackfaceVisibility: "hidden",

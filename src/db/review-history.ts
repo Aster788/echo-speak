@@ -36,6 +36,24 @@ export async function insertReviewRating(
   return data as ReviewHistoryEntry;
 }
 
+export async function listRecentRatingsForExpression(
+  expressionId: string,
+  limit = 5,
+  client?: SupabaseClient
+): Promise<ReviewRating[]> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("review_history")
+    .select("rating")
+    .eq("expression_id", expressionId)
+    .order("reviewed_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? [])
+    .map((row) => row.rating as string)
+    .filter(isReviewRating);
+}
+
 export async function listReviewHistoryForExpression(
   expressionId: string,
   client?: SupabaseClient

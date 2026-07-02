@@ -1,8 +1,13 @@
 import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
 import { SettingsForm } from "@/components/settings/SettingsForm";
+import { ReviewBudgetSettings } from "@/components/settings/ReviewBudgetSettings";
 import { loadSettings } from "@/app/settings/actions";
+import { getUserSettings } from "@/db/user-settings";
+import { DEFAULT_DAILY_REVIEW_BUDGET } from "@/lib/daily-review-budget";
 import { parseEmailOtpAuthReason } from "@/lib/auth-email-otp";
+import { getAuthenticatedUser } from "@/lib/auth-server";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +21,20 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const authReason =
     params.auth === "error" ? parseEmailOtpAuthReason(params.reason) : null;
 
+  const user = await getAuthenticatedUser();
+  let reviewBudget: number = DEFAULT_DAILY_REVIEW_BUDGET;
+  if (user) {
+    const settings = await getUserSettings(user.id, getSupabaseAdmin());
+    reviewBudget = settings?.daily_review_budget ?? DEFAULT_DAILY_REVIEW_BUDGET;
+  }
+
   return (
     <PageShell>
       <PageHeader description="Sign in to save your own keys. The site provides the shared database." />
+      <ReviewBudgetSettings
+        isAuthenticated={initial.isAuthenticated}
+        initialBudget={reviewBudget}
+      />
       <SettingsForm initial={initial} authReason={authReason} />
     </PageShell>
   );

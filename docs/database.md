@@ -15,7 +15,7 @@ supabase/migrations/
 | topics | **implemented** (Phase 3) | `20250620120000_phase3_topics_expressions.sql` |
 | expressions | **implemented** (Phase 3–4) | `20250620120000_phase3_topics_expressions.sql`, `20250621160000_phase4_active_recall.sql` |
 | expression_dismissals | **implemented** (Phase 3.5) | `20250620180000_phase35_topic_curation.sql` |
-| review_queue | **implemented** (schema only; scheduling deferred to Phase 5) | `20260629230000_review_queue.sql` |
+| review_queue | **implemented** (Phase 5 SRS scheduling) | `20260629230000_review_queue.sql`, `20260702120000_phase5_srs_scheduling.sql` |
 | review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
 | gaps | planned (Phase 7) | — |
 | sync_logs | planned (Phase 6) | — |
@@ -161,22 +161,20 @@ Unique on `(video_id, phrase_key)`.
 
 # review_queue
 
-**Status: implemented (schema only; scheduling deferred to Phase 5)**
+**Status: implemented (Phase 5 SRS scheduling)**
 
-Expressions waiting for review. Scheduling (enqueue / `due_at` computation) is deferred to Phase 5 Spaced Repetition.
+One row per expression (unique `expression_id`). Drives Today's Review due slice. **New** is not a row state — use `first_reviewed_at IS NULL` (no review yet).
 
 | Column | Type | Notes |
-
 |----------|----------|----------|
-
 | id | uuid | PK |
-
-| expression_id | uuid | FK → expressions |
-
-| due_at | timestamptz | next review date |
-
-| source | text | video / topic / gap |
-
+| expression_id | uuid | FK → expressions, unique |
+| due_at | timestamptz | next review date (v1 eligibility) |
+| memory_state | text | `learning` \| `reviewing` |
+| interval_days | integer | current SRS interval (max 365) |
+| last_reviewed_at | timestamptz | |
+| first_reviewed_at | timestamptz | null = expression still **New** |
+| source | text | transcript / feishu / manual |
 | created_at | timestamptz | |
 
 ---

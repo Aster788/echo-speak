@@ -2,23 +2,35 @@ import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
 import { ReviewSession } from "@/components/review/ReviewSession";
 import {
+  getTodaysReviewSummary,
   listReviewTopicScopes,
   listReviewVideoScopes,
 } from "@/app/review/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReviewPage() {
-  const [videoScopes, topicScopes] = await Promise.all([
+type ReviewPageProps = {
+  searchParams: Promise<{ start?: string }>;
+};
+
+export default async function ReviewPage({ searchParams }: ReviewPageProps) {
+  const params = await searchParams;
+  const [videoScopes, topicScopes, initialSummary] = await Promise.all([
     listReviewVideoScopes(),
     listReviewTopicScopes(),
+    getTodaysReviewSummary(),
   ]);
 
   return (
     <PageShell mainClassName="relative flex min-h-0 flex-1 flex-col">
       <PageHeader description="Flip your cards and recall the English." />
       <div className="mt-1 flex min-h-0 flex-1 flex-col min-w-0">
-        <ReviewSession videoScopes={videoScopes} topicScopes={topicScopes} />
+        <ReviewSession
+          videoScopes={videoScopes}
+          topicScopes={topicScopes}
+          initialSummary={initialSummary}
+          autoStartTodaysReview={params.start === "todays"}
+        />
       </div>
     </PageShell>
   );

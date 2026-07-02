@@ -11,21 +11,25 @@ import { pageHintFont, pageHintTextClassName } from "@/lib/page-hint-font";
 type ReviewModeSelectorProps = {
   phase: "select-mode" | "active";
   mode: ReviewMode | null;
+  todaysReviewLabel: string;
   onSelectMode: (mode: ReviewMode) => void;
   onBack: () => void;
 };
 
 const MODE_ICONS: Record<ReviewMode, string> = {
-  video: "/review/microphone-button.png",
+  todays_review: "/review/microphone-button.png",
+  video: "/review/mic-button.png",
   topic: "/review/mic-button.png",
 };
 
 function ModeTile({
   label,
+  sublabel,
   imageSrc,
   onClick,
 }: {
   label: string;
+  sublabel?: string;
   imageSrc: string;
   onClick: () => void;
 }) {
@@ -33,31 +37,52 @@ function ModeTile({
     <button
       type="button"
       onClick={onClick}
-      className={`group flex w-full items-center justify-center gap-3 rounded-full px-5 py-3 transition-opacity duration-150 active:opacity-80 ${highlightSurfaceClassName}`}
+      className={`group relative flex w-full items-center justify-center rounded-full px-5 py-3 transition-opacity duration-150 active:opacity-80 ${highlightSurfaceClassName}`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imageSrc}
-        alt=""
-        className="h-10 w-10 shrink-0 object-contain"
-      />
-      <span
-        className={`text-base ${pageHintFont.className} ${pageHintTextClassName}`}
-      >
-        {label}
+      {sublabel ? (
+        <span
+          className={`absolute right-5 top-1/2 -translate-y-1/2 text-base opacity-70 ${pageHintFont.className} ${pageHintTextClassName}`}
+        >
+          {sublabel}
+        </span>
+      ) : null}
+      <span className="relative inline-flex items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageSrc}
+          alt=""
+          className="absolute right-[calc(100%+0.625rem)] top-1/2 h-10 w-10 -translate-y-1/2 object-contain"
+        />
+        <span
+          className={`text-base ${pageHintFont.className} ${pageHintTextClassName}`}
+        >
+          {label}
+        </span>
       </span>
     </button>
   );
 }
 
+function activeModeLabel(mode: ReviewMode): string {
+  switch (mode) {
+    case "todays_review":
+      return "Today's Review Now";
+    case "video":
+      return "Video Practice Now";
+    case "topic":
+      return "Topic Practice Now";
+  }
+}
+
 export function ReviewModeSelector({
   phase,
   mode,
+  todaysReviewLabel,
   onSelectMode,
   onBack,
 }: ReviewModeSelectorProps) {
   if (phase === "active" && mode) {
-    const label = mode === "video" ? "Video Mode Now" : "Topic Mode Now";
+    const label = activeModeLabel(mode);
     return (
       <div
         className={`relative z-10 flex items-center gap-3 ${pageHintColumnClassName}`}
@@ -91,12 +116,18 @@ export function ReviewModeSelector({
       style={{ width: `var(${pageHintColumnWidthVar}, fit-content)` }}
     >
       <ModeTile
-        label="Video Mode"
+        label="Today's Review"
+        sublabel={todaysReviewLabel}
+        imageSrc={MODE_ICONS.todays_review}
+        onClick={() => onSelectMode("todays_review")}
+      />
+      <ModeTile
+        label="Video Practice"
         imageSrc={MODE_ICONS.video}
         onClick={() => onSelectMode("video")}
       />
       <ModeTile
-        label="Topic Mode"
+        label="Topic Practice"
         imageSrc={MODE_ICONS.topic}
         onClick={() => onSelectMode("topic")}
       />

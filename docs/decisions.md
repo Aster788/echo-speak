@@ -268,3 +268,99 @@ Use DeepSeek API for `example_zh` (superseded 2026-06-26: always LLM, no alignme
 Reason:
 
 Per-sentence cost is negligible at personal scale (~$0.0001 per expression). Cheaper than blocking review UX.
+
+---
+
+2026-07-02
+
+Decision:
+
+**Expression has one global memory state.** All review modes (Today's Review, Video Practice, Topic Practice) update the same `review_queue` row per `expression_id`.
+
+Reason:
+
+Memory is expression-level, not video- or topic-level. Successful recall anywhere should update speaking retrieval strength.
+
+---
+
+2026-07-02
+
+Decision:
+
+`review_history` records `mode` and `scope_id` **for analytics only**. Scheduling never depends on review mode.
+
+Reason:
+
+Preserve context ("reviewed in which video session") without fragmenting SRS state.
+
+---
+
+2026-07-02
+
+Decision:
+
+**Today's Review is the primary daily workflow.** Video and Topic are intentional practice modes. UI uses "Today's Review" — never "Due".
+
+Reason:
+
+Echo optimizes long-term speaking retrieval for ordinary learners, not Anki power users.
+
+---
+
+2026-07-02
+
+Decision:
+
+**Daily Today's Review sessions are capped** (default: **40** cards; settings: 10 / 20 / 30 / 40 / 50 / Unlimited). Remaining Due expressions roll to later days. After budget slice, show `🎉 You're all caught up.` with optional **Continue Today** (unshown Due + New only).
+
+Reason:
+
+Sessions should finish in ~5–15 minutes (commute-friendly). Caught up means budget complete, not database empty.
+
+---
+
+2026-07-02
+
+Decision:
+
+**New = `first_reviewed_at IS NULL` only.** No persistent New queue. Today's Review fills Due first (`due_at <= now`), then weighted-random New to reach budget. New imports become New automatically; they do not become Due until reviewed.
+
+Reason:
+
+Library grows continuously; Due always takes priority; weighted selection balances recency, source variety, and anti-starvation.
+
+---
+
+2026-07-02
+
+Decision:
+
+**Expressions never permanently graduate.** Maximum SRS interval = **365 days**. No Dormant state, no Random Recall channel in Phase 5. Long-term review is driven by `due_at` only.
+
+Reason:
+
+Echo optimizes retrieval strength for speaking months later, not exam-style graduation. Product iron rule.
+
+---
+
+2026-07-02
+
+Decision:
+
+**Rating semantics:** `unsure` → session reinsert (4–8 cards, max 3×) + 1-day schedule + `learning`; `again` → no session reinsert + 2-day schedule + `learning`; `mastered` → SRS growth + `reviewing` after **two consecutive** `mastered` events (streak resets on `again`/`unsure`).
+
+Reason:
+
+Unsure is retrieval failure (immediate reinforcement). Again is difficulty, not forgetting. Aligns with active recall for speaking, not Anki minimization.
+
+---
+
+2026-07-02
+
+Decision:
+
+**Product principles (Phase 5):** (1) Long-term speaking recall over minimizing review time. (2) Never permanently graduate. (3) Active recall CN→EN only. (4) Lightweight sessions (~5–15 min).
+
+Reason:
+
+North star for all scheduling and UX trade-offs in Phase 5+.

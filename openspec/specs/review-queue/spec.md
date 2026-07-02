@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Database schema for Phase 5 spaced-repetition scheduling (schema only; no enqueue logic in pre-Phase 5).
+Global spaced-repetition queue: schema, due/new queries, and upsert for Phase 5 scheduling.
 
 ## Requirements
 
@@ -33,11 +33,56 @@ The system SHALL enable RLS on `review_queue` with policies allowing authenticat
 - **WHEN** the migration runs
 - **THEN** RLS is enabled and policies exist for authenticated select/insert and service_role full access
 
-### Requirement: No scheduling logic in this capability
+### Requirement: Review queue scheduling columns
 
-The system SHALL NOT write `due_at` or enqueue rows in this capability; scheduling is deferred to Phase 5 Spaced Repetition.
+The system SHALL extend `review_queue` with: `memory_state` (`learning` | `reviewing`), `interval_days`, `last_reviewed_at`, `first_reviewed_at`, plus unique constraint on `expression_id`.
 
-#### Scenario: Empty table after migration
+#### Scenario: Schema migration
 
-- **WHEN** the migration completes
-- **THEN** `review_queue` has zero rows and no automated enqueue process runs
+- **WHEN** migration runs
+- **THEN** columns exist with sensible defaults for existing rows (`first_reviewed_at` null until first review)
+
+### Requirement: One row per expression
+
+The system SHALL enforce at most one `review_queue` row per `expression_id`.
+
+#### Scenario: Upsert on schedule
+
+- **WHEN** `scheduleAfterRating` runs twice for the same expression
+- **THEN** a single row is updated
+
+### Requirement: Upsert review queue entry
+
+The system SHALL provide `upsertReviewQueue` updating `due_at`, `memory_state`, `interval_days`, `last_reviewed_at`, and `first_reviewed_at` (set once on first review).
+
+#### Scenario: First review sets first_reviewed_at
+
+- **WHEN** scheduling runs for an expression with null `first_reviewed_at`
+- **THEN** `first_reviewed_at` is set to review timestamp
+
+### Requirement: List due expressions
+
+The system SHALL provide `listDueExpressions(now)` returning non-dismissed expressions with `due_at <= now()`, ordered by `due_at` ascending.
+
+#### Scenario: Due ordering
+
+- **WHEN** three expressions are due at 08:00, 09:00, 10:00
+- **THEN** results are ordered 08:00, 09:00, 10:00
+
+### Requirement: List New expressions for selection
+
+The system SHALL provide `listNewExpressions()` returning non-dismissed expressions where `first_reviewed_at IS NULL`.
+
+#### Scenario: New query
+
+- **WHEN** expression E has never been reviewed
+- **THEN** E appears in New query results
+
+### Requirement: Count eligible for Today's Review display
+
+The system SHALL provide counts for UI: due count, new count, and today's slice size given daily budget.
+
+#### Scenario: Display 40 of 120
+
+- **WHEN** 120 expressions are due and budget is 40
+- **THEN** today's slice is 40 and UI can show `40 / 120`

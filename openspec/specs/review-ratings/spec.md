@@ -8,7 +8,7 @@ Persist Active Recall self-evaluations for Phase 5 SRS scheduling (Phase 4).
 
 ### Requirement: Review history table
 
-The system SHALL persist review events in a `review_history` table with columns: `id` (uuid PK), `expression_id` (uuid FK → expressions.id), `rating` (text), `reviewed_at` (timestamptz), `mode` (text: `video` or `topic`), and `scope_id` (uuid, the video_id or topic_id active during the session).
+The system SHALL persist review events in a `review_history` table with columns: `id` (uuid PK), `expression_id` (uuid FK → expressions.id), `rating` (text), `reviewed_at` (timestamptz), `mode` (text: `todays_review`, `video`, or `topic`), and `scope_id` (uuid).
 
 #### Scenario: Insert review event
 
@@ -36,21 +36,22 @@ The system SHALL accept only `mastered`, `again`, and `unsure` as rating values.
 
 ### Requirement: Submit rating server action
 
-The system SHALL provide a server-side entry point (Server Action or authenticated API) to record a rating without direct client database writes.
+The system SHALL record ratings via server action, insert `review_history` (with `mode` and `scope_id` for analytics), and invoke `scheduleAfterRating` to update global `review_queue`. Scheduling SHALL ignore `mode` and `scope_id`.
 
-#### Scenario: Successful submit
+#### Scenario: Successful submit with schedule
 
-- **WHEN** authenticated review session calls submit with valid `expression_id`, `rating`, `mode`, and `scope_id`
-- **THEN** the system inserts into `review_history` and returns success
+- **WHEN** user submits a valid rating in any review mode
+- **THEN** `review_history` is inserted and global `review_queue` is updated
 
-### Requirement: No SRS scheduling in Phase 4
+#### Scenario: Analytics context preserved
 
-The system SHALL NOT compute or persist `next_review_at` or enqueue `review_queue` rows when a rating is submitted in Phase 4.
+- **WHEN** user rates in Video Practice with `mode=video` and `scope_id=V`
+- **THEN** `review_history` stores `video` and V but scheduler uses only `expression_id`
 
-#### Scenario: Rating without schedule side effect
+#### Scenario: Schedule failure handling
 
-- **WHEN** user submits `mastered` for an expression
-- **THEN** only `review_history` is written; no due date is updated
+- **WHEN** history insert succeeds but queue update fails
+- **THEN** system returns error without leaving inconsistent state
 
 ### Requirement: Review history query for debugging
 

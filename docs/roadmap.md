@@ -85,4 +85,4 @@ Bridge work before SRS. Not numbered as Phase 4.x; tracked as `pre-phase-5-harde
 - Missing expression discovery
 - Gaps page Accept / Ignore
 
-**Success:** Find blind spots. Shipping on `feat/phase7-gap-detection` (cloud `gaps` migration applied).
+**Success:** Find blind spots. **Shipped** (`phase-7` tag; OpenSpec archived 2026-07-19).

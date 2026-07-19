@@ -2,7 +2,8 @@ import type { Topic, TopicIndexEntry } from "@/types/topic";
 
 /**
  * Optional overrides when a Feishu section label differs from the topic slug/name.
- * Default rule: section label matches a leaf topic slug or name (case-insensitive).
+ * Default rule: section label matches a topic slug or name (case-insensitive),
+ * including topics that have children (e.g. 【Shopping】 → Shopping).
  */
 export const FEISHU_SECTION_TOPIC_SLUG_OVERRIDES: Record<string, string> = {};
 
@@ -10,20 +11,18 @@ function normalizeKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function resolveLeafTopicIdBySlug(
+function resolveTopicIdBySlug(
   slug: string,
   topicIndex: Map<string, TopicIndexEntry>
 ): string | null {
   const entry = topicIndex.get(normalizeKey(slug));
-  if (!entry || entry.childCount > 0) {
-    return null;
-  }
-  return entry.id;
+  return entry?.id ?? null;
 }
 
 /**
  * Resolve `topic_id` for a Feishu section label using static rules (no LLM).
  * Returns null when unmapped — never falls back to uncategorized.
+ * Exact slug/name matches may target parent topics that still have children.
  */
 export function resolveFeishuSectionTopicId(
   feishuSection: string | null | undefined,
@@ -38,17 +37,21 @@ export function resolveFeishuSectionTopicId(
     FEISHU_SECTION_TOPIC_SLUG_OVERRIDES[normalizeKey(trimmed)];
 
   if (overrideSlug) {
-    return resolveLeafTopicIdBySlug(overrideSlug, topicIndex);
+    return resolveTopicIdBySlug(overrideSlug, topicIndex);
   }
 
-  const bySlug = resolveLeafTopicIdBySlug(trimmed, topicIndex);
+  const bySlug = resolveTopicIdBySlug(trimmed, topicIndex);
   if (bySlug) return bySlug;
 
   const normalizedSection = normalizeKey(trimmed);
+  // Also try spaced names as kebab slug: "Social Media" → "social-media"
+  const kebabSlug = normalizedSection.replace(/\s+/g, "-");
+  const byKebab = resolveTopicIdBySlug(kebabSlug, topicIndex);
+  if (byKebab) return byKebab;
+
   for (const topic of topics) {
     if (normalizeKey(topic.name) === normalizedSection) {
-      const byName = resolveLeafTopicIdBySlug(topic.slug, topicIndex);
-      if (byName) return byName;
+      return resolveTopicIdBySlug(topic.slug, topicIndex);
     }
   }
 

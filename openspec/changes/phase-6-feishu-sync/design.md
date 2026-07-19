@@ -71,11 +71,11 @@ Creator is never stored on `expressions` — only the parse result written to `v
 
 1. Always persist `feishu_section` (raw note structure).
 2. Resolve `topic_id` at ingest using static rules — **no LLM**.
-3. Default match: section label equals a leaf topic **slug** or **name** (case-insensitive). Example: Section `Work` → topic slug `work`.
+3. Default match: section label equals a topic **slug** or **name** (case-insensitive), including topics that still have children. Example: `【Shopping】` → Shopping even if Shopping has subtopics; `Social Media` → slug `social-media`.
 4. Optional slug overrides in `FEISHU_SECTION_TOPIC_SLUG_OVERRIDES` when label differs from slug/name.
-5. Unmapped sections (e.g. `观点`, `叙事`, `闲逛`) → `topic_id = null`.
+5. Unmapped sections → `topic_id = null` (never Uncategorized).
 6. Re-sync: update `topic_id` from map unless `topic_locked = true` (respect manual Move).
-7. Parent topics with children are never mapped directly (same leaf-only rule as transcript extraction).
+7. Sync content source: Docx **blocks** API → Markdown (keeps heading links + tables); do not use `raw_content` for ingest.
 
 ### D8. Schema migration
 

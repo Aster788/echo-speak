@@ -2,7 +2,7 @@ import { insertSyncLog } from "@/db/sync-logs";
 import { getUserSettings } from "@/db/user-settings";
 import { parseFeishuDoc } from "@/lib/feishu-doc-parser";
 import {
-  fetchDocumentRawContent,
+  fetchDocumentMarkdownContent,
   fetchTenantAccessToken,
   listAccessibleDocuments,
   type FeishuCredentials,
@@ -120,7 +120,10 @@ export async function syncFeishuNotesForUser(
       const tenantToken = await fetchTenantAccessToken(credentials);
       for (const doc of docs) {
         try {
-          doc.content = await fetchDocumentRawContent(tenantToken, doc.token);
+          doc.content = await fetchDocumentMarkdownContent(
+            tenantToken,
+            doc.token
+          );
         } catch (error) {
           errors.push({
             doc: doc.name,

@@ -1,3 +1,8 @@
+import {
+  feishuBlocksToMarkdown,
+  type FeishuDocBlock,
+} from "@/lib/feishu-blocks-to-markdown";
+
 const FEISHU_API_BASE = "https://open.feishu.cn/open-apis";
 
 export type FeishuCredentials = {
@@ -38,6 +43,16 @@ type RawContentResponse = {
   msg: string;
   data?: {
     content?: string;
+  };
+};
+
+type BlocksListResponse = {
+  code: number;
+  msg: string;
+  data?: {
+    items?: FeishuDocBlock[];
+    has_more?: boolean;
+    page_token?: string;
   };
 };
 
@@ -113,7 +128,10 @@ export async function listAccessibleDocuments(
   return docs;
 }
 
-/** Raw text export; Feishu returns plain/Markdown-like content suitable for parseFeishuDoc. */
+/**
+ * Plain-text export. Strips hyperlinks and table structure — prefer
+ * `fetchDocumentMarkdownContent` for sync ingest.
+ */
 export async function fetchDocumentRawContent(
   token: string,
   documentToken: string,
@@ -134,4 +152,52 @@ export async function fetchDocumentRawContent(
     throw new FeishuApiError("Document content is empty");
   }
   return content;
+}
+
+export async function fetchDocumentBlocks(
+  token: string,
+  documentToken: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<FeishuDocBlock[]> {
+  const blocks: FeishuDocBlock[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const params = new URLSearchParams();
+    params.set("page_size", "500");
+    params.set("document_revision_id", "-1");
+    if (pageToken) params.set("page_token", pageToken);
+
+    const response = await fetchImpl(
+      `${FEISHU_API_BASE}/docx/v1/documents/${documentToken}/blocks?${params.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const data = (await response.json()) as BlocksListResponse;
+    if (!response.ok || data.code !== 0) {
+      throw new FeishuApiError(data.msg || "Failed to list document blocks", data.code);
+    }
+
+    blocks.push(...(data.data?.items ?? []));
+    pageToken = data.data?.has_more ? data.data.page_token : undefined;
+  } while (pageToken);
+
+  return blocks;
+}
+
+/**
+ * Structured Docx blocks → Markdown for `parseFeishuDoc` (keeps heading links + tables).
+ */
+export async function fetchDocumentMarkdownContent(
+  token: string,
+  documentToken: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<string> {
+  const blocks = await fetchDocumentBlocks(token, documentToken, fetchImpl);
+  const markdown = feishuBlocksToMarkdown(blocks).trim();
+  if (!markdown) {
+    throw new FeishuApiError("Document content is empty");
+  }
+  return markdown;
 }

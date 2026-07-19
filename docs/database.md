@@ -18,7 +18,7 @@ supabase/migrations/
 | review_queue | **implemented** (Phase 5 SRS scheduling) | `20260629230000_review_queue.sql`, `20260702120000_phase5_srs_scheduling.sql` |
 | review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
 | gaps | planned (Phase 7) | — |
-| sync_logs | planned (Phase 6) | — |
+| sync_logs | **implemented** (Phase 6) | `20260703120000_phase6_feishu_sync.sql` |
 | user_settings | **implemented** (Pre-Phase 5 P2) | `20250626180000_user_settings.sql` |
 
 ---
@@ -39,7 +39,9 @@ Stores imported videos.
 
 | youtube_url | text | optional; unique when set (import dedup) |
 
-| source | text | youtube / manual |
+| source | text | youtube / manual / feishu |
+
+| creator | text | nullable; Feishu H1博主名 (Phase 6) |
 
 | created_at | timestamptz | |
 
@@ -119,11 +121,13 @@ Core learning unit.
 
 | example_zh | text | nullable; Chinese sentence for review front |
 
-| topic_id | uuid | FK → topics (leaf or leaf-root) |
+| topic_id | uuid | FK → topics; **nullable when `source_type = feishu`** (Phase 6) |
 
 | topic_locked | boolean | true when user manually moved topic (Phase 3.5) |
 
 | source_type | text | transcript / feishu |
+
+| feishu_section | text | nullable; note Section e.g. `闲逛` (Phase 6, feishu only) |
 
 | weight | numeric | importance score |
 
@@ -241,6 +245,7 @@ Per-user API configuration. Requires Supabase Auth; RLS + grants restrict rows t
 | supabase_anon_key | text | legacy column; not shown in Settings UI |
 | feishu_app_id | text | user's own |
 | feishu_app_secret | text | user's own |
+| last_feishu_sync_at | timestamptz | nullable; incremental sync cursor (Phase 6) |
 | created_at | timestamptz | |
 | updated_at | timestamptz | |
 
@@ -250,23 +255,18 @@ Per-user API configuration. Requires Supabase Auth; RLS + grants restrict rows t
 
 # sync_logs
 
-**Status: planned (Phase 6)**
+**Status: implemented (Phase 6)**
 
-Feishu synchronization records.
+Feishu synchronization runs.
 
 | Column | Type | Notes |
-
 |----------|----------|----------|
-
 | id | uuid | PK |
-
+| user_id | uuid | FK → auth.users |
 | sync_type | text | full / incremental |
-
 | status | text | success / failed |
-
 | synced_at | timestamptz | |
-
-| details | jsonb | optional |
+| details | jsonb | counts, errors |
 
 ---
 

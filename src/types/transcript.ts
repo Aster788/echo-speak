@@ -11,6 +11,7 @@ export interface Video {
   id: string;
   title: string;
   youtube_url: string | null;
-  source: "youtube" | "manual";
+  source: "youtube" | "manual" | "feishu";
+  creator: string | null;
   created_at: string;
 }

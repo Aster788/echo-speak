@@ -150,7 +150,7 @@ export async function listNewExpressionCandidates(
     .map((row) => ({
       id: row.id as string,
       video_id: row.video_id as string,
-      topic_id: row.topic_id as string,
+      topic_id: (row.topic_id as string | null) ?? null,
       created_at: row.created_at as string,
     }));
 }

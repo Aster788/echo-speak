@@ -2,7 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition, type FormEvent } from "react";
+import { FeishuSyncSettings } from "@/components/settings/FeishuSyncSettings";
 import { SettingsAuthStrip } from "@/components/settings/SettingsAuthStrip";
+import {
+  ReviewBudgetSettings,
+} from "@/components/settings/ReviewBudgetSettings";
 import { SettingsField } from "@/components/settings/SettingsField";
 import {
   SETTINGS_FEISHU_HINT,
@@ -12,11 +16,13 @@ import {
   type UserSettingsFormKey,
 } from "@/lib/user-settings";
 import type { EmailOtpAuthReason } from "@/lib/auth-email-otp";
+import { DEFAULT_DAILY_REVIEW_BUDGET } from "@/lib/daily-review-budget";
 import type { SettingsLoadResult } from "@/app/settings/types";
 
 type SettingsFormProps = {
   initial: SettingsLoadResult;
   authReason?: EmailOtpAuthReason | null;
+  reviewBudget?: number;
 };
 
 function SettingsFieldGroup({
@@ -48,7 +54,11 @@ function SettingsFieldGroup({
   );
 }
 
-export function SettingsForm({ initial, authReason }: SettingsFormProps) {
+export function SettingsForm({
+  initial,
+  authReason,
+  reviewBudget = DEFAULT_DAILY_REVIEW_BUDGET,
+}: SettingsFormProps) {
   const router = useRouter();
   const [state, setState] = useState(initial);
   const [values, setValues] = useState(initial.values);
@@ -118,6 +128,11 @@ export function SettingsForm({ initial, authReason }: SettingsFormProps) {
 
       {state.isAuthenticated ? (
         <form onSubmit={handleSave} className="flex flex-col gap-4">
+          <ReviewBudgetSettings
+            isAuthenticated
+            initialBudget={reviewBudget}
+          />
+
           <SettingsFieldGroup
             hint={SETTINGS_LLM_HINT}
             fields={USER_SETTINGS_LLM_FIELDS}
@@ -131,6 +146,8 @@ export function SettingsForm({ initial, authReason }: SettingsFormProps) {
             values={values}
             onChange={handleFieldChange}
           />
+
+          <FeishuSyncSettings />
 
           <div className="flex flex-col items-stretch">
             <button
@@ -169,9 +186,14 @@ export function SettingsForm({ initial, authReason }: SettingsFormProps) {
               strokeLinejoin="round"
             />
           </svg>
-          <p className="whitespace-nowrap text-center text-[0.6875rem] italic leading-snug text-[#222222]/70">
-            Use email sign-in above to unlock and save your personal settings.
-          </p>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-center text-[0.6875rem] italic leading-snug text-[#222222]/70">
+              Today&apos;s review uses 40 cards per day by default.
+            </p>
+            <p className="text-center text-[0.6875rem] italic leading-snug text-[#222222]/70">
+              Use email sign-in above to unlock and save your personal settings.
+            </p>
+          </div>
         </div>
       )}
     </div>

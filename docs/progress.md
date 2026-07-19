@@ -23,16 +23,16 @@
 
 ## In Progress
 
-- (none)
+- **Phase 7.1a — Gap feedback loop** on `feat/extend-phase7a-gap-feedback-loop`: Ignore → dismiss (`gap_ignore`); Accept → weight + `topic_locked`
 
 ## Current Focus
 
-Phase 7 feedback loop planning (Ignore → dismiss / Accept → scoring) — separate change after `phase-7`.
+Ship 7.1a (signal + immediate Ignore noise reduction). Extract-side learning deferred to 7.1b.
 
 ## Next Milestone
 
-Gap feedback loop (preference signals → extract strategy)
+Phase 7.1b: feed Accept/Ignore into transcript extraction (prompt / candidate filter)
 
 ## Not Started
 
-- Gap feedback loop
+- Gap feedback → extract precision (7.1b)

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  DISMISS_REASONS,
+  COLLECTION_DISMISS_REASONS,
   DISMISS_REASON_LABELS,
   type DismissReason,
 } from "@/types/dismiss-reason";
@@ -40,7 +40,7 @@ export function DismissReasonDialog({
         </p>
         <p className="mt-2 text-center text-sm opacity-70">&ldquo;{phrase}&rdquo;</p>
         <div className="mt-4 flex flex-wrap justify-center gap-2 text-[0.8125rem]">
-          {DISMISS_REASONS.map((reason) => (
+          {COLLECTION_DISMISS_REASONS.map((reason) => (
             <button
               key={reason}
               type="button"

@@ -98,6 +98,20 @@ export async function listPendingGapsWithContext(
   });
 }
 
+export async function getGap(
+  gapId: string,
+  client?: SupabaseClient
+): Promise<GapRow | null> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("gaps")
+    .select("*")
+    .eq("id", gapId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as GapRow | null) ?? null;
+}
+
 export async function insertPendingGaps(
   expressionIds: string[],
   reason: string,

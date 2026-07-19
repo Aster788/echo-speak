@@ -437,6 +437,25 @@ Decision:
 
 ---
 
+2026-07-19
+
+Decision:
+
+**Phase 7.1a — Gaps feedback: Ignore = dismiss; Accept = weight + lock.**
+
+Context:
+
+Status-only Accept/Ignore did not reduce curation load. Preference signals should hit the library and blocklist first; feeding Accept/Ignore into extract prompts is a follow-up (7.1b).
+
+Decision:
+
+1. Ignore calls `dismissExpression` with reason `gap_ignore` (CASCADE removes the gap row); phrase enters global blocklist.
+2. Accept sets `gaps.status = accepted`, `weight = min(w+0.5, 3.0)`, and `topic_locked = true` (survive re-extract).
+3. No Feishu write-back; no LLM fine-tune in 7.1a.
+4. Collections dismiss picker does not show `gap_ignore` (Gaps-only reason).
+
+---
+
 2026-07-02
 
 Decision:

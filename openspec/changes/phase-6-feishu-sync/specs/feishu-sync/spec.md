@@ -245,11 +245,11 @@ The system SHALL write H1-derived creator to `videos.creator` when resolving the
 
 ### Requirement: Static Section-to-Topic mapping during sync
 
-The system SHALL resolve `topic_id` at ingest via `feishu-section-topic-map` (slug/name match on leaf topics, optional overrides). The system SHALL NOT call LLM topic classification during Feishu sync.
+The system SHALL resolve `topic_id` at ingest via `feishu-section-topic-map` (slug/name match on topics, including parents with children; optional overrides). The system SHALL fetch Docx blocks and convert to Markdown for ingest (not `raw_content`). The system SHALL NOT call LLM topic classification during Feishu sync.
 
 #### Scenario: Mapped section joins Topic review
 
-- **WHEN** sync ingests a bullet under Section `Travel` and leaf topic slug `travel` exists
+- **WHEN** sync ingests a bullet under Section `Travel` and topic slug `travel` exists
 - **THEN** the expression has `feishu_section = Travel`, `topic_id` set to that topic, and appears in Topic-scoped Collections and Review
 
 #### Scenario: Unmapped section saved only

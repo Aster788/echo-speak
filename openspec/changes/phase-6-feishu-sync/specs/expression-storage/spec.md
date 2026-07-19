@@ -30,14 +30,19 @@ The system SHALL resolve creator and video title by joining `expressions.video_i
 
 ### Requirement: Feishu section-to-topic static mapping
 
-The system SHALL resolve `topic_id` at Feishu ingest using static rules in `feishu-section-topic-map` (no LLM). The system SHALL always persist the raw Section label on `feishu_section`. The system SHALL set `topic_id` only when the section label maps to a leaf Topic by slug or name (case-insensitive), or via an explicit slug override. Unmapped sections SHALL keep `topic_id` null. Re-sync SHALL update `topic_id` from the map unless `topic_locked` is true.
+The system SHALL resolve `topic_id` at Feishu ingest using static rules in `feishu-section-topic-map` (no LLM). The system SHALL always persist the raw Section label on `feishu_section`. The system SHALL set `topic_id` when the section label matches a Topic slug or name (case-insensitive), including Topics that have children, or via an explicit slug override. Unmapped sections SHALL keep `topic_id` null (never Uncategorized). Re-sync SHALL update `topic_id` from the map unless `topic_locked` is true.
 
-#### Scenario: Section matches leaf topic slug
+#### Scenario: Section matches topic slug
 
-- **WHEN** sync ingests a bullet under Section `Work` and a leaf topic with slug `work` exists
+- **WHEN** sync ingests a bullet under Section `Work` and a topic with slug `work` exists
 - **THEN** `feishu_section` is `Work` and `topic_id` points to that topic
 
-#### Scenario: Narrative section stays unmapped
+#### Scenario: Section matches parent topic with children
+
+- **WHEN** sync ingests a bullet under Section `Shopping` and topic `Shopping` has child topics
+- **THEN** `topic_id` still points to `Shopping`
+
+#### Scenario: Unmapped section stays null
 
 - **WHEN** sync ingests a bullet under Section `观点` and no topic slug/name matches `观点`
 - **THEN** `feishu_section` is `观点` and `topic_id` is null

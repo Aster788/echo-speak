@@ -394,9 +394,27 @@ Some Feishu Sections (e.g. Work, Travel) align with Echo Topics; others (观点,
 Decision:
 
 1. `feishu_section` always saved verbatim.
-2. `topic_id` set at ingest when section label matches leaf topic **slug** or **name** (case-insensitive), or explicit override in `FEISHU_SECTION_TOPIC_SLUG_OVERRIDES`.
+2. `topic_id` set at ingest when section label matches topic **slug** or **name** (case-insensitive), including topics that have children (e.g. Shopping), or explicit override in `FEISHU_SECTION_TOPIC_SLUG_OVERRIDES`.
 3. Unmapped → `topic_id = null`. No uncategorized fallback.
 4. Re-sync updates `topic_id` unless `topic_locked`.
+
+---
+
+2026-07-19
+
+Decision:
+
+**Phase 6 amendment — Docx blocks for sync; allow parent Topic match.**
+
+Context:
+
+`raw_content` strips YouTube links on H3 headings and flattens tables. Live topic tree includes parent topics (Shopping, Food) that match Feishu Section labels.
+
+Decision:
+
+1. Sync fetches Docx **blocks** and converts to Markdown before `parseFeishuDoc`.
+2. Section→Topic match no longer requires leaf-only; exact name/slug match is enough.
+3. Archive full note snapshot under `data/sample-feishu-notes/learning-english-from-videos-20260719*`.
 
 ---
 

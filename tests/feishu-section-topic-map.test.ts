@@ -32,9 +32,26 @@ function buildIndex(
 describe("resolveFeishuSectionTopicId", () => {
   const topics: Topic[] = [
     topic({ id: "food-id", name: "Food", slug: "food", parent_id: null }),
-    topic({ id: "drinks-id", name: "Drinks", slug: "drinks", parent_id: "food-id" }),
+    topic({
+      id: "drinks-id",
+      name: "Drinks",
+      slug: "drinks",
+      parent_id: "food-id",
+    }),
     topic({ id: "work-id", name: "Work", slug: "work" }),
     topic({ id: "travel-id", name: "Travel", slug: "travel" }),
+    topic({
+      id: "shopping-id",
+      name: "Shopping",
+      slug: "shopping",
+      parent_id: "financial-id",
+    }),
+    topic({
+      id: "social-media-id",
+      name: "Social Media",
+      slug: "social-media",
+    }),
+    topic({ id: "transition-id", name: "Transition", slug: "transition" }),
   ];
 
   const index = buildIndex([
@@ -42,9 +59,12 @@ describe("resolveFeishuSectionTopicId", () => {
     ["drinks", "drinks-id", 0],
     ["work", "work-id", 0],
     ["travel", "travel-id", 0],
+    ["shopping", "shopping-id", 1],
+    ["social-media", "social-media-id", 0],
+    ["transition", "transition-id", 0],
   ]);
 
-  it("maps section label to leaf topic slug (case-insensitive)", () => {
+  it("maps section label to topic slug (case-insensitive)", () => {
     expect(resolveFeishuSectionTopicId("work", index, topics)).toBe("work-id");
     expect(resolveFeishuSectionTopicId("Work", index, topics)).toBe("work-id");
     expect(resolveFeishuSectionTopicId("travel", index, topics)).toBe(
@@ -58,12 +78,24 @@ describe("resolveFeishuSectionTopicId", () => {
     );
   });
 
-  it("returns null for parent topics with children", () => {
-    expect(resolveFeishuSectionTopicId("food", index, topics)).toBeNull();
-    expect(resolveFeishuSectionTopicId("Food", index, topics)).toBeNull();
+  it("maps parent topics when section name matches (e.g. Shopping, Food)", () => {
+    expect(resolveFeishuSectionTopicId("food", index, topics)).toBe("food-id");
+    expect(resolveFeishuSectionTopicId("Food", index, topics)).toBe("food-id");
+    expect(resolveFeishuSectionTopicId("Shopping", index, topics)).toBe(
+      "shopping-id"
+    );
   });
 
-  it("returns null for unmapped narrative sections", () => {
+  it("maps spaced section labels to kebab slugs", () => {
+    expect(resolveFeishuSectionTopicId("Social Media", index, topics)).toBe(
+      "social-media-id"
+    );
+    expect(resolveFeishuSectionTopicId("Transition", index, topics)).toBe(
+      "transition-id"
+    );
+  });
+
+  it("returns null for unmapped sections", () => {
     expect(resolveFeishuSectionTopicId("观点", index, topics)).toBeNull();
     expect(resolveFeishuSectionTopicId("闲逛", index, topics)).toBeNull();
   });

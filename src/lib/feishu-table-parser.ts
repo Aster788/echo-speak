@@ -3,7 +3,8 @@ import { splitEmbeddedPhonetic } from "@/lib/feishu-phonetic";
 export type TableVocabItem = {
   phrase: string;
   meaning: string;
-  example_en: string;
+  /** Table rows are lemma + gloss only; no example sentence. */
+  example_en: string | null;
   phonetic: string | null;
 };
 
@@ -25,7 +26,7 @@ export function parseVocabTableRows(rows: string[][]): TableVocabItem[] {
       items.push({
         phrase: lemma,
         meaning: zh,
-        example_en: lemma,
+        example_en: null,
         phonetic,
       });
     }

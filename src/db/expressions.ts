@@ -33,6 +33,20 @@ export async function getExpression(
   return data as Expression;
 }
 
+export async function listExpressionsByIds(
+  ids: string[],
+  client?: SupabaseClient
+): Promise<Expression[]> {
+  if (ids.length === 0) return [];
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("expressions")
+    .select("*")
+    .in("id", ids);
+  if (error) throw error;
+  return (data ?? []) as Expression[];
+}
+
 export async function countExpressionsByVideo(
   videoId: string,
   client?: SupabaseClient
@@ -261,13 +275,15 @@ export async function listVideoExpressionCounts(
   client?: SupabaseClient
 ): Promise<Map<string, number>> {
   const supabase = client ?? getSupabase();
-  const { data, error } = await supabase.from("expressions").select("video_id");
+  const { data, error } = await supabase.rpc("expression_counts_by_video");
   if (error) throw error;
 
   const counts = new Map<string, number>();
-  for (const row of data ?? []) {
-    const videoId = row.video_id as string;
-    counts.set(videoId, (counts.get(videoId) ?? 0) + 1);
+  for (const row of (data ?? []) as Array<{
+    video_id: string;
+    expression_count: number | string;
+  }>) {
+    counts.set(row.video_id, Number(row.expression_count));
   }
   return counts;
 }
@@ -283,9 +299,12 @@ export async function createExpression(
 
 function rowExamples(expr: Expression): ExpressionExample[] {
   if (expr.examples && expr.examples.length > 0) {
-    return expr.examples;
+    return expr.examples.filter((example) => example.en?.trim());
   }
-  return [{ en: expr.example_en, zh: expr.example_zh }];
+  if (expr.example_en?.trim()) {
+    return [{ en: expr.example_en, zh: expr.example_zh }];
+  }
+  return [];
 }
 
 /**

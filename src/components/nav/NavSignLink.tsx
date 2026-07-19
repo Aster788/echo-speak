@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { MouseEvent } from "react";
+import { useLinkStatus } from "next/link";
 import { pageHintFont, pageHintTextClassName } from "@/lib/page-hint-font";
 
 type NavSignLinkProps = {
@@ -8,6 +9,30 @@ type NavSignLinkProps = {
   active: boolean;
   onActiveClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
 };
+
+function NavLinkLabel({
+  label,
+  active,
+}: {
+  label: string;
+  active: boolean;
+}) {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span
+      className={`inline-flex items-center transition-opacity duration-100 ${
+        pending ? "opacity-35" : ""
+      } ${
+        active
+          ? "text-[13px] font-medium"
+          : "text-[11px] font-normal opacity-80 group-hover:opacity-100"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
 
 export function NavSignLink({
   href,
@@ -18,14 +43,11 @@ export function NavSignLink({
   return (
     <Link
       href={href}
+      prefetch
       onClick={active ? onActiveClick : undefined}
-      className={`${pageHintFont.className} whitespace-nowrap transition-opacity duration-150 ${pageHintTextClassName} ${
-        active
-          ? "text-[13px] font-medium"
-          : "text-[11px] font-normal opacity-80 hover:opacity-100"
-      }`}
+      className={`group whitespace-nowrap ${pageHintFont.className} ${pageHintTextClassName}`}
     >
-      {label}
+      <NavLinkLabel label={label} active={active} />
     </Link>
   );
 }

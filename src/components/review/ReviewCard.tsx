@@ -26,9 +26,12 @@ type DisplayCardContent = Pick<
 
 function collectExamples(card: Pick<ReviewDeckCard, "examples" | "example_en" | "example_zh">): ExpressionExample[] {
   if (card.examples && card.examples.length > 0) {
-    return card.examples;
+    return card.examples.filter((example) => example.en?.trim());
   }
-  return [{ en: card.example_en, zh: card.example_zh }];
+  if (card.example_en?.trim()) {
+    return [{ en: card.example_en, zh: card.example_zh }];
+  }
+  return [];
 }
 
 function cardToDisplay(card: ReviewDeckCard): DisplayCardContent {

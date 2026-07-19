@@ -1,6 +1,10 @@
 "use server";
 
-import { getExpression, listExpressionsMergedByCanonicalKey, listExpressionsByVideo } from "@/db/expressions";
+import {
+  listExpressionsByIds,
+  listExpressionsMergedByCanonicalKey,
+  listExpressionsByVideo,
+} from "@/db/expressions";
 import {
   insertReviewRating,
   isReviewRating,
@@ -14,7 +18,11 @@ import {
   upsertReviewQueue,
 } from "@/db/review-queue";
 import { getUserSettings } from "@/db/user-settings";
-import { getTopic, listTopics } from "@/db/topics";
+import {
+  getTopic,
+  listTopics,
+  listTopicsWithExpressionCounts,
+} from "@/db/topics";
 import { listVideos } from "@/db/videos";
 import { getAuthenticatedUser } from "@/lib/auth-server";
 import {
@@ -139,10 +147,7 @@ async function loadExpressionsByIds(
     listTopics(client),
   ]);
 
-  const expressions = await Promise.all(ids.map((id) => getExpression(id, client)));
-  const found = expressions.filter((item): item is NonNullable<typeof item> =>
-    Boolean(item)
-  );
+  const found = await listExpressionsByIds(ids, client);
 
   const order = new Map(ids.map((id, index) => [id, index]));
   found.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
@@ -182,14 +187,22 @@ export async function buildTodaysReviewDeck(
   const cap = effectiveBudgetCap(budget);
   const exclude = new Set(excludeIds);
 
-  const [dueIds, newCandidates] = await Promise.all([
+  const [dueIds, newCandidates, reviewedToday] = await Promise.all([
     listDueExpressionIds(new Date(), supabase),
     listNewExpressionCandidates(supabase),
+    listExpressionIdsReviewedToday(supabase),
   ]);
 
   const { ids } = buildTodaysReviewIds(dueIds, newCandidates, cap, exclude);
   const cards = await loadExpressionsByIds(ids, supabase);
-  const summary = await getTodaysReviewSummary(excludeIds);
+  const summary = buildSummary(
+    budget,
+    cap,
+    dueIds,
+    newCandidates,
+    exclude,
+    reviewedToday
+  );
 
   return { cards, summary };
 }
@@ -325,10 +338,8 @@ export async function listReviewVideoScopes(): Promise<ReviewScopeOption[]> {
 
 export async function listReviewTopicScopes(): Promise<ReviewScopeOption[]> {
   const supabase = getSupabaseAdmin();
-  const { getTopicExpressionCounts, listTopics } = await import("@/db/topics");
-  const topics = await listTopics(supabase);
-  // Aggregated counts already include each topic's subtree.
-  const counts = await getTopicExpressionCounts(supabase);
+  const { topics, counts } =
+    await listTopicsWithExpressionCounts(supabase);
 
   return topics
     .map((topic) => ({

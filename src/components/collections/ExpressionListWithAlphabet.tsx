@@ -16,7 +16,7 @@ type ExpressionListWithAlphabetProps = {
 };
 
 function expressionLetter(expression: Expression): string | null {
-  const value = (expression.phrase || expression.example_en).trim();
+  const value = (expression.phrase || expression.example_en || "").trim();
   const letter = value[0]?.toLowerCase();
   return letter && /^[a-z]$/.test(letter) ? letter : null;
 }

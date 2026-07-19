@@ -126,6 +126,17 @@ export async function getTopicExpressionCounts(
   client?: SupabaseClient
 ): Promise<Map<string, number>> {
   const supabase = client ?? getSupabase();
+  const [topics, directCounts] = await Promise.all([
+    listTopics(supabase),
+    listDirectTopicExpressionCounts(supabase),
+  ]);
+  return aggregateTopicExpressionCounts(topics, directCounts);
+}
+
+export async function listDirectTopicExpressionCounts(
+  client?: SupabaseClient
+): Promise<Map<string, number>> {
+  const supabase = client ?? getSupabase();
   const { data, error } = await supabase.rpc("expression_counts_by_topic");
   if (error) throw error;
 
@@ -136,9 +147,21 @@ export async function getTopicExpressionCounts(
   }>) {
     directCounts.set(row.topic_id, Number(row.expression_count));
   }
+  return directCounts;
+}
 
-  const topics = await listTopics(supabase);
-  return aggregateTopicExpressionCounts(topics, directCounts);
+export async function listTopicsWithExpressionCounts(
+  client?: SupabaseClient
+): Promise<{ topics: Topic[]; counts: Map<string, number> }> {
+  const supabase = client ?? getSupabase();
+  const [topics, directCounts] = await Promise.all([
+    listTopics(supabase),
+    listDirectTopicExpressionCounts(supabase),
+  ]);
+  return {
+    topics,
+    counts: aggregateTopicExpressionCounts(topics, directCounts),
+  };
 }
 
 export function aggregateTopicExpressionCounts(

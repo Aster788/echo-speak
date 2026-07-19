@@ -129,6 +129,54 @@ function patchCountsForTopicDelta(
   return next;
 }
 
+function removeTopicFromTree(
+  nodes: TopicTreeNode[],
+  topicId: string
+): TopicTreeNode[] {
+  return nodes
+    .filter((node) => node.id !== topicId)
+    .map((node) => ({
+      ...node,
+      children: removeTopicFromTree(node.children, topicId),
+    }));
+}
+
+function insertTopicUnderParent(
+  nodes: TopicTreeNode[],
+  moved: TopicTreeNode,
+  parentId: string
+): TopicTreeNode[] {
+  return nodes.map((node) => {
+    if (node.id === parentId) {
+      return {
+        ...node,
+        children: sortTopicsByName([...node.children, moved]),
+      };
+    }
+    return {
+      ...node,
+      children: insertTopicUnderParent(node.children, moved, parentId),
+    };
+  });
+}
+
+function reparentTopicInTree(
+  nodes: TopicTreeNode[],
+  topicId: string,
+  parentId: string | null
+): TopicTreeNode[] {
+  const topic = flattenTree(nodes).find((node) => node.id === topicId);
+  if (!topic) return nodes;
+
+  const moved = { ...topic, parent_id: parentId };
+  const without = removeTopicFromTree(nodes, topicId);
+  if (!parentId) {
+    return sortTopicsByName([...without, moved]);
+  }
+
+  return insertTopicUnderParent(without, moved, parentId);
+}
+
 export function CollectionsManager({
   initialTree,
   initialCounts,
@@ -354,11 +402,14 @@ export function CollectionsManager({
   }
 
   async function handleDeleteTopic(topicId: string) {
+    const previousTree = tree;
+    setTree((current) => removeTopicFromTree(current, topicId));
     const response = await fetch(`/api/topics/${topicId}`, {
       method: "DELETE",
     });
     const data = (await response.json()) as { ok: boolean; message?: string };
     if (!data.ok) {
+      setTree(previousTree);
       setMessage(data.message ?? "Failed to delete topic.");
       return;
     }
@@ -368,7 +419,6 @@ export function CollectionsManager({
       setTopicLevel("l1");
       setTopicExpressions([]);
     }
-    await refreshTopics();
     showSuccess("Topic deleted.");
   }
 
@@ -417,6 +467,8 @@ export function CollectionsManager({
         )
       );
     }
+    setDismissTarget(null);
+    setDismissReason(null);
 
     try {
       const response = await fetch(`/api/expressions/${expressionId}/dismiss`, {
@@ -436,8 +488,7 @@ export function CollectionsManager({
         return;
       }
 
-      setDismissTarget(null);
-      setDismissReason(null);
+      showSuccess("Deleted.");
     } catch {
       setTopicExpressions(previousTopicExpressions);
       setVideoExpressions(previousVideoExpressions);
@@ -463,17 +514,19 @@ export function CollectionsManager({
 
   async function confirmMergeExpression() {
     if (!mergeSource || !mergeTargetId) return;
+    const sourceId = mergeSource.id;
+    const targetId = mergeTargetId;
     setMergeBusy(true);
     const previousTopicExpressions = topicExpressions;
     const previousAllExpressions = allExpressions;
     const previousCounts = counts;
     const sourceExpr =
-      topicExpressions.find((item) => item.id === mergeSource.id) ??
-      allExpressions.find((item) => item.id === mergeSource.id);
+      topicExpressions.find((item) => item.id === sourceId) ??
+      allExpressions.find((item) => item.id === sourceId);
     const parentById = buildParentById(tree);
     // Optimistically remove the source row (it will be deleted by the merge).
     const removeSource = (list: Expression[]) =>
-      list.filter((item) => item.id !== mergeSource.id);
+      list.filter((item) => item.id !== sourceId);
     setTopicExpressions(removeSource);
     setAllExpressions(removeSource);
     setAllExpressionCount((count) => Math.max(0, count - 1));
@@ -482,14 +535,16 @@ export function CollectionsManager({
         patchCountsForTopicDelta(current, sourceExpr.topic_id, -1, parentById)
       );
     }
+    setMergeSource(null);
+    setMergeTargetId("");
 
     try {
       const response = await fetch(
-        `/api/expressions/${mergeSource.id}/merge`,
+        `/api/expressions/${sourceId}/merge`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ targetId: mergeTargetId }),
+          body: JSON.stringify({ targetId }),
         }
       );
       const data = (await response.json()) as { ok: boolean; message?: string };
@@ -501,8 +556,6 @@ export function CollectionsManager({
         setMessage(data.message ?? "Failed to merge expressions.");
         return;
       }
-      setMergeSource(null);
-      setMergeTargetId("");
       showSuccess("Merged successfully.");
     } catch {
       setTopicExpressions(previousTopicExpressions);
@@ -559,12 +612,13 @@ export function CollectionsManager({
     setMoveBusy(true);
     try {
       if (moveTarget.kind === "expression") {
+        const expressionId = moveTarget.id;
         const previousTopicExpressions = topicExpressions;
         const previousAllExpressions = allExpressions;
         const previousCounts = counts;
         const moved =
-          topicExpressions.find((item) => item.id === moveTarget.id) ??
-          allExpressions.find((item) => item.id === moveTarget.id);
+          topicExpressions.find((item) => item.id === expressionId) ??
+          allExpressions.find((item) => item.id === expressionId);
         const parentById = buildParentById(tree);
         const destinationId = moveTopicId;
         const leavingSelectedTopic =
@@ -574,12 +628,12 @@ export function CollectionsManager({
 
         if (leavingSelectedTopic) {
           setTopicExpressions((current) =>
-            current.filter((item) => item.id !== moveTarget.id)
+            current.filter((item) => item.id !== expressionId)
           );
         }
         setAllExpressions((current) =>
           current.map((item) =>
-            item.id === moveTarget.id
+            item.id === expressionId
               ? { ...item, topic_id: destinationId, topic_locked: true }
               : item
           )
@@ -601,9 +655,10 @@ export function CollectionsManager({
             return next;
           });
         }
+        setMoveTarget(null);
 
         const response = await fetch(
-          `/api/expressions/${moveTarget.id}/move`,
+          `/api/expressions/${expressionId}/move`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -622,11 +677,38 @@ export function CollectionsManager({
           return;
         }
       } else {
-        const response = await fetch(`/api/topics/${moveTarget.id}`, {
+        const topicId = moveTarget.id;
+        const parentId = moveTopicId === "__root__" ? null : moveTopicId;
+        const previousTree = tree;
+        const previousCounts = counts;
+        const parentById = buildParentById(tree);
+        const oldParentId = parentById.get(topicId) ?? null;
+        const movedCount = counts[topicId] ?? 0;
+        setTree((current) =>
+          reparentTopicInTree(current, topicId, parentId)
+        );
+        setCounts((current) => {
+          let next = patchCountsForTopicDelta(
+            current,
+            oldParentId,
+            -movedCount,
+            parentById
+          );
+          next = patchCountsForTopicDelta(
+            next,
+            parentId,
+            movedCount,
+            parentById
+          );
+          return next;
+        });
+        setMoveTarget(null);
+
+        const response = await fetch(`/api/topics/${topicId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            parentId: moveTopicId === "__root__" ? null : moveTopicId,
+            parentId,
           }),
         });
         const data = (await response.json()) as {
@@ -634,10 +716,11 @@ export function CollectionsManager({
           message?: string;
         };
         if (!data.ok) {
+          setTree(previousTree);
+          setCounts(previousCounts);
           setMessage(data.message ?? "Failed to move topic.");
           return;
         }
-        await refreshTopics();
       }
 
       setMoveTarget(null);

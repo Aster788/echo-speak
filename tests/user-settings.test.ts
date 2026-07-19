@@ -27,6 +27,7 @@ describe("user settings merge", () => {
         supabase_anon_key: null,
         feishu_app_id: null,
         feishu_app_secret: null,
+        feishu_document_urls: null,
       })
     );
 
@@ -35,6 +36,7 @@ describe("user settings merge", () => {
     expect(merged.LLM_MODEL).toBe("");
     expect(merged.FEISHU_APP_ID).toBe("");
     expect(merged.FEISHU_APP_SECRET).toBe("");
+    expect(merged.FEISHU_DOCUMENT_URLS).toBe("");
     expect(merged.NEXT_PUBLIC_SUPABASE_URL).toBe("https://env.supabase.co");
     expect(merged.NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("env-anon");
   });
@@ -46,6 +48,7 @@ describe("user settings merge", () => {
       LLM_MODEL: "m",
       FEISHU_APP_ID: "id",
       FEISHU_APP_SECRET: "secret",
+      FEISHU_DOCUMENT_URLS: "https://my.feishu.cn/docx/abc",
     };
     const row = formValuesToRow({
       ...values,
@@ -67,6 +70,7 @@ describe("user settings merge", () => {
       supabase_anon_key: "anon",
       feishu_app_id: null,
       feishu_app_secret: null,
+      feishu_document_urls: "https://my.feishu.cn/docx/keep",
       created_at: "",
       updated_at: "",
     };
@@ -77,6 +81,7 @@ describe("user settings merge", () => {
         LLM_MODEL: "",
         FEISHU_APP_ID: "",
         FEISHU_APP_SECRET: "",
+        FEISHU_DOCUMENT_URLS: "",
       },
       existing
     );

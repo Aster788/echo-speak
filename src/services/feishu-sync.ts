@@ -3,10 +3,13 @@ import { getUserSettings } from "@/db/user-settings";
 import { parseFeishuDoc } from "@/lib/feishu-doc-parser";
 import {
   fetchDocumentMarkdownContent,
+  fetchDocumentTitle,
   fetchTenantAccessToken,
   listAccessibleDocuments,
   type FeishuCredentials,
+  type FeishuDocumentRef,
 } from "@/lib/feishu-client";
+import { parseFeishuDocxTokens } from "@/lib/feishu-doc-urls";
 import { FEISHU_SYNC_DEBOUNCE_MINUTES } from "@/lib/feishu-sync-policy";
 import { getSupabase } from "@/lib/supabase";
 import { ingestFeishuVideoSection } from "@/services/feishu-expression-ingest";
@@ -96,13 +99,47 @@ export async function syncFeishuNotesForUser(
     } else {
       const tenantToken = await fetchTenantAccessToken(credentials);
       const listed = await listAccessibleDocuments(tenantToken);
+      const configuredTokens = parseFeishuDocxTokens(
+        settings?.feishu_document_urls
+      );
+
+      const byToken = new Map<string, FeishuDocumentRef>();
+      for (const doc of listed) {
+        byToken.set(doc.token, doc);
+      }
+
+      for (const token of configuredTokens) {
+        if (byToken.has(token)) continue;
+        let name = token;
+        try {
+          name = await fetchDocumentTitle(tenantToken, token);
+        } catch {
+          // Still try content fetch later; title is best-effort.
+        }
+        byToken.set(token, {
+          token,
+          name,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      if (byToken.size === 0) {
+        throw new Error(
+          "No Feishu documents found. Add FEISHU_DOCUMENT_URLS in Settings (docx URL shared with the Echo Speak app). drive/v1/files only lists the app's own folder, not collaborator docs."
+        );
+      }
+
       const cursor = settings?.last_feishu_sync_at
         ? new Date(settings.last_feishu_sync_at)
         : null;
 
-      docs = listed
+      docs = [...byToken.values()]
         .filter((doc) => {
           if (mode === "full" || !cursor) return true;
+          // Configured docs always included on full; on incremental, include when
+          // list API has a newer updatedAt, or when the doc was only from URLs
+          // (unknown mtime → treat as due).
+          if (!listed.some((item) => item.token === doc.token)) return true;
           return new Date(doc.updatedAt) > cursor;
         })
         .map((doc) => ({ ...doc }));

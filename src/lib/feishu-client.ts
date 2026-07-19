@@ -201,3 +201,34 @@ export async function fetchDocumentMarkdownContent(
   }
   return markdown;
 }
+
+type DocumentGetResponse = {
+  code: number;
+  msg: string;
+  data?: {
+    document?: {
+      document_id?: string;
+      title?: string;
+      revision_id?: number;
+    };
+  };
+};
+
+/** Title for a docx token the app can already read (e.g. collaborator access). */
+export async function fetchDocumentTitle(
+  token: string,
+  documentToken: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<string> {
+  const response = await fetchImpl(
+    `${FEISHU_API_BASE}/docx/v1/documents/${documentToken}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  const data = (await response.json()) as DocumentGetResponse;
+  if (!response.ok || data.code !== 0) {
+    throw new FeishuApiError(data.msg || "Failed to fetch document meta", data.code);
+  }
+  return data.data?.document?.title?.trim() || documentToken;
+}

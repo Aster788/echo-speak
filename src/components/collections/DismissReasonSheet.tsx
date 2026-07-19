@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  DISMISS_REASONS,
+  COLLECTION_DISMISS_REASONS,
   DISMISS_REASON_LABELS,
   type DismissReason,
 } from "@/types/dismiss-reason";
@@ -53,7 +53,7 @@ export function DismissReasonSheet({
           Why are you deleting it? This helps future extractions skip it.
         </p>
         <div className="flex flex-wrap justify-center gap-2 px-2 py-3">
-          {DISMISS_REASONS.map((reason) => {
+          {COLLECTION_DISMISS_REASONS.map((reason) => {
             const active = selectedReason === reason;
             return (
               <button

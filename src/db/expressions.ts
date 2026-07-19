@@ -179,6 +179,33 @@ export async function deleteExpression(
   if (error) throw error;
 }
 
+/** Gaps Accept: bump weight (Feishu-style cap) and lock against re-extract wipe. */
+export async function acceptExpressionKeepSignal(
+  expressionId: string,
+  client?: SupabaseClient
+): Promise<Expression> {
+  const supabase = client ?? getSupabase();
+  const expression = await getExpression(expressionId, supabase);
+  if (!expression) {
+    throw new Error("Expression not found.");
+  }
+
+  const weight = Math.min(expression.weight + 0.5, 3.0);
+  const { data, error } = await supabase
+    .from("expressions")
+    .update({ weight, topic_locked: true })
+    .eq("id", expressionId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Expression;
+}
+
+/** Pure helper for tests / shared cap math. */
+export function nextAcceptedWeight(current: number): number {
+  return Math.min(current + 0.5, 3.0);
+}
+
 import type { DismissReason } from "@/types/dismiss-reason";
 
 export async function dismissExpression(

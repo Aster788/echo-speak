@@ -115,6 +115,13 @@ export function GapsManager({ initialGaps }: GapsManagerProps) {
 
   return (
     <div className="mt-4 space-y-3">
+      <p
+        className={`${pageHintFont.className} text-[0.75rem] leading-snug text-[#222222]/65`}
+      >
+        Accept keeps the phrase (locked for re-extract). Ignore removes it from
+        Collections and blocks it on future extracts.
+      </p>
+
       <div className="flex items-center justify-between gap-2">
         <p
           className={`${pageHintFont.className} text-[0.8125rem] text-[#222222]/70`}

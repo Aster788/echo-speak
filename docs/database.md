@@ -17,7 +17,7 @@ supabase/migrations/
 | expression_dismissals | **implemented** (Phase 3.5) | `20250620180000_phase35_topic_curation.sql` |
 | review_queue | **implemented** (Phase 5 SRS scheduling) | `20260629230000_review_queue.sql`, `20260702120000_phase5_srs_scheduling.sql` |
 | review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
-| gaps | planned (Phase 7) | — |
+| gaps | **implemented** (Phase 7) | `20260719220000_phase7_gaps.sql` |
 | sync_logs | **implemented** (Phase 6) | `20260703120000_phase6_feishu_sync.sql` |
 | user_settings | **implemented** (Pre-Phase 5 P2) | `20250626180000_user_settings.sql` |
 
@@ -209,22 +209,16 @@ Active Recall self-ratings; SRS scheduling deferred to Phase 5.
 
 # gaps
 
-**Status: planned (Phase 7)**
+**Status: implemented (Phase 7)** — `20260719220000_phase7_gaps.sql`
 
-Expressions discovered from transcript but not collected in notes.
+Expressions discovered from transcript but not collected in Feishu notes (per video, via `canonicalKey`).
 
 | Column | Type | Notes |
-
 |----------|----------|----------|
-
 | id | uuid | PK |
-
-| expression_id | uuid | FK → expressions |
-
-| reason | text | why flagged |
-
-| status | text | pending / accepted / ignored |
-
+| expression_id | uuid | FK → expressions (transcript row), unique, ON DELETE CASCADE |
+| reason | text | e.g. `in_transcript_not_in_feishu` |
+| status | text | `pending` / `accepted` / `ignored` |
 | created_at | timestamptz | |
 
 ---

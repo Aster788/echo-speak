@@ -16,6 +16,7 @@ import {
 } from "@/lib/feishu-sync-policy";
 import { getSupabase } from "@/lib/supabase";
 import { ingestFeishuVideoSection } from "@/services/feishu-expression-ingest";
+import { refreshGapsForVideo } from "@/services/gap-detector";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type FeishuSyncMode = "incremental" | "full";
@@ -232,6 +233,7 @@ export async function syncFeishuNotesForUser(
     let sentencesExtracted = 0;
     let skippedTranscriptDuplicates = 0;
     let skippedSubsumedVocab = 0;
+    const touchedVideoIds = new Set<string>();
 
     for (const job of slice) {
       try {
@@ -242,9 +244,21 @@ export async function syncFeishuNotesForUser(
         sentencesExtracted += result.sentencesExtracted;
         skippedTranscriptDuplicates += result.skippedTranscriptDuplicates;
         skippedSubsumedVocab += result.skippedSubsumedVocab;
+        touchedVideoIds.add(result.videoId);
       } catch (error) {
         errors.push({
           doc: `${job.docName} · ${job.section.videoTitle}`,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    for (const videoId of touchedVideoIds) {
+      try {
+        await refreshGapsForVideo(videoId, supabase);
+      } catch (error) {
+        errors.push({
+          doc: `gap-refresh · ${videoId}`,
           error: error instanceof Error ? error.message : String(error),
         });
       }

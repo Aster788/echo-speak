@@ -2,17 +2,17 @@
 
 Objective:
 
-**Phase 7 — Gap Detection** (next roadmap phase after Feishu Sync).
+**Ship Phase 7** — merge `feat/phase7-gap-detection`, tag `phase-7`, confirm Vercel production.
 
 Checklist:
 
-1. OpenSpec explore / propose for gap detection (transcript expressions vs Feishu-curated notes)
-2. Confirm success criteria from `docs/roadmap.md` Phase 7
-3. Spike comparison keys (`canonicalKey`, per-video scope) before full design
+1. Merge PR for Phase 7 Gap Detection
+2. Tag `phase-7` on the merge commit on `main`
+3. Confirm production deploy + `/gaps` loads
+4. Afterwards: propose feedback-loop change (Ignore ↔ dismiss, Accept → scoring) as a separate branch
 
 Reference:
 
-- Roadmap: `docs/roadmap.md` (Phase 7)
-- Shipped Feishu sync: `openspec/specs/feishu-sync/spec.md`, `openspec/specs/sync-logs/spec.md`
-- Archive: `openspec/changes/archive/2026-07-19-phase-6-feishu-sync/`
-- ADR: `docs/decisions.md` (2026-07-03 Phase 6)
+- Plan: `openspec/changes/phase7-gap-detection/`
+- ADR: `docs/decisions.md` (2026-07-19 Phase 7)
+- Database: `docs/database.md` (`gaps` / `20260719220000_phase7_gaps.sql`)

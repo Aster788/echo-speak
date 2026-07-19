@@ -5,6 +5,15 @@ vi.mock("@/lib/auth-server", () => ({
   getAuthenticatedUser: vi.fn(async () => null),
 }));
 
+vi.mock("@/services/gap-detector", () => ({
+  refreshGapsForVideo: vi.fn(async () => ({
+    videoId: "video-1",
+    inserted: 0,
+    deletedPending: 0,
+    candidateCount: 0,
+  })),
+}));
+
 import { extractExpressionsForTranscript } from "@/services/expression-pipeline";
 import { getAuthenticatedUser } from "@/lib/auth-server";
 import type { SupabaseClient } from "@supabase/supabase-js";

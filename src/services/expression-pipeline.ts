@@ -25,6 +25,7 @@ import {
   type ExtractExpressionsOptions as ExtractorOptions,
 } from "@/services/expression-extractor";
 import { resolveExampleZh } from "@/services/example-zh";
+import { refreshGapsForVideo } from "@/services/gap-detector";
 import type { ExtractionDepth } from "@/lib/extraction-depth";
 
 export type ExtractExpressionsResult = {
@@ -142,6 +143,8 @@ export async function extractExpressionsForTranscript(
     });
 
   const expressions = await createExpressions(rows, supabase);
+
+  await refreshGapsForVideo(transcript.video_id, supabase);
 
   return {
     videoId: transcript.video_id,

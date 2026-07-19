@@ -66,6 +66,27 @@ export class FeishuApiError extends Error {
   }
 }
 
+async function readFeishuJson<T>(
+  response: Response,
+  label: string
+): Promise<T> {
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new FeishuApiError(
+      `${label}: empty response body (HTTP ${response.status})`,
+      response.status
+    );
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new FeishuApiError(
+      `${label}: invalid JSON (HTTP ${response.status})`,
+      response.status
+    );
+  }
+}
+
 export async function fetchTenantAccessToken(
   credentials: FeishuCredentials,
   fetchImpl: typeof fetch = fetch
@@ -82,7 +103,10 @@ export async function fetchTenantAccessToken(
     }
   );
 
-  const data = (await response.json()) as TenantTokenResponse;
+  const data = await readFeishuJson<TenantTokenResponse>(
+    response,
+    "Feishu tenant token"
+  );
   if (!response.ok || data.code !== 0 || !data.tenant_access_token) {
     throw new FeishuApiError(data.msg || "Failed to obtain Feishu tenant token", data.code);
   }
@@ -107,7 +131,10 @@ export async function listAccessibleDocuments(
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    const data = (await response.json()) as DriveFilesResponse;
+    const data = await readFeishuJson<DriveFilesResponse>(
+      response,
+      "Feishu drive files"
+    );
     if (!response.ok || data.code !== 0) {
       throw new FeishuApiError(data.msg || "Failed to list Feishu documents", data.code);
     }
@@ -143,7 +170,10 @@ export async function fetchDocumentRawContent(
       headers: { Authorization: `Bearer ${token}` },
     }
   );
-  const data = (await response.json()) as RawContentResponse;
+  const data = await readFeishuJson<RawContentResponse>(
+    response,
+    "Feishu raw_content"
+  );
   if (!response.ok || data.code !== 0) {
     throw new FeishuApiError(data.msg || "Failed to fetch document content", data.code);
   }
@@ -174,7 +204,10 @@ export async function fetchDocumentBlocks(
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    const data = (await response.json()) as BlocksListResponse;
+    const data = await readFeishuJson<BlocksListResponse>(
+      response,
+      "Feishu document blocks"
+    );
     if (!response.ok || data.code !== 0) {
       throw new FeishuApiError(data.msg || "Failed to list document blocks", data.code);
     }
@@ -226,7 +259,10 @@ export async function fetchDocumentTitle(
       headers: { Authorization: `Bearer ${token}` },
     }
   );
-  const data = (await response.json()) as DocumentGetResponse;
+  const data = await readFeishuJson<DocumentGetResponse>(
+    response,
+    "Feishu document meta"
+  );
   if (!response.ok || data.code !== 0) {
     throw new FeishuApiError(data.msg || "Failed to fetch document meta", data.code);
   }

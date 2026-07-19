@@ -169,15 +169,26 @@ export async function syncFeishuNotesForUser(
     if (!options.markdownOverride) {
       const tenantToken = await fetchTenantAccessToken(credentials);
       for (const doc of docs) {
-        try {
-          doc.content = await fetchDocumentMarkdownContent(
-            tenantToken,
-            doc.token
-          );
-        } catch (error) {
+        let lastError: unknown;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            doc.content = await fetchDocumentMarkdownContent(
+              tenantToken,
+              doc.token
+            );
+            lastError = undefined;
+            break;
+          } catch (error) {
+            lastError = error;
+            // Brief backoff for intermittent empty Feishu bodies.
+            await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+          }
+        }
+        if (!doc.content && lastError) {
           errors.push({
             doc: doc.name,
-            error: error instanceof Error ? error.message : String(error),
+            error:
+              lastError instanceof Error ? lastError.message : String(lastError),
           });
         }
       }

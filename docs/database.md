@@ -17,7 +17,7 @@ supabase/migrations/
 | expression_dismissals | **implemented** (Phase 3.5) | `20250620180000_phase35_topic_curation.sql` |
 | review_queue | **implemented** (Phase 5 SRS scheduling) | `20260629230000_review_queue.sql`, `20260702120000_phase5_srs_scheduling.sql` |
 | review_history | **implemented** (Phase 4) | `20250621160000_phase4_active_recall.sql` |
-| gaps | planned (Phase 7) | — |
+| gaps | **implemented** (Phase 7) | `20260719220000_phase7_gaps.sql` |
 | sync_logs | **implemented** (Phase 6) | `20260703120000_phase6_feishu_sync.sql` |
 | user_settings | **implemented** (Pre-Phase 5 P2) | `20250626180000_user_settings.sql` |
 
@@ -117,7 +117,7 @@ Core learning unit.
 
 | meaning | text | Chinese explanation（Review 正面第一行） |
 
-| example_en | text | Source sentence in English（Review 背面第二行；原 `example` 列重命名） |
+| example_en | text | nullable; source sentence in English（Review 背面；表格 lemma 可无例句；原 `example` 列重命名） |
 
 | example_zh | text | nullable; Chinese sentence for review front |
 
@@ -135,7 +135,7 @@ Core learning unit.
 
 **`example_zh` 填充策略：**
 
-Always LLM：对 `example_en` 调用 DeepSeek 单句翻译（见 `docs/decisions.md` 2026-06-26）。`raw_text` 保留双语供参考；对齐逻辑仅在 `example-zh-alignment.ts`（审计脚本用）。
+Always LLM：对非空 `example_en` 调用 DeepSeek 单句翻译（见 `docs/decisions.md` 2026-06-26）。`raw_text` 保留双语供参考；对齐逻辑仅在 `example-zh-alignment.ts`（审计脚本用）。Feishu 表格 lemma 无例句时不调用翻译。
 
 提取 pipeline 写入时填充；`scripts/backfill-example-zh.ts --force` 可重译历史行。
 
@@ -209,22 +209,16 @@ Active Recall self-ratings; SRS scheduling deferred to Phase 5.
 
 # gaps
 
-**Status: planned (Phase 7)**
+**Status: implemented (Phase 7)** — `20260719220000_phase7_gaps.sql`
 
-Expressions discovered from transcript but not collected in notes.
+Expressions discovered from transcript but not collected in Feishu notes (per video, via `canonicalKey`).
 
 | Column | Type | Notes |
-
 |----------|----------|----------|
-
 | id | uuid | PK |
-
-| expression_id | uuid | FK → expressions |
-
-| reason | text | why flagged |
-
-| status | text | pending / accepted / ignored |
-
+| expression_id | uuid | FK → expressions (transcript row), unique, ON DELETE CASCADE |
+| reason | text | e.g. `in_transcript_not_in_feishu` |
+| status | text | `pending` / `accepted` / `ignored` |
 | created_at | timestamptz | |
 
 ---

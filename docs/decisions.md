@@ -418,6 +418,25 @@ Decision:
 
 ---
 
+2026-07-19
+
+Decision:
+
+**Phase 7 — Gap detection is deterministic per-video set difference.**
+
+Context:
+
+Feishu sync stores keep-list phrases as `source_type = feishu`; transcript extraction stores candidates as `source_type = transcript`. The old LLM gap stub compared a library to raw text and no longer matches the product definition.
+
+Decision:
+
+1. A gap candidate is a transcript expression on video V with no Feishu expression on the same V sharing `canonicalKey(phrase)`.
+2. Persist in `gaps` (`pending` / `accepted` / `ignored`); Ignore sticks across refresh; Feishu catch-up deletes stale pending.
+3. No LLM for core detection; Accept does not write back to Feishu or invent a feishu row.
+4. Refresh after extract and after Feishu ingest for touched videos.
+
+---
+
 2026-07-02
 
 Decision:

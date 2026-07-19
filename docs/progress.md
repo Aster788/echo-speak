@@ -18,20 +18,21 @@
 - Tags: `pre-phase-5-collections`, `pre-phase-5-settings-and-auth`
 - **Pre-Phase 5 library cleanup** (2026-06-30): cloud data prep, `review_queue` schema, extraction quality loop
 - **Phase 5 — Spaced Repetition** (`phase-5` tag): Today's Review, memory engine, daily budget, Unsure session reinsert
-- **Phase 6 — Feishu Sync** (in progress on `feat/phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, `videos.creator`, `feishu_section`
+- **Phase 6 — Feishu Sync** (`phase-6` tag; archived `openspec/changes/archive/2026-07-19-phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, Settings Sync all (chunked), `videos.creator`, `feishu_section`, nullable table examples
+- **Phase 7 — Gap Detection** (`gaps` table, deterministic per-video refresh, Gaps UI grouped A–Z, Accept/Ignore; cloud migration applied)
 
 ## In Progress
 
-- Phase 6: apply migration to cloud; smoke sync with real Feishu credentials
+- Ship Phase 7: merge PR, tag `phase-7`, confirm production deploy
 
 ## Current Focus
 
-Merge Phase 6 PR, tag `phase-6`, verify Home status line + background sync at 430×932.
+Close Phase 7 on `main` (`phase-7` tag).
 
 ## Next Milestone
 
-Phase 7: Gap Detection
+Phase 7 feedback loop (Ignore → dismiss / Accept → scoring) — separate change after `phase-7`
 
 ## Not Started
 
-- Phase 7: Gap Detection
+- Gap feedback loop (preference signals → extract strategy)

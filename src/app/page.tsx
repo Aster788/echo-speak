@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
 import {
   getFeishuHomeStatus,
-  triggerFeishuSyncIfStale,
+  runFeishuSyncForUserId,
 } from "@/app/feishu/actions";
 import { getTodaysReviewSummary } from "@/app/review/actions";
 
@@ -15,9 +15,16 @@ export default async function HomePage() {
     getFeishuHomeStatus(),
   ]);
 
-  after(async () => {
-    await triggerFeishuSyncIfStale();
-  });
+  // Capture userId outside after() — cookies() is not allowed inside after().
+  const autoSyncUserId =
+    feishuStatus.shouldAutoSync && feishuStatus.userId
+      ? feishuStatus.userId
+      : null;
+  if (autoSyncUserId) {
+    after(async () => {
+      await runFeishuSyncForUserId(autoSyncUserId, "incremental");
+    });
+  }
 
   return (
     <PageShell mainClassName="flex min-h-0 flex-1 flex-col">

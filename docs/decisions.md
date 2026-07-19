@@ -355,6 +355,51 @@ Unsure is retrieval failure (immediate reinforcement). Again is difficulty, not 
 
 ---
 
+2026-07-03
+
+Decision:
+
+**Phase 6 Feishu sync — structure-first, Section ≠ Topic** (`feat/phase-6-feishu-sync`).
+
+Context:
+
+User vlog notes in Feishu: H1 = creator, H3 = video + YouTube URL, `【…】` = Section (note structure, not Echo Topic). Tables are vocab pairs; bullets are sentences with glosses.
+
+Decision:
+
+1. **Parse structure** before ingest: H3 → `videos` (title, `youtube_url`, `creator` from H1); `expressions.feishu_section` always; `topic_id` from static Section→Topic map when section label matches a leaf topic slug/name (default null).
+2. **Dual pipeline:** sentences → LLM (`feishu-extract-sentences`); tables → rule parser; table words subsumed if already in ingested phrases (whole-word match).
+3. **API:** tenant token; list docx via Drive; content via `docx/v1/documents/{id}/raw_content` (Markdown-like text).
+4. **Home:** silent incremental sync when stale >6h (`after()`); light status line under review CTA; no button/spinner/toast.
+5. **Phase 8 defer:** AI suggest Topic — never during sync; static map only in Phase 6.
+
+Consequences:
+
+- Transcript and feishu expressions share `video_id`; creator on `videos.creator`, not duplicated on expressions.
+- `feishu_section` preserved as raw note structure; mapped feishu rows join Topic Collections/Review with transcript rows.
+- Re-sync respects `topic_locked` after manual Move.
+
+---
+
+2026-07-04
+
+Decision:
+
+**Phase 6 amendment — static Section → Topic mapping (default null).**
+
+Context:
+
+Some Feishu Sections (e.g. Work, Travel) align with Echo Topics; others (观点, 叙事) are note structure only. User-defined mapping, not LLM.
+
+Decision:
+
+1. `feishu_section` always saved verbatim.
+2. `topic_id` set at ingest when section label matches leaf topic **slug** or **name** (case-insensitive), or explicit override in `FEISHU_SECTION_TOPIC_SLUG_OVERRIDES`.
+3. Unmapped → `topic_id = null`. No uncategorized fallback.
+4. Re-sync updates `topic_id` unless `topic_locked`.
+
+---
+
 2026-07-02
 
 Decision:

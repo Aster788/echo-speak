@@ -1,11 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
+import { after } from "next/server";
 import { PageHeader } from "@/components/PageHeader";
 import { PageShell } from "@/components/PageShell";
+import {
+  getFeishuHomeStatus,
+  triggerFeishuSyncIfStale,
+} from "@/app/feishu/actions";
 import { getTodaysReviewSummary } from "@/app/review/actions";
 
 export default async function HomePage() {
-  const summary = await getTodaysReviewSummary();
+  const [summary, feishuStatus] = await Promise.all([
+    getTodaysReviewSummary(),
+    getFeishuHomeStatus(),
+  ]);
+
+  after(async () => {
+    await triggerFeishuSyncIfStale();
+  });
 
   return (
     <PageShell mainClassName="flex min-h-0 flex-1 flex-col">
@@ -26,6 +38,11 @@ export default async function HomePage() {
             {summary.displayLabel}
           </span>
         </Link>
+        {feishuStatus.line ? (
+          <p className="text-center text-[0.6875rem] font-normal text-[#222222]/55">
+            {feishuStatus.line}
+          </p>
+        ) : null}
       </div>
       <div className="mt-4 flex min-h-0 flex-1 items-center justify-center pb-2">
         <Image

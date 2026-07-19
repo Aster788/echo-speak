@@ -38,7 +38,7 @@ export const TOPIC_SEEDS: TopicSeed[] = [
   { slug: "productivity", name: "Productivity" },
   { slug: "daily", name: "Daily" },
   { slug: "work", name: "Work" },
-  { slug: "social", name: "Social" },
+  { slug: "interpersonal-communication", name: "Interpersonal Communication" },
   { slug: "uncategorized", name: "Uncategorized" },
 ];
 

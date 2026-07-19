@@ -27,6 +27,7 @@ export type UserSettingsRecord = {
   feishu_app_id: string | null;
   feishu_app_secret: string | null;
   daily_review_budget: number;
+  last_feishu_sync_at: string | null;
   created_at: string;
   updated_at: string;
 };

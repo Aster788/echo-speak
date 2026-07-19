@@ -114,11 +114,18 @@ function enrichDeckCards(
   const videoById = new Map(videos.map((video) => [video.id, video]));
   const topicById = new Map(topics.map((topic) => [topic.id, topic]));
 
-  return expressions.map((expression) => ({
-    ...expression,
-    videoTitle: videoById.get(expression.video_id)?.title ?? "Unknown video",
-    topicName: topicById.get(expression.topic_id)?.name ?? "Unknown topic",
-  }));
+  return expressions.map((expression) => {
+    const videoTitle =
+      videoById.get(expression.video_id)?.title ?? "Unknown video";
+
+    return {
+      ...expression,
+      videoTitle,
+      topicName: expression.topic_id
+        ? (topicById.get(expression.topic_id)?.name ?? "Unknown topic")
+        : videoTitle,
+    };
+  });
 }
 
 async function loadExpressionsByIds(
@@ -325,6 +332,7 @@ export async function listReviewTopicScopes(): Promise<ReviewScopeOption[]> {
 
   const countsByTopic = new Map<string, number>();
   for (const expression of expressions) {
+    if (!expression.topic_id) continue;
     countsByTopic.set(
       expression.topic_id,
       (countsByTopic.get(expression.topic_id) ?? 0) + 1

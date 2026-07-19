@@ -11,10 +11,11 @@ export interface Expression {
   example_en: string;
   example_zh: string | null;
   examples: ExpressionExample[] | null;
-  topic_id: string;
+  topic_id: string | null;
   source_type: "transcript" | "feishu";
   weight: number;
   topic_locked: boolean;
+  feishu_section: string | null;
   created_at: string;
 }
 
@@ -32,7 +33,8 @@ export type CreateExpressionInput = {
   example_en: string;
   example_zh?: string | null;
   examples?: ExpressionExample[] | null;
-  topic_id: string;
+  topic_id: string | null;
   source_type?: "transcript" | "feishu";
   weight?: number;
+  feishu_section?: string | null;
 };

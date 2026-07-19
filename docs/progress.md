@@ -17,19 +17,20 @@
 - **Pre-Phase 5 Hardening** (archived `openspec/changes/archive/2026-06-29-pre-phase-5-hardening`): Review polish, cloud deploy, `example_zh`, extraction depth, Collections, Home, Settings + Auth
 - Tags: `pre-phase-5-collections`, `pre-phase-5-settings-and-auth`
 - **Pre-Phase 5 library cleanup** (2026-06-30): cloud data prep, `review_queue` schema, extraction quality loop
-- **Phase 5 — Spaced Repetition** (in progress on `feat/phase-5-spaced-repetition`): Today's Review, memory engine (`learning`/`reviewing`), daily budget, Unsure session reinsert, weighted New selection, Settings budget
+- **Phase 5 — Spaced Repetition** (`phase-5` tag): Today's Review, memory engine, daily budget, Unsure session reinsert
+- **Phase 6 — Feishu Sync** (in progress on `feat/phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, `videos.creator`, `feishu_section`
 
 ## In Progress
 
-- Phase 5 deploy: apply migration `20260702120000_phase5_srs_scheduling.sql` to cloud; smoke test Today's Review at 430×932
+- Phase 6: apply migration to cloud; smoke sync with real Feishu credentials
 
 ## Current Focus
 
-Merge Phase 5 PR, tag `phase-5`, manual smoke on Home → Today's Review, Continue Today, Video/Topic global SRS.
+Merge Phase 6 PR, tag `phase-6`, verify Home status line + background sync at 430×932.
 
 ## Next Milestone
 
-Phase 6: Feishu Sync
+Phase 7: Gap Detection
 
 ## Not Started
 

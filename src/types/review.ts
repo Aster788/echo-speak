@@ -38,7 +38,7 @@ export interface ReviewDeckCard {
   example_en: string;
   example_zh: string | null;
   examples?: ExpressionExample[] | null;
-  topic_id: string;
+  topic_id: string | null;
   source_type: "transcript" | "feishu";
   weight: number;
   topic_locked: boolean;
@@ -91,6 +91,6 @@ export type TodaysReviewSummary = {
 export type NewExpressionCandidate = {
   id: string;
   video_id: string;
-  topic_id: string;
+  topic_id: string | null;
   created_at: string;
 };

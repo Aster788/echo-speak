@@ -16,7 +16,8 @@
     "process-collections-assets": "tsx scripts/process-collections-assets.ts",
     "process-home-assets": "tsx scripts/process-home-assets.ts",
     "process-settings-assets": "tsx scripts/process-settings-assets.ts",
-    "sync-dev-supabase-env": "bash scripts/sync-dev-supabase-env.sh"
+    "sync-dev-supabase-env": "bash scripts/sync-dev-supabase-env.sh",
+    "dev:cloud": "bash scripts/dev-with-cloud-env.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

@@ -5,7 +5,8 @@ export type UserSettingsFormKey =
   | "LLM_BASE_URL"
   | "LLM_MODEL"
   | "FEISHU_APP_ID"
-  | "FEISHU_APP_SECRET";
+  | "FEISHU_APP_SECRET"
+  | "FEISHU_DOCUMENT_URLS";
 
 /** Stored in DB but not shown on Settings (deployment env only). */
 export type UserSettingsHiddenKey =
@@ -26,6 +27,7 @@ export type UserSettingsRecord = {
   supabase_anon_key: string | null;
   feishu_app_id: string | null;
   feishu_app_secret: string | null;
+  feishu_document_urls: string | null;
   daily_review_budget: number;
   last_feishu_sync_at: string | null;
   created_at: string;
@@ -59,6 +61,12 @@ export const USER_SETTINGS_LLM_FIELDS: SettingsFieldDef<UserSettingsFormKey>[] =
 export const USER_SETTINGS_FEISHU_FIELDS: SettingsFieldDef<UserSettingsFormKey>[] = [
   { key: "FEISHU_APP_ID", label: "FEISHU_APP_ID", secret: false },
   { key: "FEISHU_APP_SECRET", label: "FEISHU_APP_SECRET", secret: true },
+  {
+    key: "FEISHU_DOCUMENT_URLS",
+    label: "FEISHU_DOCUMENT_URLS",
+    secret: false,
+    placeholder: "https://…/docx/…",
+  },
 ];
 
 export const USER_SETTINGS_FORM_FIELDS: SettingsFieldDef<UserSettingsFormKey>[] = [
@@ -70,7 +78,7 @@ export const SETTINGS_LLM_HINT =
   "Use your own API keys. AI features won't work if left empty.";
 
 export const SETTINGS_FEISHU_HINT =
-  "Use your own Feishu app credentials. Feishu sync won't work if left empty.";
+  "App credentials plus docx URL(s) the Echo Speak app can read (share the doc with the app). Separate multiple URLs with spaces or newlines.";
 
 const USER_SETTINGS_HIDDEN_FIELDS: SettingsFieldDef<UserSettingsHiddenKey>[] = [
   { key: "NEXT_PUBLIC_SUPABASE_URL", label: "NEXT_PUBLIC_SUPABASE_URL", secret: false },
@@ -101,6 +109,7 @@ const KEY_TO_COLUMN: Record<
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "supabase_anon_key",
   FEISHU_APP_ID: "feishu_app_id",
   FEISHU_APP_SECRET: "feishu_app_secret",
+  FEISHU_DOCUMENT_URLS: "feishu_document_urls",
 };
 
 export function emptyFormValues(): UserSettingsFormValues {
@@ -169,6 +178,7 @@ export function envFallbackValues(): UserSettingsStoredValues {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
     FEISHU_APP_ID: process.env.FEISHU_APP_ID ?? "",
     FEISHU_APP_SECRET: process.env.FEISHU_APP_SECRET ?? "",
+    FEISHU_DOCUMENT_URLS: process.env.FEISHU_DOCUMENT_URLS ?? "",
   };
 }
 

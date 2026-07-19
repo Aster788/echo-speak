@@ -47,7 +47,7 @@ function SettingsFieldGroup({
           secret={field.secret}
           value={values[field.key]}
           onChange={(event) => onChange(field.key, event.target.value)}
-          placeholder="请输入"
+          placeholder={field.placeholder ?? "请输入"}
         />
       ))}
     </div>

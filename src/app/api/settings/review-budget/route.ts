@@ -59,6 +59,8 @@ export async function POST(request: Request) {
       supabase_anon_key: existing?.supabase_anon_key ?? null,
       feishu_app_id: existing?.feishu_app_id ?? null,
       feishu_app_secret: existing?.feishu_app_secret ?? null,
+      feishu_document_urls: existing?.feishu_document_urls ?? null,
+      last_feishu_sync_at: existing?.last_feishu_sync_at ?? null,
       daily_review_budget: budget,
       updated_at: new Date().toISOString(),
     },

@@ -20,12 +20,12 @@ export function FeishuSyncSettings() {
         Sync notes from Feishu into your expression library. Home also syncs
         automatically when stale.
       </p>
-      <div className="flex gap-2">
+      <div className="flex w-full gap-2">
         <button
           type="button"
           disabled={pending}
           onClick={() => handleSync(false)}
-          className="rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2 text-[0.8125rem] font-medium text-[#222222] disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#222222] transition-opacity duration-150 hover:opacity-80 disabled:opacity-50"
         >
           Sync now
         </button>
@@ -33,7 +33,7 @@ export function FeishuSyncSettings() {
           type="button"
           disabled={pending}
           onClick={() => handleSync(true)}
-          className="rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2 text-[0.8125rem] font-medium text-[#222222] disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#222222] transition-opacity duration-150 hover:opacity-80 disabled:opacity-50"
         >
           Sync all
         </button>

@@ -90,6 +90,45 @@ function stickyNoteTilt(index: number) {
   return STICKY_NOTE_TILTS[index % STICKY_NOTE_TILTS.length];
 }
 
+/** topic_id → parent_id for aggregated count patches */
+function buildParentById(tree: TopicTreeNode[]): Map<string, string | null> {
+  const map = new Map<string, string | null>();
+  for (const node of flattenTree(tree)) {
+    map.set(node.id, node.parent_id);
+  }
+  return map;
+}
+
+function ancestorChain(
+  topicId: string | null | undefined,
+  parentById: Map<string, string | null>
+): string[] {
+  if (!topicId) return [];
+  const chain: string[] = [];
+  let current: string | null = topicId;
+  const visited = new Set<string>();
+  while (current && !visited.has(current)) {
+    chain.push(current);
+    visited.add(current);
+    current = parentById.get(current) ?? null;
+  }
+  return chain;
+}
+
+function patchCountsForTopicDelta(
+  counts: Record<string, number>,
+  topicId: string | null | undefined,
+  delta: number,
+  parentById: Map<string, string | null>
+): Record<string, number> {
+  if (!topicId || delta === 0) return counts;
+  const next = { ...counts };
+  for (const id of ancestorChain(topicId, parentById)) {
+    next[id] = Math.max(0, (next[id] ?? 0) + delta);
+  }
+  return next;
+}
+
 export function CollectionsManager({
   initialTree,
   initialCounts,
@@ -286,7 +325,6 @@ export function CollectionsManager({
 
   async function handleSelectTopic(topicId: string) {
     setActiveRowId(topicId);
-    await new Promise((resolve) => window.setTimeout(resolve, 140));
     setSelectedTopicId(topicId);
     setTopicLevel("l2");
     setActiveRowId(null);
@@ -344,6 +382,13 @@ export function CollectionsManager({
     const previousTopicExpressions = topicExpressions;
     const previousVideoExpressions = videoExpressions;
     const previousAllExpressions = allExpressions;
+    const previousCounts = counts;
+    const previousVideos = videos;
+    const removed =
+      topicExpressions.find((item) => item.id === expressionId) ??
+      videoExpressions.find((item) => item.id === expressionId) ??
+      allExpressions.find((item) => item.id === expressionId);
+    const parentById = buildParentById(tree);
 
     setTopicExpressions((current) =>
       current.filter((item) => item.id !== expressionId)
@@ -355,6 +400,23 @@ export function CollectionsManager({
       current.filter((item) => item.id !== expressionId)
     );
     setAllExpressionCount((count) => Math.max(0, count - 1));
+    if (removed?.topic_id) {
+      setCounts((current) =>
+        patchCountsForTopicDelta(current, removed.topic_id, -1, parentById)
+      );
+    }
+    if (removed?.video_id && viewTab === "video") {
+      setVideos((current) =>
+        current.map((video) =>
+          video.id === removed.video_id
+            ? {
+                ...video,
+                expressionCount: Math.max(0, video.expressionCount - 1),
+              }
+            : video
+        )
+      );
+    }
 
     try {
       const response = await fetch(`/api/expressions/${expressionId}/dismiss`, {
@@ -368,21 +430,21 @@ export function CollectionsManager({
         setVideoExpressions(previousVideoExpressions);
         setAllExpressions(previousAllExpressions);
         setAllExpressionCount(previousAllExpressions.length);
+        setCounts(previousCounts);
+        setVideos(previousVideos);
         setMessage(data.message ?? "Failed to dismiss expression.");
         return;
       }
 
       setDismissTarget(null);
       setDismissReason(null);
-      await refreshTopics();
-      if (viewTab === "video" && videoLevel === "l1") {
-        await loadVideos();
-      }
     } catch {
       setTopicExpressions(previousTopicExpressions);
       setVideoExpressions(previousVideoExpressions);
       setAllExpressions(previousAllExpressions);
       setAllExpressionCount(previousAllExpressions.length);
+      setCounts(previousCounts);
+      setVideos(previousVideos);
       setMessage("Failed to dismiss expression.");
     } finally {
       setDismissBusy(false);
@@ -404,12 +466,22 @@ export function CollectionsManager({
     setMergeBusy(true);
     const previousTopicExpressions = topicExpressions;
     const previousAllExpressions = allExpressions;
+    const previousCounts = counts;
+    const sourceExpr =
+      topicExpressions.find((item) => item.id === mergeSource.id) ??
+      allExpressions.find((item) => item.id === mergeSource.id);
+    const parentById = buildParentById(tree);
     // Optimistically remove the source row (it will be deleted by the merge).
     const removeSource = (list: Expression[]) =>
       list.filter((item) => item.id !== mergeSource.id);
     setTopicExpressions(removeSource);
     setAllExpressions(removeSource);
     setAllExpressionCount((count) => Math.max(0, count - 1));
+    if (sourceExpr?.topic_id) {
+      setCounts((current) =>
+        patchCountsForTopicDelta(current, sourceExpr.topic_id, -1, parentById)
+      );
+    }
 
     try {
       const response = await fetch(
@@ -425,22 +497,18 @@ export function CollectionsManager({
         setTopicExpressions(previousTopicExpressions);
         setAllExpressions(previousAllExpressions);
         setAllExpressionCount(previousAllExpressions.length);
+        setCounts(previousCounts);
         setMessage(data.message ?? "Failed to merge expressions.");
         return;
       }
       setMergeSource(null);
       setMergeTargetId("");
       showSuccess("Merged successfully.");
-      await refreshTopics();
-      if (viewTab === "all") {
-        await loadAllExpressions();
-      } else if (viewTab === "topic" && selectedTopicId) {
-        await loadTopicExpressions(selectedTopicId);
-      }
     } catch {
       setTopicExpressions(previousTopicExpressions);
       setAllExpressions(previousAllExpressions);
       setAllExpressionCount(previousAllExpressions.length);
+      setCounts(previousCounts);
       setMessage("Failed to merge expressions.");
     } finally {
       setMergeBusy(false);
@@ -491,6 +559,49 @@ export function CollectionsManager({
     setMoveBusy(true);
     try {
       if (moveTarget.kind === "expression") {
+        const previousTopicExpressions = topicExpressions;
+        const previousAllExpressions = allExpressions;
+        const previousCounts = counts;
+        const moved =
+          topicExpressions.find((item) => item.id === moveTarget.id) ??
+          allExpressions.find((item) => item.id === moveTarget.id);
+        const parentById = buildParentById(tree);
+        const destinationId = moveTopicId;
+        const leavingSelectedTopic =
+          Boolean(selectedTopicId) &&
+          moved?.topic_id === selectedTopicId &&
+          destinationId !== selectedTopicId;
+
+        if (leavingSelectedTopic) {
+          setTopicExpressions((current) =>
+            current.filter((item) => item.id !== moveTarget.id)
+          );
+        }
+        setAllExpressions((current) =>
+          current.map((item) =>
+            item.id === moveTarget.id
+              ? { ...item, topic_id: destinationId, topic_locked: true }
+              : item
+          )
+        );
+        if (moved?.topic_id) {
+          setCounts((current) => {
+            let next = patchCountsForTopicDelta(
+              current,
+              moved.topic_id,
+              -1,
+              parentById
+            );
+            next = patchCountsForTopicDelta(
+              next,
+              destinationId,
+              1,
+              parentById
+            );
+            return next;
+          });
+        }
+
         const response = await fetch(
           `/api/expressions/${moveTarget.id}/move`,
           {
@@ -504,15 +615,11 @@ export function CollectionsManager({
           message?: string;
         };
         if (!data.ok) {
+          setTopicExpressions(previousTopicExpressions);
+          setAllExpressions(previousAllExpressions);
+          setCounts(previousCounts);
           setMessage(data.message ?? "Failed to move expression.");
           return;
-        }
-
-        if (selectedTopicId) {
-          await loadTopicExpressions(selectedTopicId);
-        }
-        if (viewTab === "all") {
-          await loadAllExpressions();
         }
       } else {
         const response = await fetch(`/api/topics/${moveTarget.id}`, {

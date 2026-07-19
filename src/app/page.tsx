@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { after } from "next/server";
 import { PageHeader } from "@/components/PageHeader";
-import { PageShell } from "@/components/PageShell";
 import {
   getFeishuHomeStatus,
   runFeishuSyncForUserId,
@@ -27,7 +26,7 @@ export default async function HomePage() {
   }
 
   return (
-    <PageShell mainClassName="flex min-h-0 flex-1 flex-col">
+    <>
       <PageHeader description="Turn video transcripts into expressions you actually remember." />
       <div className="mt-4 flex flex-col gap-3">
         <Link
@@ -62,6 +61,6 @@ export default async function HomePage() {
           aria-hidden
         />
       </div>
-    </PageShell>
+    </>
   );
 }

@@ -5,6 +5,7 @@ import {
 import { listDismissedPhraseKeysForVideo } from "@/db/expression-dismissals";
 import { buildTopicIndex, listTopics } from "@/db/topics";
 import { resolveVideoForFeishuSection } from "@/db/videos";
+import { expandExampleFromNote } from "@/lib/feishu-example-expand";
 import { resolveFeishuSectionTopicId } from "@/lib/feishu-section-topic-map";
 import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 import { canonicalKey } from "@/lib/phrase-canonical";
@@ -21,7 +22,17 @@ export type FeishuExtractedSentence = {
   meaning: string;
   example_en: string;
   feishu_section: string | null;
+  phonetic?: string | null;
 };
+
+function noteCandidateLines(blocks: FeishuBlock[]): string[] {
+  return blocks
+    .filter(
+      (block): block is Extract<FeishuBlock, { type: "bullet" } | { type: "phrase" }> =>
+        block.type === "bullet" || block.type === "phrase"
+    )
+    .map((block) => block.text);
+}
 
 export type FeishuSectionIngestResult = {
   videoId: string;
@@ -108,6 +119,7 @@ async function upsertFeishuExpression(
     example_en: string;
     example_zh?: string | null;
     feishu_section: string | null;
+    phonetic?: string | null;
   },
   existingByKey: Map<string, Expression>,
   resolveTopicId: (section: string | null) => string | null,
@@ -123,14 +135,17 @@ async function upsertFeishuExpression(
   const exampleZh =
     input.example_zh ?? (await resolveExampleZh(input.example_en));
   const topicId = resolveTopicId(input.feishu_section);
+  const phonetic = input.phonetic ?? null;
 
   if (existing?.source_type === "feishu") {
     const updatePayload: Record<string, unknown> = {
+      phrase: input.phrase,
       meaning: input.meaning,
       example_en: input.example_en,
       example_zh: exampleZh,
       examples: [{ en: input.example_en, zh: exampleZh }],
       feishu_section: input.feishu_section,
+      phonetic,
       weight: Math.min(existing.weight + 0.5, 3.0),
     };
     if (!existing.topic_locked) {
@@ -157,6 +172,7 @@ async function upsertFeishuExpression(
         source_type: "feishu",
         weight: 1.0,
         feishu_section: input.feishu_section,
+        phonetic,
       },
     ],
     supabase
@@ -200,6 +216,7 @@ export async function ingestFeishuVideoSection(
   let skippedTranscriptDuplicates = 0;
   let skippedDismissed = 0;
 
+  const candidateLines = noteCandidateLines(section.blocks);
   const sentences = await extractFn(section.blocks, section.videoTitle);
   const ingestedTexts: Array<{ phrase: string; example_en: string }> = [];
 
@@ -209,9 +226,14 @@ export async function ingestFeishuVideoSection(
       skippedDismissed += 1;
       continue;
     }
+    const example_en = expandExampleFromNote(
+      sentence.example_en,
+      candidateLines,
+      { phrase: sentence.phrase }
+    );
     const result = await upsertFeishuExpression(
       video.id,
-      sentence,
+      { ...sentence, example_en },
       existingByKey,
       resolveTopicId,
       supabase
@@ -223,7 +245,7 @@ export async function ingestFeishuVideoSection(
     expressionsUpserted += 1;
     ingestedTexts.push({
       phrase: sentence.phrase,
-      example_en: sentence.example_en,
+      example_en,
     });
   }
 
@@ -245,6 +267,8 @@ export async function ingestFeishuVideoSection(
       skippedDismissed += 1;
       continue;
     }
+    // Table cells start with lemma as example_en — that is not a short example
+    // sentence, so do not expand lemma → any containing note line.
     const result = await upsertFeishuExpression(
       video.id,
       {
@@ -253,6 +277,7 @@ export async function ingestFeishuVideoSection(
         example_en: item.example_en,
         example_zh: item.meaning,
         feishu_section: lastSection?.label ?? null,
+        phonetic: item.phonetic,
       },
       existingByKey,
       resolveTopicId,

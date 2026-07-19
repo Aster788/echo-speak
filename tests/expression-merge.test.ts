@@ -17,6 +17,8 @@ function expr(overrides: Partial<Expression> & Pick<Expression, "id" | "phrase">
     source_type: "transcript",
     weight: 1,
     topic_locked: false,
+    feishu_section: null,
+    phonetic: null,
     created_at: "2026-01-01",
     ...overrides,
   };

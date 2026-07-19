@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/PageHeader";
-import { PageShell } from "@/components/PageShell";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { loadSettings } from "@/app/settings/actions";
 import { getUserSettings } from "@/db/user-settings";
@@ -28,13 +27,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   }
 
   return (
-    <PageShell>
+    <>
       <PageHeader description="Sign in to save your own keys. The site provides the shared database." />
       <SettingsForm
         initial={initial}
         authReason={authReason}
         reviewBudget={reviewBudget}
       />
-    </PageShell>
+    </>
   );
 }

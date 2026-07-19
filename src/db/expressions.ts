@@ -220,6 +220,7 @@ export async function createExpressions(
       source_type: input.source_type ?? "transcript",
       weight: input.weight ?? 1.0,
       feishu_section: input.feishu_section ?? null,
+      phonetic: input.phonetic ?? null,
     };
   });
 

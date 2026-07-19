@@ -14,7 +14,7 @@ import {
   upsertReviewQueue,
 } from "@/db/review-queue";
 import { getUserSettings } from "@/db/user-settings";
-import { getTopic, listTopicSubtreeIds, listTopics } from "@/db/topics";
+import { getTopic, listTopics } from "@/db/topics";
 import { listVideos } from "@/db/videos";
 import { getAuthenticatedUser } from "@/lib/auth-server";
 import {
@@ -325,33 +325,17 @@ export async function listReviewVideoScopes(): Promise<ReviewScopeOption[]> {
 
 export async function listReviewTopicScopes(): Promise<ReviewScopeOption[]> {
   const supabase = getSupabaseAdmin();
+  const { getTopicExpressionCounts, listTopics } = await import("@/db/topics");
   const topics = await listTopics(supabase);
-  const expressions = await import("@/db/expressions").then((mod) =>
-    mod.listExpressions(supabase)
-  );
-
-  const countsByTopic = new Map<string, number>();
-  for (const expression of expressions) {
-    if (!expression.topic_id) continue;
-    countsByTopic.set(
-      expression.topic_id,
-      (countsByTopic.get(expression.topic_id) ?? 0) + 1
-    );
-  }
+  // Aggregated counts already include each topic's subtree.
+  const counts = await getTopicExpressionCounts(supabase);
 
   return topics
-    .map((topic) => {
-      const subtreeIds = listTopicSubtreeIds(topic.id, topics);
-      const count = subtreeIds.reduce(
-        (sum, id) => sum + (countsByTopic.get(id) ?? 0),
-        0
-      );
-      return {
-        id: topic.id,
-        label: topic.name,
-        count,
-      };
-    })
+    .map((topic) => ({
+      id: topic.id,
+      label: topic.name,
+      count: counts.get(topic.id) ?? 0,
+    }))
     .filter((item) => item.count > 0)
     .sort((a, b) => a.label.localeCompare(b.label));
 }

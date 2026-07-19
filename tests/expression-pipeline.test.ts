@@ -373,6 +373,8 @@ describe("expression-pipeline", () => {
       source_type: "transcript",
       weight: 1,
       topic_locked: true,
+      feishu_section: null,
+      phonetic: null,
       created_at: "2026-01-01T00:00:00Z",
     };
     const supabase = mockSupabase([], [], [locked]);

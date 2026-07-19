@@ -16,6 +16,8 @@ export interface Expression {
   weight: number;
   topic_locked: boolean;
   feishu_section: string | null;
+  /** IPA from Feishu table cells; null when absent. */
+  phonetic: string | null;
   created_at: string;
 }
 
@@ -37,4 +39,5 @@ export type CreateExpressionInput = {
   source_type?: "transcript" | "feishu";
   weight?: number;
   feishu_section?: string | null;
+  phonetic?: string | null;
 };

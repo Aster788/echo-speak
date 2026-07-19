@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { PageShell } from "@/components/PageShell";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,7 +23,7 @@ export default function RootLayout({
       <body
         className={`${inter.className} min-h-screen bg-[#222222]/[0.04] text-[#222222] antialiased`}
       >
-        {children}
+        <PageShell>{children}</PageShell>
       </body>
     </html>
   );

@@ -42,6 +42,8 @@ export interface ReviewDeckCard {
   source_type: "transcript" | "feishu";
   weight: number;
   topic_locked: boolean;
+  feishu_section?: string | null;
+  phonetic?: string | null;
   created_at: string;
   videoTitle: string;
   topicName: string;

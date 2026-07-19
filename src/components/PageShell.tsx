@@ -6,7 +6,6 @@ import { ReviewResetProvider } from "@/components/review/ReviewResetContext";
 
 type PageShellProps = {
   children: ReactNode;
-  mainClassName?: string;
 };
 
 const phoneFrameClassName = [
@@ -16,7 +15,7 @@ const phoneFrameClassName = [
   "md:h-[min(932px,calc(100vh-3rem))]",
 ].join(" ");
 
-export function PageShell({ children, mainClassName = "" }: PageShellProps) {
+export function PageShell({ children }: PageShellProps) {
   return (
     <div className="min-h-screen bg-[#222222]/[0.04] p-3 md:flex md:justify-center md:p-6">
       <div className={phoneFrameClassName}>
@@ -28,9 +27,7 @@ export function PageShell({ children, mainClassName = "" }: PageShellProps) {
         </div>
         <ReviewResetProvider>
           <Navbar />
-          <main
-            className={`phone-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-8 ${mainClassName}`}
-          >
+          <main className="phone-scrollbar relative flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-4 pb-8">
             {children}
           </main>
         </ReviewResetProvider>

@@ -65,7 +65,7 @@ export const USER_SETTINGS_FEISHU_FIELDS: SettingsFieldDef<UserSettingsFormKey>[
     key: "FEISHU_DOCUMENT_URLS",
     label: "FEISHU_DOCUMENT_URLS",
     secret: false,
-    placeholder: "https://…/docx/…",
+    placeholder: "Paste note link, e.g. https://…/docx/…",
   },
 ];
 
@@ -77,8 +77,7 @@ export const USER_SETTINGS_FORM_FIELDS: SettingsFieldDef<UserSettingsFormKey>[] 
 export const SETTINGS_LLM_HINT =
   "Use your own API keys. AI features won't work if left empty.";
 
-export const SETTINGS_FEISHU_HINT =
-  "App credentials plus docx URL(s) the Echo Speak app can read (share the doc with the app). Separate multiple URLs with spaces or newlines.";
+export const SETTINGS_FEISHU_HINT = "Needed for Feishu sync.";
 
 const USER_SETTINGS_HIDDEN_FIELDS: SettingsFieldDef<UserSettingsHiddenKey>[] = [
   { key: "NEXT_PUBLIC_SUPABASE_URL", label: "NEXT_PUBLIC_SUPABASE_URL", secret: false },

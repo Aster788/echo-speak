@@ -63,9 +63,28 @@ describe("parseVocabTableRows", () => {
       ["sew", "缝", "loose", "松动的", "wiggly", "不平整的"],
     ]);
     expect(items).toEqual([
-      { phrase: "sew", meaning: "缝", example_en: "sew" },
-      { phrase: "loose", meaning: "松动的", example_en: "loose" },
-      { phrase: "wiggly", meaning: "不平整的", example_en: "wiggly" },
+      { phrase: "sew", meaning: "缝", example_en: "sew", phonetic: null },
+      { phrase: "loose", meaning: "松动的", example_en: "loose", phonetic: null },
+      {
+        phrase: "wiggly",
+        meaning: "不平整的",
+        example_en: "wiggly",
+        phonetic: null,
+      },
+    ]);
+  });
+
+  it("strips IPA into phonetic on English cells", () => {
+    const items = parseVocabTableRows([
+      ["ginormous /dʒaɪˈnɔːrməs/", "巨大的"],
+    ]);
+    expect(items).toEqual([
+      {
+        phrase: "ginormous",
+        meaning: "巨大的",
+        example_en: "ginormous",
+        phonetic: "/dʒaɪˈnɔːrməs/",
+      },
     ]);
   });
 });

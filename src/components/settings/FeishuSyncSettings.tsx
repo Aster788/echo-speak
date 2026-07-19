@@ -107,7 +107,7 @@ export function FeishuSyncSettings() {
           onClick={() => handleSync(false)}
           className="min-w-0 flex-1 rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#222222] transition-opacity duration-150 hover:opacity-80 disabled:opacity-50"
         >
-          Sync now
+          Sync New
         </button>
         <button
           type="button"

@@ -20,18 +20,19 @@
 - **Phase 5 — Spaced Repetition** (`phase-5` tag): Today's Review, memory engine, daily budget, Unsure session reinsert
 - **Phase 6 — Feishu Sync** (`phase-6` tag; archived `openspec/changes/archive/2026-07-19-phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, Settings Sync all (chunked), `videos.creator`, `feishu_section`, nullable table examples
 - **Phase 7 — Gap Detection** (`phase-7` tag; archived `openspec/changes/archive/2026-07-19-phase7-gap-detection`): `gaps` table, deterministic per-video refresh, Gaps UI grouped A–Z, Accept/Ignore
+- **Phase 7.1a — Gap feedback loop** (PR #23; archived `openspec/changes/archive/2026-07-19-extend-phase7-gap-feedback-loop`): Ignore → dismiss/`gap_ignore`; Accept → weight + `topic_locked`
 
 ## In Progress
 
-- **Phase 7.1a — Gap feedback loop** on `feat/extend-phase7a-gap-feedback-loop`: Ignore → dismiss (`gap_ignore`); Accept → weight + `topic_locked`
+- (none)
 
 ## Current Focus
 
-Ship 7.1a (signal + immediate Ignore noise reduction). Extract-side learning deferred to 7.1b.
+Phase 7.1b planning: feed Accept/Ignore into transcript extraction (prompt / candidate filter).
 
 ## Next Milestone
 
-Phase 7.1b: feed Accept/Ignore into transcript extraction (prompt / candidate filter)
+Phase 7.1b: feedback → extract precision
 
 ## Not Started
 

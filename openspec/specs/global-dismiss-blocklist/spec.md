@@ -45,12 +45,12 @@ The system SHALL NOT insert any expression whose canonical key matches the user'
 
 ### Requirement: Collections delete captures reason
 
-The Collections delete action SHALL prompt the user to select a dismiss reason from `DISMISS_REASONS` before recording the dismissal. The selected reason SHALL be persisted on the `expression_dismissals` row.
+The Collections delete action SHALL prompt the user to select a dismiss reason from the collection dismiss reasons (excluding Gaps-only `gap_ignore`) before recording the dismissal. The selected reason SHALL be persisted on the `expression_dismissals` row.
 
 #### Scenario: Reason picker shown
 
 - **WHEN** user taps the delete icon on a Collections expression card
-- **THEN** a reason picker appears with the seven `DISMISS_REASONS`
+- **THEN** a reason picker appears with the seven collection dismiss reasons (not `gap_ignore`)
 
 #### Scenario: Reason persisted
 
@@ -61,3 +61,13 @@ The Collections delete action SHALL prompt the user to select a dismiss reason f
 
 - **WHEN** `formatDismissalHintsForPrompt` runs after dismissals with reasons exist
 - **THEN** the extract prompt includes the learner dismiss patterns section
+
+### Requirement: Gaps Ignore feeds global blocklist
+
+The system SHALL treat Gaps Ignore dismissals like other user dismissals for global blocklist purposes: the dismissed phrase_key SHALL be included in `listGlobalDismissedPhraseKeys(userId)` and SHALL be skipped on extract for other videos for that user.
+
+#### Scenario: Gaps Ignore blocks extract on another video
+
+- **WHEN** the user ignores a gap for “feel stuck” on video X (dismissal recorded with user_id)
+- **AND** extraction runs for video Y for the same user and the LLM returns “Feel Stuck”
+- **THEN** no expression row for that phrase is inserted on video Y

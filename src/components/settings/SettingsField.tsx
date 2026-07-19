@@ -53,12 +53,18 @@ export function SettingsField({
   secret = false,
   className = "",
   id,
+  value,
+  placeholder,
   ...inputProps
 }: SettingsFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [revealed, setRevealed] = useState(false);
   const inputId = id ?? `settings-${fieldKey}`;
   const inputType = secret && !revealed ? "password" : "text";
+  const valueText = value == null ? "" : String(value);
+  const placeholderText = placeholder == null ? "" : String(placeholder);
+  // Widen past the frame so long placeholders/values can be scrolled horizontally.
+  const scrollCh = Math.max(valueText.length, placeholderText.length, 1);
 
   function focusInput() {
     inputRef.current?.focus();
@@ -80,17 +86,21 @@ export function SettingsField({
             }
           }}
         >
-          <input
-            ref={inputRef}
-            id={inputId}
-            name={fieldKey}
-            type={inputType}
-            className={`min-w-0 flex-1 bg-transparent text-[0.8125rem] font-normal text-[#222222] outline-none placeholder:text-[#222222]/35 ${className}`}
-            style={{ overflowX: "auto" }}
-            spellCheck={false}
-            autoComplete="off"
-            {...inputProps}
-          />
+          <div className="min-w-0 flex-1 overflow-x-auto">
+            <input
+              ref={inputRef}
+              id={inputId}
+              name={fieldKey}
+              type={inputType}
+              value={value}
+              placeholder={placeholder}
+              className={`block bg-transparent text-[0.8125rem] font-normal text-[#222222] outline-none placeholder:text-[#222222]/35 ${className}`}
+              style={{ width: `max(100%, ${scrollCh}ch)` }}
+              spellCheck={false}
+              autoComplete="off"
+              {...inputProps}
+            />
+          </div>
           {secret ? (
             <button
               type="button"

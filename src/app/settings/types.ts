@@ -5,4 +5,5 @@ export type SettingsLoadResult = {
   email: string | null;
   values: UserSettingsFormValues;
   canSave: boolean;
+  reviewBudget: number;
 };

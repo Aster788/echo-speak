@@ -34,8 +34,8 @@ export function sortExpressionsByPhrase(
 ): Expression[] {
   return [...expressions].sort((a, b) => {
     const phraseCmp = compareNames(
-      a.phrase.trim() || a.example_en,
-      b.phrase.trim() || b.example_en
+      a.phrase.trim() || a.example_en || "",
+      b.phrase.trim() || b.example_en || ""
     );
     if (phraseCmp !== 0) return phraseCmp;
     return a.id.localeCompare(b.id);

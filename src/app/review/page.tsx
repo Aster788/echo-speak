@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/PageHeader";
 import { ReviewSession } from "@/components/review/ReviewSession";
 import {
-  getTodaysReviewSummary,
+  buildTodaysReviewDeck,
   listReviewTopicScopes,
   listReviewVideoScopes,
 } from "@/app/review/actions";
@@ -14,10 +14,10 @@ type ReviewPageProps = {
 
 export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   const params = await searchParams;
-  const [videoScopes, topicScopes, initialSummary] = await Promise.all([
+  const [videoScopes, topicScopes, todaysReview] = await Promise.all([
     listReviewVideoScopes(),
     listReviewTopicScopes(),
-    getTodaysReviewSummary(),
+    buildTodaysReviewDeck(),
   ]);
 
   return (
@@ -27,7 +27,8 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
         <ReviewSession
           videoScopes={videoScopes}
           topicScopes={topicScopes}
-          initialSummary={initialSummary}
+          initialSummary={todaysReview.summary}
+          initialTodaysCards={todaysReview.cards}
           autoStartTodaysReview={params.start === "todays"}
         />
       </div>

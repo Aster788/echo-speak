@@ -63,7 +63,8 @@ export function SettingsField({
   const inputType = secret && !revealed ? "password" : "text";
   const valueText = value == null ? "" : String(value);
   const placeholderText = placeholder == null ? "" : String(placeholder);
-  // Widen past the frame so long placeholders/values can be scrolled horizontally.
+  // Widen past the frame so long placeholders/values can be finger-scrolled
+  // horizontally (collections-title-scroll hides the scrollbar chrome).
   const scrollCh = Math.max(valueText.length, placeholderText.length, 1);
 
   function focusInput() {
@@ -86,7 +87,7 @@ export function SettingsField({
             }
           }}
         >
-          <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="collections-title-scroll min-w-0 flex-1 overflow-x-auto">
             <input
               ref={inputRef}
               id={inputId}

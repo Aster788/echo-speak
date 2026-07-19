@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   createUserTopic,
-  getTopicExpressionCounts,
   listTopicTree,
-  listTopics,
+  listTopicsWithExpressionCounts,
 } from "@/db/topics";
 import { errorMessage, jsonError, jsonOk } from "@/lib/api-response";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -11,8 +10,8 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 export async function GET() {
   try {
     const supabase = getSupabaseAdmin();
-    const topics = await listTopics(supabase);
-    const counts = await getTopicExpressionCounts(supabase);
+    const { topics, counts } =
+      await listTopicsWithExpressionCounts(supabase);
 
     return jsonOk({
       tree: listTopicTree(topics),

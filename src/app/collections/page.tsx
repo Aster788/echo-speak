@@ -1,9 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { CollectionsError } from "@/components/collections/CollectionsError";
 import {
-  getTopicExpressionCounts,
   listTopicTree,
-  listTopics,
+  listTopicsWithExpressionCounts,
 } from "@/db/topics";
 import { isSupabaseConfigError } from "@/lib/supabase-env";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -14,9 +13,9 @@ export const dynamic = "force-dynamic";
 export default async function CollectionsPage() {
   try {
     const supabase = getSupabaseAdmin();
-    const topics = await listTopics(supabase);
+    const { topics, counts } =
+      await listTopicsWithExpressionCounts(supabase);
     const tree = listTopicTree(topics);
-    const counts = await getTopicExpressionCounts(supabase);
 
     return (
       <>

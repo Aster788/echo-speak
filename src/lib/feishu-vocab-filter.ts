@@ -1,6 +1,6 @@
 export type IngestedPhraseText = {
   phrase: string;
-  example_en: string;
+  example_en: string | null;
 };
 
 function escapeRegex(word: string): string {

@@ -6,6 +6,7 @@ import { listDismissedPhraseKeysForVideo } from "@/db/expression-dismissals";
 import { buildTopicIndex, listTopics } from "@/db/topics";
 import { resolveVideoForFeishuSection } from "@/db/videos";
 import { expandExampleFromNote } from "@/lib/feishu-example-expand";
+import { isDistinctExample } from "@/lib/example-distinct";
 import { resolveFeishuSectionTopicId } from "@/lib/feishu-section-topic-map";
 import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 import { canonicalKey } from "@/lib/phrase-canonical";
@@ -20,7 +21,7 @@ import { getSupabase } from "@/lib/supabase";
 export type FeishuExtractedSentence = {
   phrase: string;
   meaning: string;
-  example_en: string;
+  example_en: string | null;
   feishu_section: string | null;
   phonetic?: string | null;
 };
@@ -103,12 +104,17 @@ async function extractSentencesFromBlocks(
 
   return (parsed.expressions ?? [])
     .filter((item) => item.phrase?.trim() && item.meaning?.trim())
-    .map((item, index) => ({
-      phrase: item.phrase!.trim(),
-      meaning: item.meaning!.trim(),
-      example_en: item.example_en?.trim() || item.phrase!.trim(),
-      feishu_section: sentenceBlocks[index]?.section ?? sentenceBlocks[0]?.section ?? null,
-    }));
+    .map((item, index) => {
+      const phrase = item.phrase!.trim();
+      const rawExample = item.example_en?.trim() || null;
+      return {
+        phrase,
+        meaning: item.meaning!.trim(),
+        example_en: isDistinctExample(rawExample, phrase) ? rawExample : null,
+        feishu_section:
+          sentenceBlocks[index]?.section ?? sentenceBlocks[0]?.section ?? null,
+      };
+    });
 }
 
 async function upsertFeishuExpression(
@@ -116,7 +122,7 @@ async function upsertFeishuExpression(
   input: {
     phrase: string;
     meaning: string;
-    example_en: string;
+    example_en: string | null;
     example_zh?: string | null;
     feishu_section: string | null;
     phonetic?: string | null;
@@ -132,8 +138,15 @@ async function upsertFeishuExpression(
     return "skipped";
   }
 
-  const exampleZh =
-    input.example_zh ?? (await resolveExampleZh(input.example_en));
+  const exampleEn = isDistinctExample(input.example_en, input.phrase)
+    ? input.example_en!.trim()
+    : null;
+  const exampleZh = exampleEn
+    ? (input.example_zh ?? (await resolveExampleZh(exampleEn)))
+    : null;
+  const examples = exampleEn
+    ? [{ en: exampleEn, zh: exampleZh }]
+    : null;
   const topicId = resolveTopicId(input.feishu_section);
   const phonetic = input.phonetic ?? null;
 
@@ -141,9 +154,9 @@ async function upsertFeishuExpression(
     const updatePayload: Record<string, unknown> = {
       phrase: input.phrase,
       meaning: input.meaning,
-      example_en: input.example_en,
+      example_en: exampleEn,
       example_zh: exampleZh,
-      examples: [{ en: input.example_en, zh: exampleZh }],
+      examples,
       feishu_section: input.feishu_section,
       phonetic,
       weight: Math.min(existing.weight + 0.5, 3.0),
@@ -166,8 +179,9 @@ async function upsertFeishuExpression(
         video_id: videoId,
         phrase: input.phrase,
         meaning: input.meaning,
-        example_en: input.example_en,
+        example_en: exampleEn,
         example_zh: exampleZh,
+        examples,
         topic_id: topicId,
         source_type: "feishu",
         weight: 1.0,
@@ -218,7 +232,7 @@ export async function ingestFeishuVideoSection(
 
   const candidateLines = noteCandidateLines(section.blocks);
   const sentences = await extractFn(section.blocks, section.videoTitle);
-  const ingestedTexts: Array<{ phrase: string; example_en: string }> = [];
+  const ingestedTexts: Array<{ phrase: string; example_en: string | null }> = [];
 
   for (const sentence of sentences) {
     const key = canonicalKey(sentence.phrase);
@@ -226,11 +240,11 @@ export async function ingestFeishuVideoSection(
       skippedDismissed += 1;
       continue;
     }
-    const example_en = expandExampleFromNote(
-      sentence.example_en,
-      candidateLines,
-      { phrase: sentence.phrase }
-    );
+    const example_en = sentence.example_en
+      ? expandExampleFromNote(sentence.example_en, candidateLines, {
+          phrase: sentence.phrase,
+        })
+      : null;
     const result = await upsertFeishuExpression(
       video.id,
       { ...sentence, example_en },
@@ -267,15 +281,14 @@ export async function ingestFeishuVideoSection(
       skippedDismissed += 1;
       continue;
     }
-    // Table cells start with lemma as example_en — that is not a short example
-    // sentence, so do not expand lemma → any containing note line.
+    // Vocab tables are lemma + gloss only — never invent example_en from the phrase.
     const result = await upsertFeishuExpression(
       video.id,
       {
         phrase: item.phrase,
         meaning: item.meaning,
-        example_en: item.example_en,
-        example_zh: item.meaning,
+        example_en: null,
+        example_zh: null,
         feishu_section: lastSection?.label ?? null,
         phonetic: item.phonetic,
       },

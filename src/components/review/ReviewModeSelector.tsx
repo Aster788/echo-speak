@@ -41,7 +41,7 @@ function ModeTile({
     >
       {sublabel ? (
         <span
-          className={`absolute right-5 top-1/2 -translate-y-1/2 text-base opacity-70 ${pageHintFont.className} ${pageHintTextClassName}`}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 whitespace-nowrap text-[0.8125rem] tabular-nums opacity-70 ${pageHintFont.className} ${pageHintTextClassName}`}
         >
           {sublabel}
         </span>

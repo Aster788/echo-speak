@@ -158,6 +158,9 @@ export async function backfillExampleZhForExpression(
   if (expression.example_zh?.trim()) {
     return expression.example_zh;
   }
+  if (!expression.example_en?.trim()) {
+    return null;
+  }
 
   const exampleZh = await resolveExampleZhFn(expression.example_en);
   if (exampleZh) {
@@ -188,6 +191,10 @@ export async function backfillMissingExampleZh(
   for (const expression of expressions) {
     if (!options.force && expression.example_zh?.trim()) {
       unchanged += 1;
+      continue;
+    }
+    if (!expression.example_en?.trim()) {
+      skipped += 1;
       continue;
     }
 

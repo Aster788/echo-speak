@@ -8,7 +8,7 @@ export interface Expression {
   video_id: string;
   phrase: string;
   meaning: string;
-  example_en: string;
+  example_en: string | null;
   example_zh: string | null;
   examples: ExpressionExample[] | null;
   topic_id: string | null;
@@ -32,7 +32,7 @@ export type CreateExpressionInput = {
   video_id: string;
   phrase: string;
   meaning: string;
-  example_en: string;
+  example_en: string | null;
   example_zh?: string | null;
   examples?: ExpressionExample[] | null;
   topic_id: string | null;

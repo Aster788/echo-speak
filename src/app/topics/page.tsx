@@ -1,9 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import {
-  getTopicExpressionCounts,
   listLeafTopics,
   listTopicTree,
-  listTopics,
+  listTopicsWithExpressionCounts,
 } from "@/db/topics";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { TopicsManager } from "./TopicsManager";
@@ -12,9 +11,9 @@ export const dynamic = "force-dynamic";
 
 export default async function TopicsPage() {
   const supabase = getSupabaseAdmin();
-  const topics = await listTopics(supabase);
+  const { topics, counts } =
+    await listTopicsWithExpressionCounts(supabase);
   const tree = listTopicTree(topics);
-  const counts = await getTopicExpressionCounts(supabase);
   const dockTopics = listLeafTopics(topics).map((topic) => ({
     id: topic.id,
     name: topic.name,

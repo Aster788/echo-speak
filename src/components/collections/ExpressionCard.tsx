@@ -13,9 +13,12 @@ type ExpressionCardProps = {
 
 function collectExamples(expression: Expression): ExpressionExample[] {
   if (expression.examples && expression.examples.length > 0) {
-    return expression.examples;
+    return expression.examples.filter((example) => example.en?.trim());
   }
-  return [{ en: expression.example_en, zh: expression.example_zh }];
+  if (expression.example_en?.trim()) {
+    return [{ en: expression.example_en, zh: expression.example_zh }];
+  }
+  return [];
 }
 
 export function ExpressionCard({

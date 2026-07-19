@@ -1,8 +1,12 @@
 "use server";
 
 import { getAuthenticatedUser } from "@/lib/auth-server";
+import { getUserSettings } from "@/db/user-settings";
+import { DEFAULT_DAILY_REVIEW_BUDGET } from "@/lib/daily-review-budget";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   emptyFormValues,
+  rowToFormValues,
 } from "@/lib/user-settings";
 import {
   resolveEffectiveSettingsFromEnv,
@@ -20,15 +24,19 @@ export async function loadSettings(): Promise<SettingsLoadResult> {
       email: null,
       values: emptyFormValues(),
       canSave: false,
+      reviewBudget: DEFAULT_DAILY_REVIEW_BUDGET,
     };
   }
 
-  const values = await resolveStoredSettingsForUser(user.id);
+  const supabase = await createSupabaseServerClient();
+  const row = await getUserSettings(user.id, supabase);
   return {
     isAuthenticated: true,
     email: user.email ?? null,
-    values,
+    values: rowToFormValues(row),
     canSave: true,
+    reviewBudget:
+      row?.daily_review_budget ?? DEFAULT_DAILY_REVIEW_BUDGET,
   };
 }
 

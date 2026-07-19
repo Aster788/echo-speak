@@ -40,6 +40,7 @@ type ReviewSessionProps = {
   videoScopes: ReviewScopeOption[];
   topicScopes: ReviewScopeOption[];
   initialSummary: TodaysReviewSummary;
+  initialTodaysCards: ReviewDeckCard[];
   autoStartTodaysReview?: boolean;
 };
 
@@ -47,6 +48,7 @@ export function ReviewSession({
   videoScopes,
   topicScopes,
   initialSummary,
+  initialTodaysCards,
   autoStartTodaysReview = false,
 }: ReviewSessionProps) {
   const [phase, setPhase] = useState<SessionPhase>("select-mode");
@@ -63,6 +65,9 @@ export function ReviewSession({
   const unsureReinserts = useRef(new Map<string, number>());
   const deferredUnsureIds = useRef(new Set<string>());
   const autoStarted = useRef(false);
+  const preloadedTodaysCards = useRef<ReviewDeckCard[] | null>(
+    initialTodaysCards
+  );
 
   const currentCard = deck[index] ?? null;
 
@@ -98,6 +103,27 @@ export function ReviewSession({
 
   const startTodaysReview = useCallback(
     (excludeIds: string[] = []) => {
+      const preloaded =
+        excludeIds.length === 0 ? preloadedTodaysCards.current : null;
+      if (preloaded) {
+        preloadedTodaysCards.current = null;
+        setMode("todays_review");
+        setScopeId(TODAYS_REVIEW_SCOPE_ID);
+        setScopeLabel("Today's Review");
+        setDeck(preloaded);
+        setShownIds(preloaded.map((card) => card.id));
+        setIndex(0);
+        unsureReinserts.current = new Map();
+        setPhase(
+          preloaded.length > 0
+            ? "reviewing"
+            : initialSummary.isCaughtUp
+              ? "caught-up"
+              : "complete"
+        );
+        return;
+      }
+
       startTransition(async () => {
         setError(null);
         const result = await buildTodaysReviewDeck(excludeIds);
@@ -122,7 +148,7 @@ export function ReviewSession({
         }
       });
     },
-    []
+    [initialSummary.isCaughtUp]
   );
 
   useEffect(() => {

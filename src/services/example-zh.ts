@@ -7,22 +7,27 @@ export async function translateExampleZh(
 ): Promise<string | null> {
   if (!hasLlmApiKey()) return null;
 
-  const client = getLlmClient();
-  const response = await client.chat.completions.create({
-    model: getLlmModel(),
-    messages: [
-      {
-        role: "system",
-        content:
-          "Translate the English sentence into natural Simplified Chinese. Return only the translation with no quotes or explanation.",
-      },
-      { role: "user", content: exampleEn.trim() },
-    ],
-    temperature: 0.2,
-  });
+  try {
+    const client = getLlmClient();
+    const response = await client.chat.completions.create({
+      model: getLlmModel(),
+      messages: [
+        {
+          role: "system",
+          content:
+            "Translate the English sentence into natural Simplified Chinese. Return only the translation with no quotes or explanation.",
+        },
+        { role: "user", content: exampleEn.trim() },
+      ],
+      temperature: 0.2,
+    });
 
-  const content = response.choices[0]?.message?.content?.trim();
-  return content || null;
+    const content = response.choices[0]?.message?.content?.trim();
+    return content || null;
+  } catch {
+    // Provider empty/truncated response — leave example_zh null for this item.
+    return null;
+  }
 }
 
 /** Always LLM: translate `example_en` to Simplified Chinese for Review card front. */

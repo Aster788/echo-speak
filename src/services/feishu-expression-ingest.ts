@@ -57,27 +57,38 @@ async function extractSentencesFromBlocks(
   }));
 
   const openai = getLlmClient();
-  const response = await openai.chat.completions.create({
-    model: getLlmModel(),
-    messages: [
-      { role: "system", content: prompt },
-      {
-        role: "user",
-        content: JSON.stringify({ videoTitle, items: payload }),
-      },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.2,
-  });
+  let content: string;
+  try {
+    const response = await openai.chat.completions.create({
+      model: getLlmModel(),
+      messages: [
+        { role: "system", content: prompt },
+        {
+          role: "user",
+          content: JSON.stringify({ videoTitle, items: payload }),
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    });
+    content = response.choices[0]?.message?.content?.trim() || "{}";
+  } catch {
+    // Provider empty/truncated JSON body — skip sentence LLM; tables still ingest.
+    return [];
+  }
 
-  const content = response.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(content) as {
+  let parsed: {
     expressions?: Array<{
       phrase?: string;
       meaning?: string;
       example_en?: string;
     }>;
   };
+  try {
+    parsed = JSON.parse(content) as typeof parsed;
+  } catch {
+    return [];
+  }
 
   return (parsed.expressions ?? [])
     .filter((item) => item.phrase?.trim() && item.meaning?.trim())

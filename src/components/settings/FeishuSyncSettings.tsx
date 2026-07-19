@@ -1,16 +1,58 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { runFeishuSyncManual } from "@/app/feishu/actions";
+
+const RESUME_KEY = "echo-speak:feishu-sync-resume-offset";
+
+function formatSyncError(error: unknown): string {
+  const text =
+    error instanceof Error ? error.message : String(error ?? "Feishu sync failed.");
+  if (
+    /Unexpected end of JSON input/i.test(text) ||
+    /empty response body/i.test(text) ||
+    /invalid JSON/i.test(text) ||
+    /Failed to fetch/i.test(text)
+  ) {
+    return "Sync hit an empty API response (Feishu or LLM). Tap Sync all again — it will continue from the last offset.";
+  }
+  return text;
+}
+
+function readResumeOffset(): number {
+  if (typeof window === "undefined") return 0;
+  const raw = window.sessionStorage.getItem(RESUME_KEY);
+  const n = raw ? Number(raw) : 0;
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+function writeResumeOffset(offset: number) {
+  if (typeof window === "undefined") return;
+  if (offset > 0) {
+    window.sessionStorage.setItem(RESUME_KEY, String(offset));
+  } else {
+    window.sessionStorage.removeItem(RESUME_KEY);
+  }
+}
 
 export function FeishuSyncSettings() {
   const [message, setMessage] = useState("");
+  const [resumeOffset, setResumeOffset] = useState(0);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setResumeOffset(readResumeOffset());
+  }, []);
+
+  function updateResume(offset: number) {
+    setResumeOffset(offset);
+    writeResumeOffset(offset);
+  }
 
   function handleSync(full = false) {
     startTransition(async () => {
       try {
-        let sectionOffset = 0;
+        let sectionOffset = full ? readResumeOffset() : 0;
         let totalExpressions = 0;
         let totalVideos = 0;
         let docsProcessed = 0;
@@ -22,7 +64,8 @@ export function FeishuSyncSettings() {
           });
 
           if (!result.ok) {
-            setMessage(result.error);
+            updateResume(sectionOffset);
+            setMessage(formatSyncError(new Error(result.error)));
             return;
           }
 
@@ -32,6 +75,7 @@ export function FeishuSyncSettings() {
           totalSections = result.result.totalSections;
 
           if (result.result.complete) {
+            updateResume(0);
             setMessage(
               `Synced ${totalExpressions} expressions from ${totalVideos} videos across ${docsProcessed} docs` +
                 (totalSections > 0 ? ` (${totalSections}/${totalSections} videos)` : "") +
@@ -42,15 +86,10 @@ export function FeishuSyncSettings() {
 
           setMessage(result.summary);
           sectionOffset = result.result.nextSectionOffset;
+          updateResume(sectionOffset);
         }
       } catch (error) {
-        const text =
-          error instanceof Error ? error.message : "Feishu sync failed.";
-        setMessage(
-          text.includes("fetch") || text.includes("Failed to fetch")
-            ? "Sync timed out or the connection dropped. Tap Sync all again to continue from where it left off."
-            : text
-        );
+        setMessage(formatSyncError(error));
       }
     });
   }
@@ -76,7 +115,11 @@ export function FeishuSyncSettings() {
           onClick={() => handleSync(true)}
           className="min-w-0 flex-1 rounded-[1rem] border-[2.5px] border-[#D4D4D4] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#222222] transition-opacity duration-150 hover:opacity-80 disabled:opacity-50"
         >
-          {pending ? "Syncing…" : "Sync all"}
+          {pending
+            ? "Syncing…"
+            : resumeOffset > 0
+              ? `Sync all (resume ${resumeOffset})`
+              : "Sync all"}
         </button>
       </div>
       {message ? (

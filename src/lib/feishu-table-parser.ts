@@ -1,7 +1,10 @@
+import { splitEmbeddedPhonetic } from "@/lib/feishu-phonetic";
+
 export type TableVocabItem = {
   phrase: string;
   meaning: string;
   example_en: string;
+  phonetic: string | null;
 };
 
 function stripMarkdownEscapes(text: string): string {
@@ -18,10 +21,12 @@ export function parseVocabTableRows(rows: string[][]): TableVocabItem[] {
       const zh = cells[i + 1];
       if (!en || !zh) continue;
       if (/^[-:]+$/.test(en) || /^[-:]+$/.test(zh)) continue;
+      const { lemma, phonetic } = splitEmbeddedPhonetic(en);
       items.push({
-        phrase: en,
+        phrase: lemma,
         meaning: zh,
-        example_en: en,
+        example_en: lemma,
+        phonetic,
       });
     }
   }

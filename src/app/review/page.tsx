@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/PageHeader";
-import { PageShell } from "@/components/PageShell";
 import { ReviewSession } from "@/components/review/ReviewSession";
 import {
   getTodaysReviewSummary,
@@ -22,7 +21,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   ]);
 
   return (
-    <PageShell mainClassName="relative flex min-h-0 flex-1 flex-col">
+    <>
       <PageHeader description="Flip your cards and recall the English." />
       <div className="mt-1 flex min-h-0 flex-1 flex-col min-w-0">
         <ReviewSession
@@ -32,6 +31,6 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
           autoStartTodaysReview={params.start === "todays"}
         />
       </div>
-    </PageShell>
+    </>
   );
 }

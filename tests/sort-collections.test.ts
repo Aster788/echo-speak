@@ -21,6 +21,8 @@ function expression(
     source_type: "transcript",
     weight: 1,
     topic_locked: false,
+    feishu_section: null,
+    phonetic: null,
     created_at: "2026-01-01",
     ...overrides,
   };
@@ -49,8 +51,22 @@ describe("sort-collections", () => {
 
   it("sorts videos by title", () => {
     const sorted = sortVideosByTitle([
-      { id: "2", title: "Zebra vlog", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
-      { id: "1", title: "Alpha clip", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
+      {
+        id: "2",
+        title: "Zebra vlog",
+        youtube_url: "",
+        source: "youtube",
+        creator: null,
+        created_at: "2026-01-01",
+      },
+      {
+        id: "1",
+        title: "Alpha clip",
+        youtube_url: "",
+        source: "youtube",
+        creator: null,
+        created_at: "2026-01-01",
+      },
     ]);
 
     expect(sorted.map((item) => item.title)).toEqual([
@@ -61,8 +77,22 @@ describe("sort-collections", () => {
 
   it("sorts English titles before Chinese titles", () => {
     const sorted = sortVideosByTitle([
-      { id: "cn", title: "没有安排的一天", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
-      { id: "en", title: "a normal day in my life", youtube_url: "", source: "youtube", created_at: "2026-01-01" },
+      {
+        id: "cn",
+        title: "没有安排的一天",
+        youtube_url: "",
+        source: "youtube",
+        creator: null,
+        created_at: "2026-01-01",
+      },
+      {
+        id: "en",
+        title: "a normal day in my life",
+        youtube_url: "",
+        source: "youtube",
+        creator: null,
+        created_at: "2026-01-01",
+      },
     ]);
 
     expect(sorted.map((item) => item.id)).toEqual(["en", "cn"]);

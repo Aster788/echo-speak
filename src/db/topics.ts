@@ -126,13 +126,15 @@ export async function getTopicExpressionCounts(
   client?: SupabaseClient
 ): Promise<Map<string, number>> {
   const supabase = client ?? getSupabase();
-  const { data, error } = await supabase.from("expressions").select("topic_id");
+  const { data, error } = await supabase.rpc("expression_counts_by_topic");
   if (error) throw error;
 
   const directCounts = new Map<string, number>();
-  for (const row of data ?? []) {
-    const topicId = row.topic_id as string;
-    directCounts.set(topicId, (directCounts.get(topicId) ?? 0) + 1);
+  for (const row of (data ?? []) as Array<{
+    topic_id: string;
+    expression_count: number | string;
+  }>) {
+    directCounts.set(row.topic_id, Number(row.expression_count));
   }
 
   const topics = await listTopics(supabase);

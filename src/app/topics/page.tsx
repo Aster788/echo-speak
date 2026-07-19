@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/PageHeader";
-import { PageShell } from "@/components/PageShell";
 import {
   getTopicExpressionCounts,
   listLeafTopics,
@@ -23,7 +22,7 @@ export default async function TopicsPage() {
   }));
 
   return (
-    <PageShell mainClassName="pb-32">
+    <div className="pb-32">
       <PageHeader description="Curate your topic tree, move expressions, or drag to the trash." />
       <div className="mt-6">
         <TopicsManager
@@ -32,6 +31,6 @@ export default async function TopicsPage() {
           dockTopics={dockTopics}
         />
       </div>
-    </PageShell>
+    </div>
   );
 }

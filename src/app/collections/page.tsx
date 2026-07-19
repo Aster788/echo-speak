@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components/PageHeader";
-import { PageShell } from "@/components/PageShell";
 import { CollectionsError } from "@/components/collections/CollectionsError";
 import {
   getTopicExpressionCounts,
@@ -20,7 +19,7 @@ export default async function CollectionsPage() {
     const counts = await getTopicExpressionCounts(supabase);
 
     return (
-      <PageShell>
+      <>
         <PageHeader description="Build your personal library of natural English expressions." />
         <div className="mt-4">
           <CollectionsManager
@@ -28,14 +27,14 @@ export default async function CollectionsPage() {
             initialCounts={Object.fromEntries(counts)}
           />
         </div>
-      </PageShell>
+      </>
     );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to connect to Supabase.";
 
     return (
-      <PageShell>
+      <>
         <PageHeader description="Build your personal library of natural English expressions." />
         <div className="mt-4">
           <CollectionsError
@@ -46,7 +45,7 @@ export default async function CollectionsPage() {
             }
           />
         </div>
-      </PageShell>
+      </>
     );
   }
 }

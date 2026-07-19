@@ -89,7 +89,7 @@ function ExampleBlocks({
             </p>
           )}
           {example.zh && (
-            <p className="text-[0.8125rem] leading-snug opacity-85">
+            <p className="text-[0.8125rem] italic leading-snug opacity-85">
               {example.zh}
             </p>
           )}

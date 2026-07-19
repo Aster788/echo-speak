@@ -6,6 +6,7 @@ import {
   reviewCardTextColor,
 } from "@/lib/review-card-palette";
 import { formatExampleIndexLabel } from "@/lib/example-index-label";
+import { splitPhraseAndPhonetic } from "@/lib/feishu-phonetic";
 import type { ReviewDeckCard, ReviewMode, ReviewRating } from "@/types/review";
 import type { ExpressionExample } from "@/types/expression";
 import { ReviewRatingActions } from "./ReviewRatingActions";
@@ -20,7 +21,7 @@ type ReportType = "english" | "chinese" | "punctuation";
 
 type DisplayCardContent = Pick<
   ReviewDeckCard,
-  "phrase" | "meaning" | "example_en" | "example_zh" | "examples"
+  "phrase" | "meaning" | "example_en" | "example_zh" | "examples" | "phonetic"
 >;
 
 function collectExamples(card: Pick<ReviewDeckCard, "examples" | "example_en" | "example_zh">): ExpressionExample[] {
@@ -32,13 +33,22 @@ function collectExamples(card: Pick<ReviewDeckCard, "examples" | "example_en" | 
 
 function cardToDisplay(card: ReviewDeckCard): DisplayCardContent {
   const examples = collectExamples(card);
+  const { lemma, phonetic } = splitPhraseAndPhonetic(
+    card.phrase,
+    card.phonetic
+  );
   return {
-    phrase: card.phrase,
+    phrase: lemma,
     meaning: card.meaning,
     example_en: examples[0]?.en ?? card.example_en,
     example_zh: examples[0]?.zh ?? card.example_zh,
     examples,
+    phonetic,
   };
+}
+
+function exampleDiffersFromLemma(exampleEn: string, lemma: string): boolean {
+  return exampleEn.trim().toLowerCase() !== lemma.trim().toLowerCase();
 }
 
 const REPORT_TYPES: Array<{ value: ReportType; label: string }> = [
@@ -248,21 +258,32 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                 <p className="text-[1.5rem] font-normal leading-snug">
                   {displayCard.phrase}
                 </p>
+                {displayCard.phonetic ? (
+                  <p className="mt-2 text-[0.9375rem] leading-snug opacity-70">
+                    {displayCard.phonetic}
+                  </p>
+                ) : null}
                 <div className="mt-4 w-full space-y-3">
-                  {examples.map((example, index) => (
-                    <div key={index} className="space-y-1">
-                      {isMultiExample && (
-                        <p className="text-[0.6875rem] font-medium tabular-nums tracking-wide opacity-70">
-                          {formatExampleIndexLabel(index)}
-                        </p>
-                      )}
-                      {example.en ? (
+                  {examples.map((example, index) => {
+                    if (
+                      !example.en ||
+                      !exampleDiffersFromLemma(example.en, displayCard.phrase)
+                    ) {
+                      return null;
+                    }
+                    return (
+                      <div key={index} className="space-y-1">
+                        {isMultiExample && (
+                          <p className="text-[0.6875rem] font-medium tabular-nums tracking-wide opacity-70">
+                            {formatExampleIndexLabel(index)}
+                          </p>
+                        )}
                         <p className="text-[0.9375rem] leading-relaxed opacity-90">
                           {example.en}
                         </p>
-                      ) : null}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </button>

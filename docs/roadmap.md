@@ -72,8 +72,10 @@ Bridge work before SRS. Not numbered as Phase 4.x; tracked as `pre-phase-5-harde
 
 - Feishu API
 - Incremental sync
+- Structure-aware note ingest (H1/H3/Section/tables/bullets)
+- Silent Home sync + Settings Sync all
 
-**Success:** One-click sync.
+**Success:** One-click sync. **Shipped** (`phase-6` tag; OpenSpec archived 2026-07-19).
 
 ---
 

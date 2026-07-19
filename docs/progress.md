@@ -18,15 +18,15 @@
 - Tags: `pre-phase-5-collections`, `pre-phase-5-settings-and-auth`
 - **Pre-Phase 5 library cleanup** (2026-06-30): cloud data prep, `review_queue` schema, extraction quality loop
 - **Phase 5 — Spaced Repetition** (`phase-5` tag): Today's Review, memory engine, daily budget, Unsure session reinsert
-- **Phase 6 — Feishu Sync** (in progress on `feat/phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, `videos.creator`, `feishu_section`
+- **Phase 6 — Feishu Sync** (`phase-6` tag; archived `openspec/changes/archive/2026-07-19-phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, Settings Sync all (chunked), `videos.creator`, `feishu_section`, nullable table examples
 
 ## In Progress
 
-- Phase 6: apply migration to cloud; smoke sync with real Feishu credentials
+- (none)
 
 ## Current Focus
 
-Merge Phase 6 PR, tag `phase-6`, verify Home status line + background sync at 430×932.
+Phase 7 planning: Gap Detection (compare transcript extract vs Feishu notes).
 
 ## Next Milestone
 

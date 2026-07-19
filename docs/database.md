@@ -117,7 +117,7 @@ Core learning unit.
 
 | meaning | text | Chinese explanation（Review 正面第一行） |
 
-| example_en | text | Source sentence in English（Review 背面第二行；原 `example` 列重命名） |
+| example_en | text | nullable; source sentence in English（Review 背面；表格 lemma 可无例句；原 `example` 列重命名） |
 
 | example_zh | text | nullable; Chinese sentence for review front |
 
@@ -135,7 +135,7 @@ Core learning unit.
 
 **`example_zh` 填充策略：**
 
-Always LLM：对 `example_en` 调用 DeepSeek 单句翻译（见 `docs/decisions.md` 2026-06-26）。`raw_text` 保留双语供参考；对齐逻辑仅在 `example-zh-alignment.ts`（审计脚本用）。
+Always LLM：对非空 `example_en` 调用 DeepSeek 单句翻译（见 `docs/decisions.md` 2026-06-26）。`raw_text` 保留双语供参考；对齐逻辑仅在 `example-zh-alignment.ts`（审计脚本用）。Feishu 表格 lemma 无例句时不调用翻译。
 
 提取 pipeline 写入时填充；`scripts/backfill-example-zh.ts --force` 可重译历史行。
 

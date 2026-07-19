@@ -10,7 +10,10 @@ import {
   type FeishuDocumentRef,
 } from "@/lib/feishu-client";
 import { parseFeishuDocxTokens } from "@/lib/feishu-doc-urls";
-import { FEISHU_SYNC_DEBOUNCE_MINUTES } from "@/lib/feishu-sync-policy";
+import {
+  FEISHU_SYNC_DEBOUNCE_MINUTES,
+  FEISHU_SYNC_MAX_SECTIONS_PER_RUN,
+} from "@/lib/feishu-sync-policy";
 import { getSupabase } from "@/lib/supabase";
 import { ingestFeishuVideoSection } from "@/services/feishu-expression-ingest";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -25,6 +28,10 @@ export type FeishuSyncResult = {
   sentencesExtracted: number;
   skippedTranscriptDuplicates: number;
   skippedSubsumedVocab: number;
+  /** False when more video sections remain; client should call again with nextSectionOffset. */
+  complete: boolean;
+  nextSectionOffset: number;
+  totalSections: number;
 };
 
 const syncStartedAt = new Map<string, number>();
@@ -66,10 +73,17 @@ export async function syncFeishuNotesForUser(
     mode?: FeishuSyncMode;
     supabase?: SupabaseClient;
     markdownOverride?: string;
+    sectionOffset?: number;
+    maxSections?: number;
   } = {}
 ): Promise<FeishuSyncResult | null> {
   const supabase = options.supabase ?? getSupabase();
   const mode = options.mode ?? "incremental";
+  const sectionOffset = Math.max(0, options.sectionOffset ?? 0);
+  const maxSections = Math.max(
+    1,
+    options.maxSections ?? FEISHU_SYNC_MAX_SECTIONS_PER_RUN
+  );
 
   if (shouldDebounce(userId)) {
     return null;
@@ -85,7 +99,12 @@ export async function syncFeishuNotesForUser(
       throw new Error("Feishu credentials are required in Settings.");
     }
 
-    let docs: Array<{ token: string; name: string; updatedAt: string; content?: string }>;
+    let docs: Array<{
+      token: string;
+      name: string;
+      updatedAt: string;
+      content?: string;
+    }>;
 
     if (options.markdownOverride) {
       docs = [
@@ -145,12 +164,6 @@ export async function syncFeishuNotesForUser(
         .map((doc) => ({ ...doc }));
     }
 
-    let videoSectionsProcessed = 0;
-    let expressionsUpserted = 0;
-    let tablesParsed = 0;
-    let sentencesExtracted = 0;
-    let skippedTranscriptDuplicates = 0;
-    let skippedSubsumedVocab = 0;
     const errors: Array<{ doc: string; error: string }> = [];
 
     if (!options.markdownOverride) {
@@ -170,22 +183,57 @@ export async function syncFeishuNotesForUser(
       }
     }
 
+    type SectionJob = {
+      docName: string;
+      section: ReturnType<typeof parseFeishuDoc>[number];
+    };
+    if (
+      docs.length > 0 &&
+      docs.every((doc) => !doc.content) &&
+      errors.length > 0
+    ) {
+      throw new Error(errors[0]?.error ?? "Failed to fetch Feishu document content.");
+    }
+
+    const sectionJobs: SectionJob[] = [];
     for (const doc of docs) {
       if (!doc.content) continue;
       try {
-        const sections = parseFeishuDoc(doc.content);
-        for (const section of sections) {
-          const result = await ingestFeishuVideoSection(section, { supabase });
-          videoSectionsProcessed += 1;
-          expressionsUpserted += result.expressionsUpserted;
-          tablesParsed += result.tablesParsed;
-          sentencesExtracted += result.sentencesExtracted;
-          skippedTranscriptDuplicates += result.skippedTranscriptDuplicates;
-          skippedSubsumedVocab += result.skippedSubsumedVocab;
+        for (const section of parseFeishuDoc(doc.content)) {
+          sectionJobs.push({ docName: doc.name, section });
         }
       } catch (error) {
         errors.push({
           doc: doc.name,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    const totalSections = sectionJobs.length;
+    const slice = sectionJobs.slice(sectionOffset, sectionOffset + maxSections);
+    const nextSectionOffset = sectionOffset + slice.length;
+    const complete = nextSectionOffset >= totalSections;
+
+    let videoSectionsProcessed = 0;
+    let expressionsUpserted = 0;
+    let tablesParsed = 0;
+    let sentencesExtracted = 0;
+    let skippedTranscriptDuplicates = 0;
+    let skippedSubsumedVocab = 0;
+
+    for (const job of slice) {
+      try {
+        const result = await ingestFeishuVideoSection(job.section, { supabase });
+        videoSectionsProcessed += 1;
+        expressionsUpserted += result.expressionsUpserted;
+        tablesParsed += result.tablesParsed;
+        sentencesExtracted += result.sentencesExtracted;
+        skippedTranscriptDuplicates += result.skippedTranscriptDuplicates;
+        skippedSubsumedVocab += result.skippedSubsumedVocab;
+      } catch (error) {
+        errors.push({
+          doc: `${job.docName} · ${job.section.videoTitle}`,
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -199,21 +247,29 @@ export async function syncFeishuNotesForUser(
       sentencesExtracted,
       skippedTranscriptDuplicates,
       skippedSubsumedVocab,
+      complete,
+      nextSectionOffset: complete ? 0 : nextSectionOffset,
+      totalSections,
     };
 
-    const failed = errors.length > 0 && videoSectionsProcessed === 0;
+    const failed =
+      errors.length > 0 && videoSectionsProcessed === 0 && slice.length > 0;
     await insertSyncLog(
       {
         userId,
         syncType: mode,
         status: failed ? "failed" : "success",
         syncedAt: syncStarted,
-        details: { ...summary, errors: errors.length ? errors : undefined },
+        details: {
+          ...summary,
+          sectionOffset,
+          errors: errors.length ? errors : undefined,
+        },
       },
       supabase
     );
 
-    if (!failed) {
+    if (!failed && complete) {
       await updateLastFeishuSyncAt(userId, syncStarted, supabase);
     }
 
@@ -227,6 +283,7 @@ export async function syncFeishuNotesForUser(
         syncedAt: syncStarted,
         details: {
           error: error instanceof Error ? error.message : String(error),
+          sectionOffset,
         },
       },
       supabase

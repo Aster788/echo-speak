@@ -1,4 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
+import type { AcceptedPreferenceRecord } from "@/types/extraction-preference";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type GapStatus = "pending" | "accepted" | "ignored";
@@ -18,6 +19,81 @@ export type PendingGapWithContext = GapRow & {
   video_title: string | null;
   video_creator: string | null;
 };
+
+type AcceptedGapJoinRow = {
+  created_at: string;
+  expressions:
+    | {
+        phrase: string;
+        meaning: string;
+        topic_id: string | null;
+        weight: number;
+        topics: { slug: string } | { slug: string }[] | null;
+      }
+    | {
+        phrase: string;
+        meaning: string;
+        topic_id: string | null;
+        weight: number;
+        topics: { slug: string } | { slug: string }[] | null;
+      }[]
+    | null;
+};
+
+export async function listAcceptedGapPreferenceRecords(
+  userId: string,
+  client?: SupabaseClient
+): Promise<AcceptedPreferenceRecord[]> {
+  const supabase = client ?? getSupabase();
+  const { data: usersData, error: usersError } =
+    await supabase.auth.admin.listUsers({ page: 1, perPage: 2 });
+  if (usersError) throw usersError;
+  if (
+    usersData.users.length !== 1 ||
+    usersData.users[0]?.id !== userId
+  ) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("gaps")
+    .select(
+      `
+      created_at,
+      expressions!inner (
+        phrase,
+        meaning,
+        topic_id,
+        weight,
+        topics (slug)
+      )
+    `
+    )
+    .eq("status", "accepted")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  return ((data ?? []) as unknown as AcceptedGapJoinRow[]).flatMap((row) => {
+    const expression = Array.isArray(row.expressions)
+      ? row.expressions[0]
+      : row.expressions;
+    if (!expression?.phrase?.trim()) return [];
+    const topic = Array.isArray(expression.topics)
+      ? expression.topics[0] ?? null
+      : expression.topics;
+
+    return [
+      {
+        phrase: expression.phrase.trim(),
+        meaning: expression.meaning ?? "",
+        topicId: expression.topic_id,
+        topicSlug: topic?.slug ?? null,
+        weight: Number(expression.weight) || 1,
+        feedbackAt: row.created_at,
+      },
+    ];
+  });
+}
 
 export async function listGapsForVideo(
   videoId: string,

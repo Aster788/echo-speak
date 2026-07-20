@@ -16,6 +16,7 @@ vi.mock("@/services/gap-detector", () => ({
 
 import { extractExpressionsForTranscript } from "@/services/expression-pipeline";
 import { getAuthenticatedUser } from "@/lib/auth-server";
+import { buildExtractionPreferenceContextFromHistory } from "@/services/extraction-preference-context";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Topic } from "@/types/topic";
 import type { Expression } from "@/types/expression";
@@ -410,6 +411,76 @@ describe("expression-pipeline", () => {
 
     expect(result.expressionCount).toBe(1);
     expect(result.expressions[0]?.phrase).toBe("at the very end");
+  });
+
+  it("loads current feedback, passes hard blocks to extraction, and reports diagnostics", async () => {
+    vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
+      id: "user-1",
+    } as never);
+    const supabase = mockSupabase([], ["feel stuck"]);
+    const preferenceContext = buildExtractionPreferenceContextFromHistory({
+      accepted: [
+        {
+          phrase: "keep track of",
+          meaning: "记录",
+          topicId: "work-id",
+          topicSlug: "work",
+          weight: 2,
+          feedbackAt: "2026-07-19T00:00:00Z",
+        },
+      ],
+      dismissed: [
+        {
+          phrase: "feel stuck",
+          phraseKey: "feel stuck",
+          reason: "gap_ignore",
+          topicId: null,
+          topicSlug: null,
+          dismissedAt: "2026-07-19T00:00:00Z",
+        },
+      ],
+    });
+    const buildPreferenceContextFn = vi.fn(async () => preferenceContext);
+    const extractFn = vi.fn(async (_text, extractorOptions) => {
+      expect(extractorOptions?.preferenceContext).toBe(preferenceContext);
+      expect(extractorOptions?.dismissedKeys).toEqual(new Set(["feel stuck"]));
+      extractorOptions?.onDiagnostics?.({
+        totalAccepted: 1,
+        totalDismissed: 1,
+        positiveSampleCount: 1,
+        negativeSampleCount: 1,
+        rawCandidateCount: 2,
+        hardBlockedCount: 1,
+        selectedCount: 1,
+      });
+      return [
+        {
+          phrase: "keep track of",
+          definition: "记录",
+          example: "Keep track of it.",
+          topic_slug: "work",
+        },
+      ];
+    });
+
+    const result = await extractExpressionsForTranscript("transcript-1", {
+      supabase,
+      extractFn,
+      buildPreferenceContextFn,
+      resolveExampleZhFn: async () => "示例中文",
+    });
+
+    expect(buildPreferenceContextFn).toHaveBeenCalledWith("user-1", supabase);
+    expect(result.diagnostics).toEqual({
+      totalAccepted: 1,
+      totalDismissed: 1,
+      positiveSampleCount: 1,
+      negativeSampleCount: 1,
+      rawCandidateCount: 2,
+      hardBlockedCount: 1,
+      selectedCount: 1,
+      persistedCount: 1,
+    });
   });
 });
 

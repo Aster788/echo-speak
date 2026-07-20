@@ -40,6 +40,8 @@ Return a JSON object:
 
 **Include:** Multi-word collocations, idioms, phrasal verbs, and fixed expressions that transfer to new sentences.
 
+{{PREFERENCE_CONTEXT}}
+
 **Exclude:**
 
 - Single words (even uncommon ones)
@@ -70,5 +72,3 @@ Return a JSON object:
 - Always pick the most specific `topic_slug`; never use a parent slug when a child fits
 - Use transferable phrase forms (e.g. `make someone's day`) rather than clip-specific inflections when both appear
 - **`phrase` must be dictionary/lemma form:** base verb (take, not takes), infinitive or fixed idiom; no leading `-ing` from the clip, no past tense copied from one sentence
-
-{{DISMISSAL_HINTS}}

@@ -24,16 +24,17 @@
 
 ## In Progress
 
-- (none)
+- **Phase 7.1b — Feedback → extract precision** (`feat/extend-phase7b-gap-feedback-loop`): full-history runtime preference context, bounded Topic-aware prompt examples, pre-rank canonical hard filter, precision-first rank prompt, per-run diagnostics
+- Validation: controlled fixture `raw=7`, `hard-blocked=1`, `selected=6` without Feishu writes; 222 tests, TypeScript, production build, filename audit, and OpenSpec validation pass
 
 ## Current Focus
 
-Phase 7.1b planning: feed Accept/Ignore into transcript extraction (prompt / candidate filter).
+Phase 7.1b implementation verification and OpenSpec close-out.
 
 ## Next Milestone
 
-Phase 7.1b: feedback → extract precision
+Phase 7.1b PR, deployment, spec sync/archive, and milestone tag.
 
 ## Not Started
 
-- Gap feedback → extract precision (7.1b)
+- (none)

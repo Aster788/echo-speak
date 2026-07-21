@@ -1,6 +1,7 @@
 import { normalizePhraseKey } from "@/lib/merge-expressions";
 import { getSupabase } from "@/lib/supabase";
 import type { DismissReason } from "@/types/dismiss-reason";
+import type { DismissedPreferenceRecord } from "@/types/extraction-preference";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ExpressionDismissal = {
@@ -21,6 +22,56 @@ export type RecordDismissalInput = {
   topicId?: string | null;
   userId?: string | null;
 };
+
+type DismissalPreferenceRow = {
+  phrase: string | null;
+  phrase_key: string;
+  reason: DismissReason | null;
+  topic_id: string | null;
+  dismissed_at: string;
+  topics: { slug: string } | { slug: string }[] | null;
+};
+
+export async function listDismissalPreferenceRecords(
+  userId: string,
+  client?: SupabaseClient
+): Promise<DismissedPreferenceRecord[]> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("expression_dismissals")
+    .select(
+      `
+      phrase,
+      phrase_key,
+      reason,
+      topic_id,
+      dismissed_at,
+      topics (slug)
+    `
+    )
+    .eq("user_id", userId)
+    .order("dismissed_at", { ascending: false });
+  if (error) throw error;
+
+  return ((data ?? []) as unknown as DismissalPreferenceRow[]).flatMap(
+    (row) => {
+      if (!row.phrase?.trim() || !row.phrase_key?.trim()) return [];
+      const topic = Array.isArray(row.topics)
+        ? row.topics[0] ?? null
+        : row.topics;
+      return [
+        {
+          phrase: row.phrase.trim(),
+          phraseKey: row.phrase_key,
+          reason: row.reason,
+          topicId: row.topic_id,
+          topicSlug: topic?.slug ?? null,
+          dismissedAt: row.dismissed_at,
+        },
+      ];
+    }
+  );
+}
 
 export async function recordDismissal(
   input: RecordDismissalInput,

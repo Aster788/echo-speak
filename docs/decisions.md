@@ -465,3 +465,28 @@ Decision:
 Reason:
 
 North star for all scheduling and UX trade-offs in Phase 5+.
+
+---
+
+2026-07-19
+
+Decision:
+
+**Phase 7.1b — runtime full-history extraction preferences with precision-first ranking.**
+
+Context:
+
+Phase 7.1a persists Accept as an accepted gap plus retained weighted expression, and Ignore/Delete as user-scoped dismissals. Exact dismissed phrases were blocked, but accepted preferences and dismissal patterns did not guide new extraction or ranking.
+
+Decision:
+
+1. Every Extract/Re-extract dynamically reads the complete available accepted-gap and user-scoped dismissal history; no generated preference summary is stored.
+2. Prompt context is bounded to 12 accepted + 12 dismissed canonical examples. Ranking prioritizes examples matching candidate Topics, then accepted weight and feedback recency.
+3. Both extraction and selection prompts receive positive/negative guidance. The model generalizes preferred expression type and difficulty; it does not copy accepted phrases into unrelated videos.
+4. Ignore/Delete canonical keys are removed before ranking and checked again before persistence.
+5. Target count is a maximum, not a quota. Ranking may return fewer expressions when remaining candidates are weak or preference-misaligned.
+6. No model fine-tuning and no additional mandatory classifier call in v1. Per-run diagnostics record feedback totals, prompt sample counts, raw candidates, hard-blocked candidates, selected candidates, and persisted rows.
+
+Reason:
+
+This makes feedback effective on the next extraction while keeping behavior explainable, prompt size bounded, and Ignore deterministic. It optimizes for lower curation load rather than maximum expression volume.

@@ -22,8 +22,13 @@ import type { Expression } from "@/types/expression";
 import type { ExtractedExpression } from "@/types/expression";
 import {
   extractExpressions,
+  type ExtractionFeedbackDiagnostics,
   type ExtractExpressionsOptions as ExtractorOptions,
 } from "@/services/expression-extractor";
+import {
+  buildExtractionPreferenceContext,
+  selectPreferenceExamples,
+} from "@/services/extraction-preference-context";
 import { resolveExampleZh } from "@/services/example-zh";
 import { refreshGapsForVideo } from "@/services/gap-detector";
 import type { ExtractionDepth } from "@/lib/extraction-depth";
@@ -33,6 +38,7 @@ export type ExtractExpressionsResult = {
   transcriptId: string;
   expressionCount: number;
   expressions: Expression[];
+  diagnostics: ExtractionFeedbackDiagnostics & { persistedCount: number };
 };
 
 export type ExtractExpressionsPipelineOptions = {
@@ -42,6 +48,7 @@ export type ExtractExpressionsPipelineOptions = {
     options?: ExtractorOptions
   ) => Promise<ExtractedExpression[]>;
   resolveExampleZhFn?: typeof resolveExampleZh;
+  buildPreferenceContextFn?: typeof buildExtractionPreferenceContext;
   depth?: ExtractionDepth;
 };
 
@@ -52,6 +59,8 @@ export async function extractExpressionsForTranscript(
   const supabase = options.supabase ?? getSupabaseAdmin();
   const extractFn = options.extractFn ?? extractExpressions;
   const resolveExampleZhFn = options.resolveExampleZhFn ?? resolveExampleZh;
+  const buildPreferenceContextFn =
+    options.buildPreferenceContextFn ?? buildExtractionPreferenceContext;
 
   const transcript = await getTranscript(transcriptId, supabase);
   if (!transcript) {
@@ -79,10 +88,35 @@ export async function extractExpressionsForTranscript(
     }
   }
 
-  const filtered = filterDismissedExpressions(
-    await extractFn(cleanedText, { depth: options.depth, topics }),
-    dismissedKeys
+  const preferenceContext = await buildPreferenceContextFn(
+    user?.id ?? null,
+    supabase
   );
+  for (const key of preferenceContext.hardBlockedKeys) {
+    dismissedKeys.add(key);
+  }
+  const preferenceSamples = selectPreferenceExamples(preferenceContext);
+  let extractorDiagnostics: ExtractionFeedbackDiagnostics | null = null;
+  const extracted = await extractFn(cleanedText, {
+    depth: options.depth,
+    topics,
+    preferenceContext,
+    dismissedKeys,
+    onDiagnostics: (diagnostics) => {
+      extractorDiagnostics = diagnostics;
+    },
+  });
+  const filtered = filterDismissedExpressions(extracted, dismissedKeys);
+  const diagnostics: ExtractionFeedbackDiagnostics =
+    extractorDiagnostics ?? {
+      totalAccepted: preferenceContext.totalAccepted,
+      totalDismissed: preferenceContext.totalDismissed,
+      positiveSampleCount: preferenceSamples.accepted.length,
+      negativeSampleCount: preferenceSamples.dismissed.length,
+      rawCandidateCount: extracted.length,
+      hardBlockedCount: extracted.length - filtered.length,
+      selectedCount: filtered.length,
+    };
 
   await deleteUnlockedExpressionsByVideoAndSource(
     transcript.video_id,
@@ -151,6 +185,10 @@ export async function extractExpressionsForTranscript(
     transcriptId: transcript.id,
     expressionCount: expressions.length,
     expressions,
+    diagnostics: {
+      ...diagnostics,
+      persistedCount: expressions.length,
+    },
   };
 }
 

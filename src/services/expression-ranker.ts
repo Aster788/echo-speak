@@ -2,21 +2,36 @@ import { getLlmClient, getLlmModel, loadPrompt } from "@/lib/llm";
 import { filterLowQualityExpressions } from "@/lib/filter-expressions";
 import { parseExtractResponse } from "@/services/expression-extractor";
 import type { ExtractedExpression } from "@/types/expression";
+import type { ExtractionPreferenceContext } from "@/types/extraction-preference";
+import { formatExtractionPreferenceContext } from "@/services/extraction-preference-context";
 import type OpenAI from "openai";
 
-async function buildSelectPrompt(targetCount: number): Promise<string> {
+async function buildSelectPrompt(
+  targetCount: number,
+  preferenceContext?: ExtractionPreferenceContext,
+  preferredTopicSlugs?: ReadonlySet<string>
+): Promise<string> {
   const template = await loadPrompt("select-expressions");
-  return template.replaceAll("{{TARGET_COUNT}}", String(targetCount));
+  const preferenceText = preferenceContext
+    ? formatExtractionPreferenceContext(
+        preferenceContext,
+        preferredTopicSlugs
+      )
+    : "";
+  return template
+    .replaceAll("{{TARGET_COUNT}}", String(targetCount))
+    .replace("{{PREFERENCE_CONTEXT}}", preferenceText);
 }
 
 function buildSelectUserMessage(
   transcriptContext: string,
-  candidates: ExtractedExpression[]
+  candidates: ExtractedExpression[],
+  targetCount: number
 ): string {
   return JSON.stringify(
     {
       transcript_excerpt: transcriptContext.slice(0, 4_000),
-      target_count: candidates.length,
+      target_count: targetCount,
       candidates,
     },
     null,
@@ -28,21 +43,33 @@ export async function rankExtractedExpressions(
   candidates: ExtractedExpression[],
   targetCount: number,
   transcriptContext: string,
-  openai?: OpenAI
+  openai?: OpenAI,
+  preferenceContext?: ExtractionPreferenceContext
 ): Promise<ExtractedExpression[]> {
   if (candidates.length <= targetCount) {
     return candidates;
   }
 
   const client = openai ?? getLlmClient();
-  const systemPrompt = await buildSelectPrompt(targetCount);
+  const preferredTopicSlugs = new Set(
+    candidates.map((candidate) => candidate.topic_slug).filter(Boolean)
+  );
+  const systemPrompt = await buildSelectPrompt(
+    targetCount,
+    preferenceContext,
+    preferredTopicSlugs
+  );
   const response = await client.chat.completions.create({
     model: getLlmModel(),
     messages: [
       { role: "system", content: systemPrompt },
       {
         role: "user",
-        content: buildSelectUserMessage(transcriptContext, candidates),
+        content: buildSelectUserMessage(
+          transcriptContext,
+          candidates,
+          targetCount
+        ),
       },
     ],
     response_format: { type: "json_object" },

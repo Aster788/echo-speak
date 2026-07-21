@@ -21,19 +21,19 @@
 - **Phase 6 — Feishu Sync** (`phase-6` tag; archived `openspec/changes/archive/2026-07-19-phase-6-feishu-sync`): structure parse, dual ingest, silent Home sync, Settings Sync all (chunked), `videos.creator`, `feishu_section`, nullable table examples
 - **Phase 7 — Gap Detection** (`phase-7` tag; archived `openspec/changes/archive/2026-07-19-phase7-gap-detection`): `gaps` table, deterministic per-video refresh, Gaps UI grouped A–Z, Accept/Ignore
 - **Phase 7.1a — Gap feedback loop** (PR #23; archived `openspec/changes/archive/2026-07-19-extend-phase7-gap-feedback-loop`): Ignore → dismiss/`gap_ignore`; Accept → weight + `topic_locked`
+- **Phase 7.1b — Feedback → extract precision** (PR #24; archived `openspec/changes/archive/2026-07-21-extend-phase7b-gap-feedback-loop`): full-history runtime preference context, bounded Topic-aware prompt examples, pre-rank canonical hard filter, precision-first rank prompt, per-run diagnostics
 
 ## In Progress
 
-- **Phase 7.1b — Feedback → extract precision** (`feat/extend-phase7b-gap-feedback-loop`): full-history runtime preference context, bounded Topic-aware prompt examples, pre-rank canonical hard filter, precision-first rank prompt, per-run diagnostics
-- Validation: controlled fixture `raw=7`, `hard-blocked=1`, `selected=6` without Feishu writes; 222 tests, TypeScript, production build, filename audit, and OpenSpec validation pass
+- (none)
 
 ## Current Focus
 
-Phase 7.1b implementation verification and OpenSpec close-out.
+Observe real-world Gaps/Collections triage reduction after Phase 7.1b ships; tune the 12+12 sample cap only from evidence.
 
 ## Next Milestone
 
-Phase 7.1b PR, deployment, spec sync/archive, and milestone tag.
+Measure post-7.1b import quality and triage load over subsequent Feishu syncs and Re-extracts.
 
 ## Not Started
 

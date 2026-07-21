@@ -29,6 +29,11 @@ export default async function HomePage() {
     <>
       <PageHeader description="Turn video transcripts into expressions you actually remember." />
       <div className="mt-4 flex flex-col gap-3">
+        {feishuStatus.line ? (
+          <p className="text-center text-[0.6875rem] font-normal text-[#222222]/55">
+            {feishuStatus.line}
+          </p>
+        ) : null}
         <Link
           href="/import"
           className="rounded-[1rem] border-[2.5px] border-[#000000] bg-[#000000] px-4 py-2.5 text-center text-[0.8125rem] font-medium text-[#FFFFFF] transition-opacity duration-150 hover:opacity-90"
@@ -44,11 +49,6 @@ export default async function HomePage() {
             {summary.displayLabel}
           </span>
         </Link>
-        {feishuStatus.line ? (
-          <p className="text-center text-[0.6875rem] font-normal text-[#222222]/55">
-            {feishuStatus.line}
-          </p>
-        ) : null}
       </div>
       <div className="mt-4 flex min-h-0 flex-1 items-center justify-center pb-2">
         <Image

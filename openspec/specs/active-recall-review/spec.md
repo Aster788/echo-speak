@@ -97,7 +97,7 @@ The system SHALL display the card back with `phrase` as the primary line and `ex
 
 ### Requirement: Card source footer
 
-Footer shows video title for Today's Review and Video Practice; topic name for Topic Practice.
+The system SHALL show the source video title in the card footer for Today's Review and Video Practice, and the assigned topic name for Topic Practice.
 
 #### Scenario: Today's Review footer
 

@@ -1,3 +1,9 @@
+# gap-detection
+
+## Purpose
+
+Detect transcript expressions missing from Feishu notes per video; Gaps UI with Accept/Ignore (Phase 7).
+
 ## Requirements
 
 ### Requirement: Gaps table schema

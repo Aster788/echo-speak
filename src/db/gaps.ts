@@ -188,6 +188,79 @@ export async function getGap(
   return (data as GapRow | null) ?? null;
 }
 
+type GapExpressionJoin = {
+  id: string;
+  phrase: string;
+  meaning: string;
+  weight: number;
+  video_id: string;
+  topic_id: string | null;
+};
+
+export type GapWithExpression = GapRow & {
+  expression: GapExpressionJoin;
+};
+
+type GapWithExpressionRow = GapRow & {
+  expressions:
+    | GapExpressionJoin
+    | GapExpressionJoin[]
+    | null;
+};
+
+/** Single round-trip: gap + linked expression fields for Accept/Ignore. */
+export async function getPendingGapWithExpression(
+  gapId: string,
+  client?: SupabaseClient
+): Promise<GapWithExpression | null> {
+  const supabase = client ?? getSupabase();
+  const { data, error } = await supabase
+    .from("gaps")
+    .select(
+      `
+      id,
+      expression_id,
+      reason,
+      status,
+      created_at,
+      expressions!inner (
+        id,
+        phrase,
+        meaning,
+        weight,
+        video_id,
+        topic_id
+      )
+    `
+    )
+    .eq("id", gapId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  const row = data as unknown as GapWithExpressionRow;
+  const expression = Array.isArray(row.expressions)
+    ? row.expressions[0]
+    : row.expressions;
+  if (!expression) return null;
+
+  return {
+    id: row.id,
+    expression_id: row.expression_id,
+    reason: row.reason,
+    status: row.status,
+    created_at: row.created_at,
+    expression: {
+      id: expression.id,
+      phrase: expression.phrase,
+      meaning: expression.meaning,
+      weight: Number(expression.weight) || 1,
+      video_id: expression.video_id,
+      topic_id: expression.topic_id,
+    },
+  };
+}
+
 export async function insertPendingGaps(
   expressionIds: string[],
   reason: string,

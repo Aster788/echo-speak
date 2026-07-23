@@ -12,7 +12,7 @@ export default async function GapsPage() {
 
     return (
       <>
-        <PageHeader description="Blind spots: in extract, not in Feishu. Accept to keep; Ignore to delete from library." />
+        <PageHeader description="Blind spots: in extraction." />
         <GapsManager
           initialGaps={gaps.map((gap) => ({
             id: gap.id,
@@ -32,7 +32,7 @@ export default async function GapsPage() {
 
     return (
       <>
-        <PageHeader description="Blind spots: in extract, not in Feishu. Accept to keep; Ignore to delete from library." />
+        <PageHeader description="Blind spots: in extraction." />
         <p className="mt-8 text-center text-[0.8125rem] font-normal text-[#222222] opacity-70">
           {isSupabaseConfigError(message)
             ? "Supabase is not configured."

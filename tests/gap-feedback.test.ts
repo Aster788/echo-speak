@@ -18,19 +18,11 @@ describe("acceptGap / ignoreGap", () => {
   it("acceptGap bumps weight, locks topic, sets accepted", async () => {
     const expression = {
       id: "expr-1",
-      video_id: "video-1",
       phrase: "feel stuck",
       meaning: "感到卡住",
-      example_en: null,
-      example_zh: null,
-      examples: null,
-      topic_id: "topic-1",
-      source_type: "transcript" as const,
       weight: 1.0,
-      topic_locked: false,
-      feishu_section: null,
-      phonetic: null,
-      created_at: "2026-07-19T00:00:00Z",
+      video_id: "video-1",
+      topic_id: "topic-1",
     };
     const gap = {
       id: "gap-1",
@@ -38,6 +30,7 @@ describe("acceptGap / ignoreGap", () => {
       reason: "in_transcript_not_in_feishu",
       status: "pending" as const,
       created_at: "2026-07-19T00:00:00Z",
+      expressions: expression,
     };
 
     let expressionUpdate: Record<string, unknown> | null = null;
@@ -68,7 +61,13 @@ describe("acceptGap / ignoreGap", () => {
                     select() {
                       return {
                         single: async () => ({
-                          data: { ...gap, ...payload },
+                          data: {
+                            id: gap.id,
+                            expression_id: gap.expression_id,
+                            reason: gap.reason,
+                            created_at: gap.created_at,
+                            ...payload,
+                          },
                           error: null,
                         }),
                       };
@@ -82,29 +81,11 @@ describe("acceptGap / ignoreGap", () => {
 
         if (table === "expressions") {
           return {
-            select() {
-              return {
-                eq() {
-                  return {
-                    single: async () => ({ data: expression, error: null }),
-                  };
-                },
-              };
-            },
             update(payload: Record<string, unknown>) {
               expressionUpdate = payload;
               return {
                 eq() {
-                  return {
-                    select() {
-                      return {
-                        single: async () => ({
-                          data: { ...expression, ...payload },
-                          error: null,
-                        }),
-                      };
-                    },
-                  };
+                  return Promise.resolve({ error: null });
                 },
               };
             },
@@ -123,19 +104,11 @@ describe("acceptGap / ignoreGap", () => {
   it("ignoreGap dismisses with gap_ignore and deletes expression", async () => {
     const expression = {
       id: "expr-1",
-      video_id: "video-1",
       phrase: "Feel Stuck",
       meaning: "感到卡住",
-      example_en: null,
-      example_zh: null,
-      examples: null,
-      topic_id: "topic-1",
-      source_type: "transcript" as const,
       weight: 1.0,
-      topic_locked: false,
-      feishu_section: null,
-      phonetic: null,
-      created_at: "2026-07-19T00:00:00Z",
+      video_id: "video-1",
+      topic_id: "topic-1",
     };
     const gap = {
       id: "gap-1",
@@ -143,6 +116,7 @@ describe("acceptGap / ignoreGap", () => {
       reason: "in_transcript_not_in_feishu",
       status: "pending" as const,
       created_at: "2026-07-19T00:00:00Z",
+      expressions: expression,
     };
 
     const dismissalUpserts: Record<string, unknown>[] = [];
@@ -166,15 +140,6 @@ describe("acceptGap / ignoreGap", () => {
 
         if (table === "expressions") {
           return {
-            select() {
-              return {
-                eq() {
-                  return {
-                    single: async () => ({ data: expression, error: null }),
-                  };
-                },
-              };
-            },
             delete() {
               return {
                 eq(_col: string, id: string) {
@@ -229,6 +194,14 @@ describe("acceptGap / ignoreGap", () => {
                       reason: "in_transcript_not_in_feishu",
                       status: "accepted",
                       created_at: "2026-07-19T00:00:00Z",
+                      expressions: {
+                        id: "expr-1",
+                        phrase: "feel stuck",
+                        meaning: "",
+                        weight: 1,
+                        video_id: "video-1",
+                        topic_id: null,
+                      },
                     },
                     error: null,
                   }),

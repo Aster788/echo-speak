@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { GapCard, type GapCardItem } from "@/components/GapCard";
 import { pageHintFont } from "@/lib/page-hint-font";
 import { compareNames, compareVideoTitles } from "@/lib/sort-collections";
@@ -52,34 +52,49 @@ function groupGapsByVideo(gaps: GapCardItem[]): GapVideoGroup[] {
     });
 }
 
+function restoreGap(prev: GapCardItem[], gap: GapCardItem): GapCardItem[] {
+  if (prev.some((item) => item.id === gap.id)) return prev;
+  return [...prev, gap];
+}
+
 export function GapsManager({ initialGaps }: GapsManagerProps) {
   const [gaps, setGaps] = useState(initialGaps);
-  const [busyId, setBusyId] = useState<string | null>(null);
   const [refreshing, startRefresh] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const inFlight = useRef(new Set<string>());
 
   const groups = groupGapsByVideo(gaps);
 
-  async function act(gapId: string, action: "accept" | "ignore") {
-    setBusyId(gapId);
+  function act(gapId: string, action: "accept" | "ignore") {
+    if (inFlight.current.has(gapId)) return;
+    const removed = gaps.find((gap) => gap.id === gapId);
+    if (!removed) return;
+
+    inFlight.current.add(gapId);
+    setGaps((prev) => prev.filter((gap) => gap.id !== gapId));
     setError(null);
-    try {
-      const response = await fetch(`/api/gaps/${gapId}/${action}`, {
-        method: "POST",
-      });
-      const payload = (await response.json()) as {
-        ok?: boolean;
-        message?: string;
-      };
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.message ?? `Failed to ${action} gap.`);
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/gaps/${gapId}/${action}`, {
+          method: "POST",
+        });
+        const payload = (await response.json()) as {
+          ok?: boolean;
+          message?: string;
+        };
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.message ?? `Failed to ${action} gap.`);
+        }
+      } catch (err) {
+        setGaps((prev) => restoreGap(prev, removed));
+        setError(
+          err instanceof Error ? err.message : `Failed to ${action} gap.`
+        );
+      } finally {
+        inFlight.current.delete(gapId);
       }
-      setGaps((prev) => prev.filter((gap) => gap.id !== gapId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to ${action} gap.`);
-    } finally {
-      setBusyId(null);
-    }
+    })();
   }
 
   function refreshAll() {
@@ -162,9 +177,9 @@ export function GapsManager({ initialGaps }: GapsManagerProps) {
                   <li key={gap.id}>
                     <GapCard
                       gap={gap}
-                      busy={busyId === gap.id || refreshing}
-                      onAccept={() => void act(gap.id, "accept")}
-                      onIgnore={() => void act(gap.id, "ignore")}
+                      busy={refreshing}
+                      onAccept={() => act(gap.id, "accept")}
+                      onIgnore={() => act(gap.id, "ignore")}
                     />
                   </li>
                 ))}

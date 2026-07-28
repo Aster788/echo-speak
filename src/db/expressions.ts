@@ -1,14 +1,16 @@
 import { recordDismissal } from "@/db/expression-dismissals";
-import { getSupabase } from "@/lib/supabase";
-import { sortExpressionsByPhrase } from "@/lib/sort-collections";
+import { listTopicSubtreeIds, listTopics } from "@/db/topics";
+import { applyExpressionCorrection } from "@/lib/expression-correction";
 import { canonicalKey, pickDisplayPhrase } from "@/lib/phrase-canonical";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { sortExpressionsByPhrase } from "@/lib/sort-collections";
+import { getSupabase } from "@/lib/supabase";
+import type { ExpressionCorrectionInput } from "@/types/expression-correction";
 import type {
   CreateExpressionInput,
   Expression,
   ExpressionExample,
 } from "@/types/expression";
-import { listTopicSubtreeIds, listTopics } from "@/db/topics";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function listExpressions(
   client?: SupabaseClient
@@ -284,6 +286,45 @@ export async function updateExpressionExampleZh(
     .update({ example_zh: exampleZh })
     .eq("id", expressionId);
   if (error) throw error;
+}
+
+/** Persist a Review-card field correction (phrase / meaning / example). */
+export async function correctExpressionFields(
+  expressionId: string,
+  input: ExpressionCorrectionInput,
+  client?: SupabaseClient
+): Promise<Expression> {
+  const supabase = client ?? getSupabase();
+  const existing = await getExpression(expressionId, supabase);
+  if (!existing) {
+    throw new Error(`Expression not found: ${expressionId}`);
+  }
+
+  const next = applyExpressionCorrection(
+    {
+      phrase: existing.phrase,
+      meaning: existing.meaning,
+      example_en: existing.example_en,
+      example_zh: existing.example_zh,
+      examples: existing.examples,
+    },
+    input
+  );
+
+  const { data, error } = await supabase
+    .from("expressions")
+    .update({
+      phrase: next.phrase,
+      meaning: next.meaning,
+      example_en: next.example_en,
+      example_zh: next.example_zh,
+      examples: next.examples,
+    })
+    .eq("id", expressionId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Expression;
 }
 
 export async function listExpressionsMissingExampleZh(

@@ -6,7 +6,14 @@ import {
   reviewCardTextColor,
 } from "@/lib/review-card-palette";
 import { formatExampleIndexLabel } from "@/lib/example-index-label";
+import {
+  applyExpressionCorrection,
+  collectCorrectableExamples,
+  isExampleCorrectionField,
+  prefillCorrectionValue,
+} from "@/lib/expression-correction";
 import { splitPhraseAndPhonetic } from "@/lib/feishu-phonetic";
+import type { ExpressionCorrectionField } from "@/types/expression-correction";
 import type { ReviewDeckCard, ReviewMode, ReviewRating } from "@/types/review";
 import type { ExpressionExample } from "@/types/expression";
 import { ReviewRatingActions } from "./ReviewRatingActions";
@@ -17,21 +24,17 @@ type ReviewCardProps = {
   onRate: (rating: ReviewRating) => void;
 };
 
-type ReportType = "english" | "chinese" | "punctuation";
-
 type DisplayCardContent = Pick<
   ReviewDeckCard,
   "phrase" | "meaning" | "example_en" | "example_zh" | "examples" | "phonetic"
 >;
 
-function collectExamples(card: Pick<ReviewDeckCard, "examples" | "example_en" | "example_zh">): ExpressionExample[] {
-  if (card.examples && card.examples.length > 0) {
-    return card.examples.filter((example) => example.en?.trim());
-  }
-  if (card.example_en?.trim()) {
-    return [{ en: card.example_en, zh: card.example_zh }];
-  }
-  return [];
+function collectExamples(
+  card: Pick<ReviewDeckCard, "examples" | "example_en" | "example_zh">
+): ExpressionExample[] {
+  return collectCorrectableExamples(card).filter((example) =>
+    example.en?.trim()
+  );
 }
 
 function cardToDisplay(card: ReviewDeckCard): DisplayCardContent {
@@ -54,11 +57,16 @@ function exampleDiffersFromLemma(exampleEn: string, lemma: string): boolean {
   return exampleEn.trim().toLowerCase() !== lemma.trim().toLowerCase();
 }
 
-const REPORT_TYPES: Array<{ value: ReportType; label: string }> = [
-  { value: "english", label: "英文有误" },
-  { value: "chinese", label: "中文有误" },
-  { value: "punctuation", label: "标点有误" },
+const REPORT_TYPES: Array<{
+  value: ExpressionCorrectionField;
+  label: string;
+}> = [
+  { value: "meaning", label: "短语释义有误" },
+  { value: "example_zh", label: "例句释义有误" },
+  { value: "phrase", label: "短语英文有误" },
+  { value: "example_en", label: "例句英文有误" },
 ];
+
 const REPORT_FIREWORK_COLORS = [
   "#F5C84B",
   "#E86F7C",
@@ -71,14 +79,20 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
   const [isBack, setIsBack] = useState(false);
   const [feedback, setFeedback] = useState<ReviewRating | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
-  const [reportType, setReportType] = useState<ReportType>("chinese");
+  const [reportType, setReportType] =
+    useState<ExpressionCorrectionField>("meaning");
+  const [exampleIndex, setExampleIndex] = useState(0);
   const [correctContent, setCorrectContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   const [successVisible, setSuccessVisible] = useState(false);
   const [displayCard, setDisplayCard] = useState<DisplayCardContent>(() =>
     cardToDisplay(card)
   );
   const examples = collectExamples(displayCard);
   const isMultiExample = examples.length > 1;
+  const needsExamplePicker =
+    isExampleCorrectionField(reportType) && isMultiExample;
 
   const background = useMemo(
     () => pickReviewCardColor(card.id),
@@ -99,10 +113,43 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
     setDisplayCard(cardToDisplay(card));
     setIsBack(false);
     setReportOpen(false);
-    setReportType("chinese");
+    setReportType("meaning");
+    setExampleIndex(0);
     setCorrectContent("");
+    setSubmitting(false);
+    setReportError(null);
     setSuccessVisible(false);
   }, [card]);
+
+  function openReport() {
+    const nextType: ExpressionCorrectionField = "meaning";
+    setReportType(nextType);
+    setExampleIndex(0);
+    setCorrectContent(prefillCorrectionValue(displayCard, nextType, 0));
+    setReportError(null);
+    setReportOpen(true);
+  }
+
+  function selectReportType(nextType: ExpressionCorrectionField) {
+    setReportType(nextType);
+    setReportError(null);
+    const nextIndex =
+      isExampleCorrectionField(nextType) && examples.length > 0
+        ? Math.min(exampleIndex, examples.length - 1)
+        : 0;
+    setExampleIndex(nextIndex);
+    setCorrectContent(
+      prefillCorrectionValue(displayCard, nextType, nextIndex)
+    );
+  }
+
+  function selectExampleIndex(nextIndex: number) {
+    setExampleIndex(nextIndex);
+    setReportError(null);
+    setCorrectContent(
+      prefillCorrectionValue(displayCard, reportType, nextIndex)
+    );
+  }
 
   function handleRate(rating: ReviewRating) {
     if (feedback) return;
@@ -115,26 +162,68 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
     }, 900);
   }
 
-  function handleSubmitReport() {
+  async function handleSubmitReport() {
     const nextContent = correctContent.trim();
-    if (!nextContent) return;
+    if (!nextContent || submitting) return;
 
-    setDisplayCard((current) => {
-      if (reportType === "english") {
-        return { ...current, phrase: nextContent };
+    setSubmitting(true);
+    setReportError(null);
+
+    try {
+      const payload: {
+        field: ExpressionCorrectionField;
+        value: string;
+        exampleIndex?: number;
+      } = {
+        field: reportType,
+        value: nextContent,
+      };
+      if (isExampleCorrectionField(reportType)) {
+        payload.exampleIndex = needsExamplePicker ? exampleIndex : 0;
       }
 
-      if (reportType === "chinese") {
-        return { ...current, meaning: nextContent };
+      const response = await fetch(`/api/expressions/${card.id}/correct`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        expression?: ReviewDeckCard;
+      };
+      if (!response.ok || !body.ok) {
+        throw new Error(body.message ?? "提交失败，请重试。");
       }
 
-      return { ...current, example_zh: nextContent };
-    });
+      // Prefer server payload; fall back to local apply so the card updates
+      // even if the response shape is partial.
+      if (body.expression) {
+        setDisplayCard(cardToDisplay({ ...card, ...body.expression }));
+      } else {
+        const next = applyExpressionCorrection(displayCard, {
+          field: reportType,
+          value: nextContent,
+          exampleIndex: payload.exampleIndex,
+        });
+        setDisplayCard({
+          ...displayCard,
+          ...next,
+          phonetic: displayCard.phonetic,
+        });
+      }
 
-    setReportOpen(false);
-    setCorrectContent("");
-    setSuccessVisible(true);
-    window.setTimeout(() => setSuccessVisible(false), 1100);
+      setReportOpen(false);
+      setCorrectContent("");
+      setSuccessVisible(true);
+      window.setTimeout(() => setSuccessVisible(false), 1100);
+    } catch (error) {
+      setReportError(
+        error instanceof Error ? error.message : "提交失败，请重试。"
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -169,7 +258,7 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
               className="absolute right-3 top-3 z-30 h-10 w-10 transition-opacity duration-150 active:opacity-70"
               onClick={(event) => {
                 event.stopPropagation();
-                setReportOpen(true);
+                openReport();
               }}
               aria-label="Report card issue"
             >
@@ -204,7 +293,9 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                           {example.zh}
                         </p>
                       ) : (
-                        <p className="text-[1rem] leading-relaxed opacity-50">—</p>
+                        <p className="text-[1rem] leading-relaxed opacity-50">
+                          —
+                        </p>
                       )}
                     </div>
                   ))}
@@ -241,7 +332,7 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
               className="absolute right-3 top-3 z-30 h-10 w-10 transition-opacity duration-150 active:opacity-70"
               onClick={(event) => {
                 event.stopPropagation();
-                setReportOpen(true);
+                openReport();
               }}
               aria-label="Report card issue"
             >
@@ -306,7 +397,9 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Report card issue"
-          onClick={() => setReportOpen(false)}
+          onClick={() => {
+            if (!submitting) setReportOpen(false);
+          }}
         >
           <div
             className="relative flex w-full max-w-[340px] flex-col bg-[length:100%_100%] bg-center bg-no-repeat px-9 py-12 text-[#222222]"
@@ -316,18 +409,19 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex flex-1 flex-col justify-center gap-8">
+            <div className="flex flex-1 flex-col justify-center gap-6">
               <div>
                 <p className="mb-3 text-center text-[0.9375rem] font-medium">
                   错误类型
                 </p>
-                <div className="flex justify-center gap-2 text-[0.8125rem]">
+                <div className="grid grid-cols-2 gap-2 text-[0.8125rem]">
                   {REPORT_TYPES.map((type) => (
                     <button
                       key={type.value}
                       type="button"
-                      onClick={() => setReportType(type.value)}
-                      className={`rounded-full border px-3 py-1 transition-opacity duration-150 active:opacity-70 ${
+                      onClick={() => selectReportType(type.value)}
+                      disabled={submitting}
+                      className={`rounded-full border px-2.5 py-1.5 transition-opacity duration-150 active:opacity-70 disabled:opacity-50 ${
                         reportType === type.value
                           ? "border-[#222222]/55 bg-[#FFFFFF]/35"
                           : "border-[#222222]/20"
@@ -339,29 +433,63 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
                 </div>
               </div>
 
+              {needsExamplePicker && (
+                <div>
+                  <p className="mb-2 text-center text-[0.875rem]">选择例句</p>
+                  <div className="flex flex-wrap justify-center gap-2 text-[0.8125rem]">
+                    {examples.map((_, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => selectExampleIndex(index)}
+                        disabled={submitting}
+                        className={`rounded-full border px-3 py-1 transition-opacity duration-150 active:opacity-70 disabled:opacity-50 ${
+                          exampleIndex === index
+                            ? "border-[#222222]/55 bg-[#FFFFFF]/35"
+                            : "border-[#222222]/20"
+                        }`}
+                      >
+                        例句 {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <label className="block text-[0.875rem]">
                 <span>请输入正确内容：</span>
                 <input
                   value={correctContent}
                   onChange={(event) => setCorrectContent(event.target.value)}
-                  className="mt-1 block w-full border-0 border-b border-[#222222]/50 bg-transparent px-0 py-1 outline-none focus:ring-0"
+                  disabled={submitting}
+                  className="mt-1 block w-full border-0 border-b border-[#222222]/50 bg-transparent px-0 py-1 outline-none focus:ring-0 disabled:opacity-50"
                 />
               </label>
+
+              {reportError ? (
+                <p className="text-center text-[0.8125rem] text-[#B33A3A]" role="alert">
+                  {reportError}
+                </p>
+              ) : null}
 
               <div className="flex items-center justify-center gap-4 pt-1 text-[0.875rem]">
                 <button
                   type="button"
                   onClick={() => setReportOpen(false)}
-                  className="rounded-full border border-[#222222]/20 px-5 py-2 transition-opacity duration-150 active:opacity-70"
+                  disabled={submitting}
+                  className="rounded-full border border-[#222222]/20 px-5 py-2 transition-opacity duration-150 active:opacity-70 disabled:opacity-50"
                 >
                   取消
                 </button>
                 <button
                   type="button"
-                  onClick={handleSubmitReport}
-                  className="rounded-full border border-[#222222]/20 px-5 py-2 transition-opacity duration-150 active:opacity-70"
+                  onClick={() => {
+                    void handleSubmitReport();
+                  }}
+                  disabled={submitting || !correctContent.trim()}
+                  className="rounded-full border border-[#222222]/20 px-5 py-2 transition-opacity duration-150 active:opacity-70 disabled:opacity-50"
                 >
-                  提交
+                  {submitting ? "提交中…" : "提交"}
                 </button>
               </div>
             </div>

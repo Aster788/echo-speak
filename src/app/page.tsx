@@ -28,7 +28,7 @@ export default async function HomePage() {
   return (
     <>
       <PageHeader description="Turn video transcripts into expressions you actually remember." />
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 flex shrink-0 flex-col gap-3">
         {feishuStatus.line ? (
           <p className="text-center text-[0.6875rem] font-normal text-[#222222]/55">
             {feishuStatus.line}
@@ -50,7 +50,7 @@ export default async function HomePage() {
           </span>
         </Link>
       </div>
-      <div className="mt-4 flex min-h-0 flex-1 items-center justify-center pb-2">
+      <div className="mt-4 flex shrink-0 justify-center pb-2">
         <Image
           src="/home/hello.png"
           alt=""

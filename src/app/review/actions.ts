@@ -147,12 +147,22 @@ async function loadExpressionsByIds(
     listTopics(client),
   ]);
 
-  const found = await listExpressionsByIds(ids, client);
+  const uniqueIds = [...new Set(ids)];
+  const found = await listExpressionsByIds(uniqueIds, client);
+  const enriched = enrichDeckCards(found, videos, topics);
+  const byId = new Map(enriched.map((card) => [card.id, card]));
 
-  const order = new Map(ids.map((id, index) => [id, index]));
-  found.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  // Preserve caller order and allow reinserted duplicates (unsure gaps).
+  return ids
+    .map((id) => byId.get(id))
+    .filter((card): card is ReviewDeckCard => Boolean(card));
+}
 
-  return enrichDeckCards(found, videos, topics);
+/** Resume Today's Review from a persisted ordered id list (may include duplicates). */
+export async function loadTodaysReviewCardsByIds(
+  ids: string[]
+): Promise<ReviewDeckCard[]> {
+  return loadExpressionsByIds(ids, getSupabaseAdmin());
 }
 
 export async function getTodaysReviewSummary(

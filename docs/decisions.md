@@ -490,3 +490,15 @@ Decision:
 Reason:
 
 This makes feedback effective on the next extraction while keeping behavior explainable, prompt size bounded, and Ignore deterministic. It optimizes for lower curation load rather than maximum expression volume.
+
+---
+
+2026-07-28
+
+Decision:
+
+**Today's Review mid-session progress is persisted in localStorage** for the local calendar day (`echo-speak:todays-review-session`: deck ids, index, shown ids, deferred unsure). Restarting the browser resumes the same deck instead of allocating a new budget slice. Rating UI advances optimistically to the next card's Chinese face (no flip-back on the current card).
+
+Reason:
+
+Session counter and deck order previously lived only in React state; quitting Chrome felt like progress was wiped even though ratings were saved. Resume matches user expectation for an unfinished daily batch.

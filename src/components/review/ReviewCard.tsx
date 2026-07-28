@@ -105,10 +105,12 @@ export function ReviewCard({ card, mode, onRate }: ReviewCardProps) {
   }, [card]);
 
   function handleRate(rating: ReviewRating) {
+    if (feedback) return;
     setFeedback(rating);
+    // Keep the English face until the parent remounts the next card.
+    // Do not flip back to Chinese — that reverse flip felt like a stall.
     window.setTimeout(() => {
       onRate(rating);
-      setIsBack(false);
       setFeedback(null);
     }, 900);
   }

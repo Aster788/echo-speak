@@ -27,11 +27,13 @@ export function ReviewRatingActions({
         <button
           key={rating}
           type="button"
+          disabled={feedback !== null}
           onClick={(event) => {
             event.stopPropagation();
+            if (feedback) return;
             onRate(rating);
           }}
-          className={`relative px-2 py-4 text-center text-[0.8125rem] font-normal capitalize transition-opacity duration-150 active:opacity-70 ${
+          className={`relative px-2 py-4 text-center text-[0.8125rem] font-normal capitalize transition-opacity duration-150 active:opacity-70 disabled:opacity-100 ${
             index > 0 ? `border-l ${borderColor}` : ""
           }`}
         >

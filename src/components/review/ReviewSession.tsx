@@ -142,9 +142,21 @@ export function ReviewSession({
     return next;
   }, []);
 
+  const flushDeferredSafe = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return true;
+    try {
+      const result = await flushDeferredUnsureSchedules(ids);
+      return result.ok;
+    } catch {
+      // Network abort on mobile background — schedules retry on next rate/end.
+      return false;
+    }
+  }, []);
+
   const backToScopePicker = useCallback(() => {
-    void flushDeferredUnsureSchedules([...deferredUnsureIds.current]);
+    const ids = [...deferredUnsureIds.current];
     deferredUnsureIds.current = new Set();
+    void flushDeferredSafe(ids);
     setPhase("pick-scope");
     setScopeId(null);
     setScopeLabel("");
@@ -152,7 +164,7 @@ export function ReviewSession({
     setIndex(0);
     setError(null);
     ratingInFlight.current = false;
-  }, []);
+  }, [flushDeferredSafe]);
 
   const applyTodaysDeck = useCallback(
     (
@@ -272,15 +284,27 @@ export function ReviewSession({
         const saved = loadTodaysReviewSession();
         if (isResumableTodaysReviewSession(saved)) {
           startTransition(async () => {
-            const resumed = await resumeTodaysReview();
-            if (!resumed) await beginFreshDeck([]);
+            try {
+              const resumed = await resumeTodaysReview();
+              if (!resumed) await beginFreshDeck([]);
+            } catch (err) {
+              setError(
+                err instanceof Error ? err.message : "Failed to resume review."
+              );
+            }
           });
           return;
         }
       }
 
       startTransition(async () => {
-        await beginFreshDeck(excludeIds);
+        try {
+          await beginFreshDeck(excludeIds);
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : "Failed to start review."
+          );
+        }
       });
     },
     [applyTodaysDeck, initialSummary, resumeTodaysReview]
@@ -297,16 +321,13 @@ export function ReviewSession({
     startTodaysReview();
   }, [autoStartTodaysReview, startTodaysReview]);
 
-  // Flush deferred unsure schedules if the tab is closing mid-session.
+  // On hide: persist locally only. iOS aborts Server Actions on background,
+  // and an uncaught rejection becomes the generic Application error screen.
+  // Flush deferred schedules when the tab is visible again (or on rate/end).
   useEffect(() => {
-    function flushOnHide() {
+    function persistOnHide() {
       if (modeRef.current !== "todays_review") return;
       if (phaseRef.current !== "reviewing") return;
-      const ids = [...deferredUnsureIds.current];
-      if (ids.length === 0) return;
-      void flushDeferredUnsureSchedules(ids);
-      // Keep ids in the persisted session; server schedule is already written.
-      deferredUnsureIds.current = new Set();
       persistTodaysSession(
         deckRef.current,
         indexRef.current,
@@ -314,12 +335,32 @@ export function ReviewSession({
       );
     }
 
+    function flushOnVisible() {
+      if (modeRef.current !== "todays_review") return;
+      if (phaseRef.current !== "reviewing") return;
+      const ids = [...deferredUnsureIds.current];
+      if (ids.length === 0) return;
+      void flushDeferredSafe(ids).then((ok) => {
+        if (!ok) return;
+        for (const id of ids) deferredUnsureIds.current.delete(id);
+        persistTodaysSession(
+          deckRef.current,
+          indexRef.current,
+          shownIdsRef.current
+        );
+      });
+    }
+
     function onPageHide() {
-      flushOnHide();
+      persistOnHide();
     }
 
     function onVisibilityChange() {
-      if (document.visibilityState === "hidden") flushOnHide();
+      if (document.visibilityState === "hidden") {
+        persistOnHide();
+        return;
+      }
+      if (document.visibilityState === "visible") flushOnVisible();
     }
 
     window.addEventListener("pagehide", onPageHide);
@@ -328,7 +369,7 @@ export function ReviewSession({
       window.removeEventListener("pagehide", onPageHide);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [persistTodaysSession]);
+  }, [flushDeferredSafe, persistTodaysSession]);
 
   function handleSelectMode(nextMode: ReviewMode) {
     if (nextMode === "todays_review") {
@@ -345,12 +386,18 @@ export function ReviewSession({
 
     startTransition(async () => {
       setError(null);
-      const result = await loadReviewDeck(mode, nextScopeId);
-      setScopeId(nextScopeId);
-      setScopeLabel(result.scopeLabel);
-      setDeck(result.cards);
-      setIndex(0);
-      setPhase(result.cards.length > 0 ? "reviewing" : "complete");
+      try {
+        const result = await loadReviewDeck(mode, nextScopeId);
+        setScopeId(nextScopeId);
+        setScopeLabel(result.scopeLabel);
+        setDeck(result.cards);
+        setIndex(0);
+        setPhase(result.cards.length > 0 ? "reviewing" : "complete");
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load review deck."
+        );
+      }
     });
   }
 
@@ -402,39 +449,52 @@ export function ReviewSession({
     }
 
     startTransition(async () => {
-      const result = await submitReviewRating(
-        expressionId,
-        rating,
-        mode,
-        scopeId,
-        { deferSchedule }
-      );
+      try {
+        const result = await submitReviewRating(
+          expressionId,
+          rating,
+          mode,
+          scopeId,
+          { deferSchedule }
+        );
 
-      if (!result.ok) {
+        if (!result.ok) {
+          setDeck(ratedDeck);
+          setIndex(ratedIndex);
+          setPhase("reviewing");
+          setError(result.error);
+          if (mode === "todays_review") {
+            persistTodaysSession(ratedDeck, ratedIndex, shownIds);
+          }
+          return;
+        }
+
+        if (finished) {
+          const flushed = await flushDeferredSafe([
+            ...deferredUnsureIds.current,
+          ]);
+          if (flushed) deferredUnsureIds.current = new Set();
+          clearPersistedTodaysSession();
+          const nextSummary = await refreshSummary(shownIds);
+          if (mode === "todays_review" && nextSummary.canContinueToday) {
+            setPhase("caught-up");
+          } else {
+            setPhase("complete");
+          }
+        }
+      } catch (err) {
         setDeck(ratedDeck);
         setIndex(ratedIndex);
         setPhase("reviewing");
-        setError(result.error);
+        setError(
+          err instanceof Error ? err.message : "Failed to save rating."
+        );
         if (mode === "todays_review") {
           persistTodaysSession(ratedDeck, ratedIndex, shownIds);
         }
+      } finally {
         ratingInFlight.current = false;
-        return;
       }
-
-      if (finished) {
-        await flushDeferredUnsureSchedules([...deferredUnsureIds.current]);
-        deferredUnsureIds.current = new Set();
-        clearPersistedTodaysSession();
-        const nextSummary = await refreshSummary(shownIds);
-        if (mode === "todays_review" && nextSummary.canContinueToday) {
-          setPhase("caught-up");
-        } else {
-          setPhase("complete");
-        }
-      }
-
-      ratingInFlight.current = false;
     });
   }
 

@@ -43,7 +43,8 @@ export function NavSignLink({
   return (
     <Link
       href={href}
-      prefetch
+      // Avoid racing five route chunks while iOS freezes Chrome mid-prefetch.
+      prefetch={false}
       onClick={active ? onActiveClick : undefined}
       className={`group whitespace-nowrap ${pageHintFont.className} ${pageHintTextClassName}`}
     >

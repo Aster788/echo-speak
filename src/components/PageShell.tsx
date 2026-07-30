@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { ReviewResetProvider } from "@/components/review/ReviewResetContext";
 
@@ -26,7 +26,9 @@ export function PageShell({ children }: PageShellProps) {
           <div className="mx-auto h-1 w-16 rounded-full bg-[#222222]/15" />
         </div>
         <ReviewResetProvider>
-          <Navbar />
+          <Suspense fallback={<div className="h-[4.25rem] shrink-0 border-b border-[#222222]/10" />}>
+            <Navbar />
+          </Suspense>
           <main className="phone-scrollbar relative flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-4 pb-8">
             {children}
           </main>

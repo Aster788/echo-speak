@@ -309,24 +309,35 @@ export async function submitReviewRating(
 
 export async function flushDeferredUnsureSchedules(
   expressionIds: string[]
-): Promise<void> {
-  const supabase = getSupabaseAdmin();
-  const now = new Date();
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    if (expressionIds.length === 0) return { ok: true };
 
-  for (const expressionId of expressionIds) {
-    const queueRow = await getQueueRow(expressionId, supabase);
-    const schedule = scheduleDeferredUnsure(now, queueRow);
-    await upsertReviewQueue(
-      {
-        expressionId,
-        dueAt: schedule.dueAt,
-        memoryState: schedule.memoryState,
-        intervalDays: schedule.intervalDays,
-        lastReviewedAt: schedule.lastReviewedAt,
-        firstReviewedAt: schedule.firstReviewedAt,
-      },
-      supabase
-    );
+    const supabase = getSupabaseAdmin();
+    const now = new Date();
+
+    for (const expressionId of expressionIds) {
+      const queueRow = await getQueueRow(expressionId, supabase);
+      const schedule = scheduleDeferredUnsure(now, queueRow);
+      await upsertReviewQueue(
+        {
+          expressionId,
+          dueAt: schedule.dueAt,
+          memoryState: schedule.memoryState,
+          intervalDays: schedule.intervalDays,
+          lastReviewedAt: schedule.lastReviewedAt,
+          firstReviewedAt: schedule.firstReviewedAt,
+        },
+        supabase
+      );
+    }
+    return { ok: true };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to flush deferred schedules.";
+    return { ok: false, error: message };
   }
 }
 

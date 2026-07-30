@@ -502,3 +502,16 @@ Decision:
 Reason:
 
 Session counter and deck order previously lived only in React state; quitting Chrome felt like progress was wiped even though ratings were saved. Resume matches user expectation for an unfinished daily batch.
+
+---
+
+2026-07-30
+
+Decision:
+
+**Mobile Chrome resume crashes are treated as recoverable client failures.** Root layout registers an early boot script plus `ClientRecovery` to hard-reload once on ChunkLoadError / aborted fetch / BFCache restore. Review no longer fires Server Actions on `visibilitychange`/`pagehide` (localStorage only on hide; flush when visible again). `error.tsx` / `global-error.tsx` provide a reload fallback. Navbar links use `prefetch={false}` to avoid racing route chunks while iOS freezes the tab.
+
+Reason:
+
+iPhone Chrome freezes the tab when switching apps; in-flight chunk/RSC/Server Action requests abort and surface as the generic "Application error" screen. Refresh always healed it — so auto-reload + avoid unload actions is the durable fix.
+

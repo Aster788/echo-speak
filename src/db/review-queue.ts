@@ -1,4 +1,5 @@
 import { normalizePhraseKey } from "@/lib/merge-expressions";
+import { fetchAllRows } from "@/lib/supabase-fetch-all";
 import { getSupabase } from "@/lib/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
@@ -49,15 +50,19 @@ export async function upsertReviewQueue(
 async function listDismissedKeysByVideo(
   client: SupabaseClient
 ): Promise<Map<string, Set<string>>> {
-  const { data, error } = await client
-    .from("expression_dismissals")
-    .select("video_id, phrase_key");
-  if (error) throw error;
+  const rows = await fetchAllRows<{ video_id: string; phrase_key: string }>(
+    (from, to) =>
+      client
+        .from("expression_dismissals")
+        .select("video_id, phrase_key")
+        .order("id", { ascending: true })
+        .range(from, to)
+  );
 
   const map = new Map<string, Set<string>>();
-  for (const row of data ?? []) {
-    const videoId = row.video_id as string;
-    const phraseKey = row.phrase_key as string;
+  for (const row of rows) {
+    const videoId = row.video_id;
+    const phraseKey = row.phrase_key;
     if (!map.has(videoId)) map.set(videoId, new Set());
     map.get(videoId)!.add(phraseKey);
   }
@@ -75,23 +80,36 @@ function isExpressionDismissed(
   return phraseKey ? keys.has(phraseKey) : false;
 }
 
+type ExpressionDismissalRow = {
+  id: string;
+  video_id: string;
+  phrase: string;
+};
+
+async function listExpressionDismissalRows(
+  client: SupabaseClient
+): Promise<ExpressionDismissalRow[]> {
+  return fetchAllRows<ExpressionDismissalRow>((from, to) =>
+    client
+      .from("expressions")
+      .select("id, video_id, phrase")
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
+}
+
 async function listDismissedExpressionIds(
   client: SupabaseClient
 ): Promise<Set<string>> {
   const dismissed = await listDismissedKeysByVideo(client);
-  const { data, error } = await client.from("expressions").select("id, video_id, phrase");
-  if (error) throw error;
+  const rows = await listExpressionDismissalRows(client);
 
   return new Set(
-    (data ?? [])
+    rows
       .filter((row) =>
-        isExpressionDismissed(
-          row.video_id as string,
-          row.phrase as string,
-          dismissed
-        )
+        isExpressionDismissed(row.video_id, row.phrase, dismissed)
       )
-      .map((row) => row.id as string)
+      .map((row) => row.id)
   );
 }
 
@@ -101,16 +119,19 @@ export async function listDueExpressionIds(
 ): Promise<string[]> {
   const supabase = client ?? getSupabase();
   const dismissed = await listDismissedExpressionIds(supabase);
-  const { data, error } = await supabase
-    .from("review_queue")
-    .select("expression_id, due_at, first_reviewed_at")
-    .lte("due_at", now.toISOString())
-    .not("first_reviewed_at", "is", null)
-    .order("due_at", { ascending: true });
-  if (error) throw error;
+  const data = await fetchAllRows<{ expression_id: string }>((from, to) =>
+    supabase
+      .from("review_queue")
+      .select("expression_id, due_at, first_reviewed_at")
+      .lte("due_at", now.toISOString())
+      .not("first_reviewed_at", "is", null)
+      .order("due_at", { ascending: true })
+      .order("expression_id", { ascending: true })
+      .range(from, to)
+  );
 
-  return (data ?? [])
-    .map((row) => row.expression_id as string)
+  return data
+    .map((row) => row.expression_id)
     .filter((id) => !dismissed.has(id));
 }
 
@@ -118,40 +139,45 @@ export async function listNewExpressionCandidates(
   client?: SupabaseClient
 ): Promise<NewExpressionCandidate[]> {
   const supabase = client ?? getSupabase();
-  const dismissed = await listDismissedExpressionIds(supabase);
 
-  const { data: reviewed, error: reviewedError } = await supabase
-    .from("review_queue")
-    .select("expression_id")
-    .not("first_reviewed_at", "is", null);
-  if (reviewedError) throw reviewedError;
+  const [dismissedByVideo, reviewed, expressions] = await Promise.all([
+    listDismissedKeysByVideo(supabase),
+    fetchAllRows<{ expression_id: string }>((from, to) =>
+      supabase
+        .from("review_queue")
+        .select("expression_id")
+        .not("first_reviewed_at", "is", null)
+        .order("expression_id", { ascending: true })
+        .range(from, to)
+    ),
+    fetchAllRows<{
+      id: string;
+      video_id: string;
+      topic_id: string | null;
+      created_at: string;
+      phrase: string;
+    }>((from, to) =>
+      supabase
+        .from("expressions")
+        .select("id, video_id, topic_id, created_at, phrase")
+        .order("id", { ascending: true })
+        .range(from, to)
+    ),
+  ]);
 
-  const reviewedIds = new Set(
-    (reviewed ?? []).map((row) => row.expression_id as string)
-  );
+  const reviewedIds = new Set(reviewed.map((row) => row.expression_id));
 
-  const { data, error } = await supabase
-    .from("expressions")
-    .select("id, video_id, topic_id, created_at, phrase");
-  if (error) throw error;
-
-  const dismissedByVideo = await listDismissedKeysByVideo(supabase);
-
-  return (data ?? [])
+  return expressions
     .filter(
       (row) =>
-        !reviewedIds.has(row.id as string) &&
-        !isExpressionDismissed(
-          row.video_id as string,
-          row.phrase as string,
-          dismissedByVideo
-        )
+        !reviewedIds.has(row.id) &&
+        !isExpressionDismissed(row.video_id, row.phrase, dismissedByVideo)
     )
     .map((row) => ({
-      id: row.id as string,
-      video_id: row.video_id as string,
-      topic_id: (row.topic_id as string | null) ?? null,
-      created_at: row.created_at as string,
+      id: row.id,
+      video_id: row.video_id,
+      topic_id: row.topic_id,
+      created_at: row.created_at,
     }));
 }
 
@@ -177,11 +203,14 @@ export async function listExpressionIdsReviewedToday(
   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
-  const { data, error } = await supabase
-    .from("review_history")
-    .select("expression_id")
-    .gte("reviewed_at", start.toISOString());
-  if (error) throw error;
+  const data = await fetchAllRows<{ expression_id: string }>((from, to) =>
+    supabase
+      .from("review_history")
+      .select("expression_id")
+      .gte("reviewed_at", start.toISOString())
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
 
-  return new Set((data ?? []).map((row) => row.expression_id as string));
+  return new Set(data.map((row) => row.expression_id));
 }

@@ -3,6 +3,7 @@ import { listTopicSubtreeIds, listTopics } from "@/db/topics";
 import { applyExpressionCorrection } from "@/lib/expression-correction";
 import { canonicalKey, pickDisplayPhrase } from "@/lib/phrase-canonical";
 import { sortExpressionsByPhrase } from "@/lib/sort-collections";
+import { chunkIds, fetchAllRows } from "@/lib/supabase-fetch-all";
 import { getSupabase } from "@/lib/supabase";
 import type { ExpressionCorrectionInput } from "@/types/expression-correction";
 import type {
@@ -16,9 +17,14 @@ export async function listExpressions(
   client?: SupabaseClient
 ): Promise<Expression[]> {
   const supabase = client ?? getSupabase();
-  const { data, error } = await supabase.from("expressions").select("*");
-  if (error) throw error;
-  return sortExpressionsByPhrase((data ?? []) as Expression[]);
+  const data = await fetchAllRows<Expression>((from, to) =>
+    supabase
+      .from("expressions")
+      .select("*")
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
+  return sortExpressionsByPhrase(data);
 }
 
 export async function getExpression(
@@ -41,12 +47,16 @@ export async function listExpressionsByIds(
 ): Promise<Expression[]> {
   if (ids.length === 0) return [];
   const supabase = client ?? getSupabase();
-  const { data, error } = await supabase
-    .from("expressions")
-    .select("*")
-    .in("id", ids);
-  if (error) throw error;
-  return (data ?? []) as Expression[];
+  const rows: Expression[] = [];
+  for (const chunk of chunkIds(ids)) {
+    const { data, error } = await supabase
+      .from("expressions")
+      .select("*")
+      .in("id", chunk);
+    if (error) throw error;
+    rows.push(...((data ?? []) as Expression[]));
+  }
+  return rows;
 }
 
 export async function countExpressionsByVideo(
@@ -87,13 +97,15 @@ export async function listExpressionsByTopicSubtree(
     return [];
   }
 
-  const { data, error } = await supabase
-    .from("expressions")
-    .select("*")
-    .in("topic_id", subtreeIds)
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return sortExpressionsByPhrase((data ?? []) as Expression[]);
+  const data = await fetchAllRows<Expression>((from, to) =>
+    supabase
+      .from("expressions")
+      .select("*")
+      .in("topic_id", subtreeIds)
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
+  return sortExpressionsByPhrase(data);
 }
 
 export async function listExpressionsByTopicId(

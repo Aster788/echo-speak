@@ -515,3 +515,15 @@ Reason:
 
 iPhone Chrome freezes the tab when switching apps; in-flight chunk/RSC/Server Action requests abort and surface as the generic "Application error" screen. Refresh always healed it — so auto-reload + avoid unload actions is the durable fix.
 
+---
+
+2026-08-01
+
+Decision:
+
+**All unbounded Supabase `.select()` list reads must page via `fetchAllRows` (`.range`).** PostgREST defaults to max 1000 rows; Today's Review `newEligible` was silently truncated (887 vs ~1480) once the library grew past 1000 expressions.
+
+Reason:
+
+Under-counting New expressions hides most of the library from scheduling math and confuses progress readouts. Prefer shared pagination over raising `max_rows` so local/cloud stay consistent.
+

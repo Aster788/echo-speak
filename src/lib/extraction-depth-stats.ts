@@ -2,6 +2,7 @@ import {
   DISMISS_REASON_LABELS,
   type DismissReason,
 } from "@/types/dismiss-reason";
+import { fetchAllRows } from "@/lib/supabase-fetch-all";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Scheme2Row = {
@@ -52,15 +53,24 @@ export async function buildScheme2Rows(
     .order("title");
   if (videosError) throw videosError;
 
-  const { data: keptRows, error: keptError } = await client
-    .from("expressions")
-    .select("video_id");
-  if (keptError) throw keptError;
+  const keptRows = await fetchAllRows<{ video_id: string }>((from, to) =>
+    client
+      .from("expressions")
+      .select("video_id")
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
 
-  const { data: dismissRows, error: dismissError } = await client
-    .from("expression_dismissals")
-    .select("video_id, reason");
-  if (dismissError) throw dismissError;
+  const dismissRows = await fetchAllRows<{
+    video_id: string;
+    reason: DismissReason | null;
+  }>((from, to) =>
+    client
+      .from("expression_dismissals")
+      .select("video_id, reason")
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
 
   const { data: transcripts, error: transcriptError } = await client
     .from("transcripts")
@@ -68,14 +78,14 @@ export async function buildScheme2Rows(
   if (transcriptError) throw transcriptError;
 
   const keptByVideo = new Map<string, number>();
-  for (const row of keptRows ?? []) {
+  for (const row of keptRows) {
     const id = row.video_id as string;
     keptByVideo.set(id, (keptByVideo.get(id) ?? 0) + 1);
   }
 
   const deletedByVideo = new Map<string, number>();
   const reasonsByVideo = new Map<string, Map<DismissReason, number>>();
-  for (const row of dismissRows ?? []) {
+  for (const row of dismissRows) {
     const id = row.video_id as string;
     deletedByVideo.set(id, (deletedByVideo.get(id) ?? 0) + 1);
     if (row.reason) {

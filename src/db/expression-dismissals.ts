@@ -1,4 +1,5 @@
 import { normalizePhraseKey } from "@/lib/merge-expressions";
+import { fetchAllRows } from "@/lib/supabase-fetch-all";
 import { getSupabase } from "@/lib/supabase";
 import type { DismissReason } from "@/types/dismiss-reason";
 import type { DismissedPreferenceRecord } from "@/types/extraction-preference";
@@ -37,10 +38,11 @@ export async function listDismissalPreferenceRecords(
   client?: SupabaseClient
 ): Promise<DismissedPreferenceRecord[]> {
   const supabase = client ?? getSupabase();
-  const { data, error } = await supabase
-    .from("expression_dismissals")
-    .select(
-      `
+  const data = await fetchAllRows<DismissalPreferenceRow>((from, to) =>
+    supabase
+      .from("expression_dismissals")
+      .select(
+        `
       phrase,
       phrase_key,
       reason,
@@ -48,29 +50,29 @@ export async function listDismissalPreferenceRecords(
       dismissed_at,
       topics (slug)
     `
-    )
-    .eq("user_id", userId)
-    .order("dismissed_at", { ascending: false });
-  if (error) throw error;
-
-  return ((data ?? []) as unknown as DismissalPreferenceRow[]).flatMap(
-    (row) => {
-      if (!row.phrase?.trim() || !row.phrase_key?.trim()) return [];
-      const topic = Array.isArray(row.topics)
-        ? row.topics[0] ?? null
-        : row.topics;
-      return [
-        {
-          phrase: row.phrase.trim(),
-          phraseKey: row.phrase_key,
-          reason: row.reason,
-          topicId: row.topic_id,
-          topicSlug: topic?.slug ?? null,
-          dismissedAt: row.dismissed_at,
-        },
-      ];
-    }
+      )
+      .eq("user_id", userId)
+      .order("dismissed_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, to)
   );
+
+  return data.flatMap((row) => {
+    if (!row.phrase?.trim() || !row.phrase_key?.trim()) return [];
+    const topic = Array.isArray(row.topics)
+      ? row.topics[0] ?? null
+      : row.topics;
+    return [
+      {
+        phrase: row.phrase.trim(),
+        phraseKey: row.phrase_key,
+        reason: row.reason,
+        topicId: row.topic_id,
+        topicSlug: topic?.slug ?? null,
+        dismissedAt: row.dismissed_at,
+      },
+    ];
+  });
 }
 
 export async function recordDismissal(
@@ -132,11 +134,14 @@ export async function listGlobalDismissedPhraseKeys(
   client?: SupabaseClient
 ): Promise<Set<string>> {
   const supabase = client ?? getSupabase();
-  const { data, error } = await supabase
-    .from("expression_dismissals")
-    .select("phrase_key")
-    .eq("user_id", userId);
-  if (error) throw error;
+  const data = await fetchAllRows<{ phrase_key: string }>((from, to) =>
+    supabase
+      .from("expression_dismissals")
+      .select("phrase_key")
+      .eq("user_id", userId)
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
 
-  return new Set((data ?? []).map((row) => row.phrase_key as string));
+  return new Set(data.map((row) => row.phrase_key));
 }

@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { fetchAllRows } from "@/lib/supabase-fetch-all";
 import {
   DISMISS_REASON_LABELS,
   type DismissReason,
@@ -19,15 +20,18 @@ export async function listDismissalReasonCounts(
   client?: SupabaseClient
 ): Promise<DismissalReasonCount[]> {
   const supabase = client ?? getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("expression_dismissals")
-    .select("reason")
-    .not("reason", "is", null);
-  if (error) throw error;
+  const data = await fetchAllRows<{ reason: DismissReason }>((from, to) =>
+    supabase
+      .from("expression_dismissals")
+      .select("reason")
+      .not("reason", "is", null)
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
 
   const counts = new Map<DismissReason, number>();
-  for (const row of data ?? []) {
-    const reason = row.reason as DismissReason;
+  for (const row of data) {
+    const reason = row.reason;
     counts.set(reason, (counts.get(reason) ?? 0) + 1);
   }
 
